@@ -14,7 +14,6 @@ import { Genres } from "./components/Genres";
 import { Gallery } from "./components/Gallery";
 import { Testimonials } from "./components/Testimonials";
 import { Faq } from "./components/Faq";
-import { Contact } from "./components/Contact";
 import { WhatsAppFab } from "./components/WhatsAppFab";
 import { BottomBanner } from "./components/BottomBanner";
 import { AdminPanel } from "./components/AdminPanel";
@@ -158,7 +157,6 @@ function App() {
           <Genres />
           <Gallery />
           <Testimonials />
-          <Contact />
         </>
       )}
       <WhatsAppFab />
