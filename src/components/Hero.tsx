@@ -72,8 +72,8 @@ export function Hero() {
               "https://placehold.co/1920x1080/1a1a2e/d4af37?text=Miserenata.co";
           }}
         />
-        <div className="absolute inset-0 bg-gradient-to-b from-stone-950/60 via-stone-950/80 to-stone-950" />
-        <div className="absolute inset-0 bg-gradient-to-r from-stone-950/70 via-transparent to-stone-950/70" />
+        <div className="hidden sm:block absolute inset-0 bg-gradient-to-b from-stone-950/60 via-stone-950/80 to-stone-950" />
+        <div className="hidden sm:block absolute inset-0 bg-gradient-to-r from-stone-950/70 via-transparent to-stone-950/70" />
       </div>
 
       <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
@@ -84,13 +84,13 @@ export function Hero() {
           </span>
         </div>
 
-        <h1 className="font-display font-black text-3xl sm:text-5xl md:text-6xl lg:text-7xl leading-[1.08] mb-5 sm:mb-7 bg-gradient-to-br from-amber-200 via-yellow-100 to-amber-400 bg-clip-text text-transparent tracking-tight">
+        <h1 className="font-display font-black text-3xl sm:text-5xl md:text-6xl lg:text-7xl leading-[1.08] mb-5 sm:mb-7 bg-gradient-to-br from-amber-200 via-yellow-100 to-amber-400 bg-clip-text text-transparent tracking-tight drop-shadow-[0_4px_16px_rgba(0,0,0,0.55)]">
           El arte de sorprender
           <br />
           en cada nota.
         </h1>
 
-        <p className="text-base sm:text-xl md:text-2xl text-stone-300 max-w-3xl mx-auto mb-8 sm:mb-10 leading-relaxed font-light">
+        <p className="text-base sm:text-xl md:text-2xl text-white sm:text-stone-300 max-w-3xl mx-auto mb-8 sm:mb-10 leading-relaxed font-light text-shadow-hero sm:[text-shadow:none]">
           Serenatas, mariachis y artistas en vivo de la más alta categoría en
           <span className="text-amber-400 font-semibold"> Duitama</span>,
           <span className="text-amber-400 font-semibold"> Paipa</span> y
@@ -123,7 +123,7 @@ export function Hero() {
           </button>
         </div>
 
-        <div className="mt-8 flex flex-wrap items-center justify-center gap-x-6 gap-y-2 text-xs sm:text-sm text-stone-400">
+        <div className="mt-8 flex flex-wrap items-center justify-center gap-x-6 gap-y-2 text-xs sm:text-sm text-stone-200 sm:text-stone-400 text-shadow-hero sm:[text-shadow:none]">
           <span className="inline-flex items-center gap-2">
             <Music4 className="w-4 h-4 text-amber-400" /> Mariachis y tríos
           </span>

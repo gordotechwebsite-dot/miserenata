@@ -38,6 +38,12 @@ body {
   letter-spacing: -0.02em;
 }
 
+.text-shadow-hero {
+  text-shadow:
+    0 2px 10px rgba(0, 0, 0, 0.7),
+    0 1px 3px rgba(0, 0, 0, 0.6);
+}
+
 .hero-grain::before {
   content: "";
   position: absolute;
