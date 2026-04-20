@@ -42,12 +42,10 @@ export function VipBanner() {
               </span>
             </div>
 
-            <h2 className="font-display text-3xl sm:text-5xl font-bold text-white leading-tight mb-5">
+            <h2 className="font-display font-black text-3xl sm:text-5xl leading-[1.1] mb-5 bg-gradient-to-br from-amber-200 via-yellow-100 to-amber-400 bg-clip-text text-transparent tracking-tight">
               Cuando lo común
               <br />
-              <span className="italic text-transparent bg-clip-text bg-gradient-to-r from-amber-200 to-yellow-400">
-                no es suficiente.
-              </span>
+              no es suficiente.
             </h2>
 
             <p className="text-stone-300 text-base sm:text-lg leading-relaxed mb-7">

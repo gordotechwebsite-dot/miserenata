@@ -42,9 +42,8 @@ export function Occasions() {
               Ocasiones
             </span>
           </div>
-          <h2 className="font-display text-3xl sm:text-5xl font-bold text-white mb-4">
-            Música que <span className="italic text-amber-300">acompaña</span> tus
-            momentos
+          <h2 className="font-display font-black text-3xl sm:text-5xl mb-4 bg-gradient-to-br from-amber-200 via-yellow-100 to-amber-400 bg-clip-text text-transparent tracking-tight leading-[1.15]">
+            Música que acompaña tus momentos
           </h2>
           <p className="text-stone-400 text-base sm:text-lg">
             Cualquier motivo es razón para sorprender con una experiencia en vivo.

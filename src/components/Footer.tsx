@@ -1,5 +1,5 @@
-import { Music4, Instagram, Mail, MapPin } from "lucide-react";
-import { WHATSAPP_LINK } from "../lib/supabase";
+import { Music4, Instagram, Mail, MapPin, Phone } from "lucide-react";
+import { WHATSAPP_LINK, PHONE_NUMBER, PHONE_DISPLAY } from "../lib/supabase";
 
 export function Footer() {
   const year = new Date().getFullYear();
@@ -43,6 +43,15 @@ export function Footer() {
               <li className="flex items-center gap-2">
                 <MapPin className="w-4 h-4 text-amber-400" />
                 Duitama · Paipa · Sogamoso
+              </li>
+              <li>
+                <a
+                  href={`tel:${PHONE_NUMBER}`}
+                  className="flex items-center gap-2 hover:text-amber-300"
+                >
+                  <Phone className="w-4 h-4 text-amber-400" />
+                  {PHONE_DISPLAY}
+                </a>
               </li>
               <li className="flex items-center gap-2">
                 <Mail className="w-4 h-4 text-amber-400" />

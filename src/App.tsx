@@ -6,11 +6,13 @@ import { Navbar } from "./components/Navbar";
 import { Hero } from "./components/Hero";
 import { TrustStrip } from "./components/TrustStrip";
 import { Audiences } from "./components/Audiences";
+import { Genres } from "./components/Genres";
 import { Packages } from "./components/Packages";
 import { VipBanner } from "./components/VipBanner";
 import { Occasions } from "./components/Occasions";
 import { ReservationForm } from "./components/ReservationForm";
 import { HowItWorks } from "./components/HowItWorks";
+import { Gallery } from "./components/Gallery";
 import { Testimonials } from "./components/Testimonials";
 import { Faq } from "./components/Faq";
 import { Contact } from "./components/Contact";
@@ -117,11 +119,23 @@ function App() {
   }
 
   return (
-    <div className="min-h-screen bg-stone-950 text-white">
+    <div className="min-h-screen text-white sm:bg-stone-950">
+      <video
+        className="fixed inset-0 w-full h-full object-cover -z-10 sm:hidden"
+        src="/video/hero-mobile.mp4"
+        poster="/video/hero-mobile-poster.jpg"
+        autoPlay
+        muted
+        loop
+        playsInline
+        preload="metadata"
+        aria-hidden="true"
+      />
       <Navbar />
       <Hero />
       <TrustStrip />
       <Audiences />
+      <Genres />
       <Packages
         packages={packages}
         loading={loading}
@@ -136,6 +150,7 @@ function App() {
         onSelect={setSelected}
       />
       <HowItWorks />
+      <Gallery />
       <Testimonials />
       <Faq />
       <Contact />

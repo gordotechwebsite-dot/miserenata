@@ -15,11 +15,13 @@ export default {
           "sans-serif",
         ],
         display: [
-          "Playfair Display",
-          "ui-serif",
-          "Georgia",
-          "Cambria",
-          "serif",
+          "Unbounded",
+          "ui-sans-serif",
+          "system-ui",
+          "-apple-system",
+          "Segoe UI",
+          "Roboto",
+          "sans-serif",
         ],
       },
       borderRadius: {

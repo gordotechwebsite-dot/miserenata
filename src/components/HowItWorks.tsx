@@ -26,11 +26,8 @@ export function HowItWorks() {
     <section id="como-funciona" className="py-16 sm:py-24 bg-stone-950">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="text-center mb-12 sm:mb-16">
-          <h2 className="font-display text-3xl sm:text-5xl font-bold mb-4 text-white">
-            Reservar es
-            <span className="italic text-transparent bg-clip-text bg-gradient-to-r from-amber-300 to-yellow-200">
-              {" "}así de simple
-            </span>
+          <h2 className="font-display font-black text-3xl sm:text-5xl mb-4 bg-gradient-to-br from-amber-200 via-yellow-100 to-amber-400 bg-clip-text text-transparent tracking-tight">
+            Reservar es así de simple
           </h2>
           <p className="text-stone-400 text-base sm:text-lg max-w-xl mx-auto">
             3 pasos y listo. Nosotros nos encargamos del resto.

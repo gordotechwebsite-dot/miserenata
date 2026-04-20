@@ -48,8 +48,8 @@ export function Faq() {
               Preguntas Frecuentes
             </span>
           </div>
-          <h2 className="font-display text-3xl sm:text-5xl font-bold text-white mb-4">
-            Lo que tal vez <span className="italic text-amber-300">te preguntas</span>
+          <h2 className="font-display font-black text-3xl sm:text-5xl mb-4 bg-gradient-to-br from-amber-200 via-yellow-100 to-amber-400 bg-clip-text text-transparent tracking-tight">
+            Lo que tal vez te preguntas
           </h2>
         </div>
 
