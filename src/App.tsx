@@ -5,7 +5,6 @@ import { DEFAULT_PACKAGES, type PackageData } from "./lib/constants";
 import { Navbar } from "./components/Navbar";
 import { Hero } from "./components/Hero";
 import { TrustStrip } from "./components/TrustStrip";
-import { Audiences } from "./components/Audiences";
 import { Genres } from "./components/Genres";
 import { Packages } from "./components/Packages";
 import { VipBanner } from "./components/VipBanner";
@@ -135,7 +134,6 @@ function App() {
       <Navbar />
       <Hero />
       <TrustStrip />
-      <Audiences />
       <Genres />
       <Packages
         packages={packages}
