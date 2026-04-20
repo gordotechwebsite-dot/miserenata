@@ -131,6 +131,60 @@ export const TESTIMONIALS = [
     text: "Excelente servicio, muy profesionales. Las canciones fueron hermosas y el grupo tiene una energía increíble.",
     rating: 5,
   },
+  {
+    name: "Julián Pineda",
+    city: "Tunja",
+    text: "Pedí una Norteña para el aniversario de mis papás y quedamos fascinados. Los músicos súper amables y el sonido impecable.",
+    rating: 5,
+  },
+  {
+    name: "Daniela Suárez",
+    city: "Nobsa",
+    text: "Reservamos por WhatsApp y fue súper fácil. Llegaron a tiempo, se vistieron elegantes y se notó la experiencia. Gracias Miserenata.",
+    rating: 5,
+  },
+  {
+    name: "Laura Camila Torres",
+    city: "Tibasosa",
+    text: "La banda sonó espectacular en el grado de mi hermano. Toda la familia bailó y la pasamos increíble. Volveremos a contratarlos.",
+    rating: 5,
+  },
+  {
+    name: "Jorge Iván Castillo",
+    city: "Belén",
+    text: "El detalle con mi esposa valió cada peso. Le tocaron sus canciones favoritas y quedó sin palabras. Servicio de primera.",
+    rating: 5,
+  },
+  {
+    name: "Paola Martínez",
+    city: "Santa Rosa de Viterbo",
+    text: "Le organicé la serenata sorpresa a mi novio y fue perfecto. Muy buena comunicación desde el primer mensaje.",
+    rating: 5,
+  },
+  {
+    name: "Sebastián Rivera",
+    city: "Chiquinquirá",
+    text: "Contratamos la Gran Serenata para el cumpleaños 60 de mi papá. Lloró de felicidad. Se nota el profesionalismo del grupo.",
+    rating: 5,
+  },
+  {
+    name: "Valentina Gómez",
+    city: "Sogamoso",
+    text: "Los contraté para la pedida de mano y todo salió mágico. Muy recomendados, puntuales y con mucho sentimiento al tocar.",
+    rating: 5,
+  },
+  {
+    name: "Camilo Herrera",
+    city: "Paipa",
+    text: "El sonido y la presentación de los músicos fueron espectaculares. Mi mamá no paraba de llorar de emoción.",
+    rating: 5,
+  },
+  {
+    name: "Luisa Jiménez",
+    city: "Duitama",
+    text: "Reservamos una Mariachi para el 15 de mi hija y fue el alma de la fiesta. Todos los invitados preguntaron por ustedes.",
+    rating: 5,
+  },
 ] as const;
 
 export const EXTRAS = [

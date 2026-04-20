@@ -40,6 +40,7 @@ export default {
       animation: {
         "fade-up": "fade-up 0.6s ease-out both",
         "marquee": "marquee 30s linear infinite",
+        "testimonials-marquee": "marquee 90s linear infinite",
       },
       keyframes: {
         "fade-up": {

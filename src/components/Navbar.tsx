@@ -24,7 +24,20 @@ export function Navbar() {
   }, []);
 
   const scrollTo = (id: string) => {
-    document.getElementById(id)?.scrollIntoView({ behavior: "smooth" });
+    if (id === "faq") {
+      window.location.hash = "faq";
+      window.scrollTo({ top: 0, behavior: "instant" as ScrollBehavior });
+      setOpen(false);
+      return;
+    }
+    if (window.location.hash && window.location.hash !== "#") {
+      window.location.hash = "";
+      setTimeout(() => {
+        document.getElementById(id)?.scrollIntoView({ behavior: "smooth" });
+      }, 50);
+    } else {
+      document.getElementById(id)?.scrollIntoView({ behavior: "smooth" });
+    }
     setOpen(false);
   };
 

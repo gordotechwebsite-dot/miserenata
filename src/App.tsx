@@ -136,6 +136,21 @@ function App() {
       <Navbar />
       {route.kind === "genre" ? (
         <GenrePage id={route.id} packages={packages} loading={loading} />
+      ) : route.kind === "faq" ? (
+        <div className="pt-24">
+          <Faq />
+          <div className="text-center pb-16">
+            <button
+              onClick={() => {
+                window.location.hash = "";
+                window.scrollTo({ top: 0, behavior: "instant" as ScrollBehavior });
+              }}
+              className="inline-flex items-center gap-2 border border-stone-700 hover:border-amber-500/60 bg-stone-900/60 text-stone-100 hover:text-amber-300 px-5 py-3 rounded-2xl font-bold transition-all"
+            >
+              Volver al inicio
+            </button>
+          </div>
+        </div>
       ) : (
         <>
           <Hero />
@@ -143,7 +158,6 @@ function App() {
           <Genres />
           <Gallery />
           <Testimonials />
-          <Faq />
           <Contact />
         </>
       )}
