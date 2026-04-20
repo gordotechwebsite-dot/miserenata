@@ -20,7 +20,7 @@ using ( bucket_id = 'gallery' );
 
 ### Subida / borrado solo para el admin autenticado
 
-Reemplaza `miseranataco@gmail.com` si cambias el email del admin.
+Reemplaza `promotionsmiserenata@gmail.com` si cambias el email del admin.
 
 ```sql
 create policy "Gallery admin insert"
@@ -28,7 +28,7 @@ on storage.objects for insert
 to authenticated
 with check (
   bucket_id = 'gallery'
-  and (auth.jwt() ->> 'email') = 'miseranataco@gmail.com'
+  and (auth.jwt() ->> 'email') = 'promotionsmiserenata@gmail.com'
 );
 
 create policy "Gallery admin delete"
@@ -36,7 +36,7 @@ on storage.objects for delete
 to authenticated
 using (
   bucket_id = 'gallery'
-  and (auth.jwt() ->> 'email') = 'miseranataco@gmail.com'
+  and (auth.jwt() ->> 'email') = 'promotionsmiserenata@gmail.com'
 );
 
 create policy "Gallery admin update"
@@ -44,7 +44,7 @@ on storage.objects for update
 to authenticated
 using (
   bucket_id = 'gallery'
-  and (auth.jwt() ->> 'email') = 'miseranataco@gmail.com'
+  and (auth.jwt() ->> 'email') = 'promotionsmiserenata@gmail.com'
 );
 ```
 
@@ -86,19 +86,19 @@ using ( true );
 
 ### Escritura solo para el admin autenticado
 
-Reemplaza `miseranataco@gmail.com` si cambias el email del admin.
+Reemplaza `promotionsmiserenata@gmail.com` si cambias el email del admin.
 
 ```sql
 create policy "site_settings admin insert"
 on public.site_settings for insert
 to authenticated
-with check ( (auth.jwt() ->> 'email') = 'miseranataco@gmail.com' );
+with check ( (auth.jwt() ->> 'email') = 'promotionsmiserenata@gmail.com' );
 
 create policy "site_settings admin update"
 on public.site_settings for update
 to authenticated
-using ( (auth.jwt() ->> 'email') = 'miseranataco@gmail.com' )
-with check ( (auth.jwt() ->> 'email') = 'miseranataco@gmail.com' );
+using ( (auth.jwt() ->> 'email') = 'promotionsmiserenata@gmail.com' )
+with check ( (auth.jwt() ->> 'email') = 'promotionsmiserenata@gmail.com' );
 ```
 
 ## 3. Valor inicial (opcional)
