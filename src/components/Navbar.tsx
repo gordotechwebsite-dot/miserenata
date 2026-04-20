@@ -49,7 +49,15 @@ export function Navbar() {
       }`}
     >
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex items-center justify-between">
-        <button onClick={() => scrollTo("inicio")} className="group">
+        <button
+          onClick={() => scrollTo("inicio")}
+          onDoubleClick={() => {
+            window.location.hash = "admin";
+            window.scrollTo({ top: 0, behavior: "instant" as ScrollBehavior });
+          }}
+          className="group select-none"
+          title="Doble clic para acceso admin"
+        >
           <span className="font-display text-lg sm:text-xl font-bold bg-gradient-to-r from-amber-300 to-yellow-200 bg-clip-text text-transparent tracking-tight">
             Miserenata<span className="text-amber-400">.</span>co
           </span>
