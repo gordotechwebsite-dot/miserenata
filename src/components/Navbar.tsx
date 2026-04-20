@@ -1,0 +1,98 @@
+import { useEffect, useState } from "react";
+import { Menu, X, Music4 } from "lucide-react";
+
+const LINKS = [
+  { id: "inicio", label: "Inicio" },
+  { id: "servicios", label: "Paquetes" },
+  { id: "reservar", label: "Reservar" },
+  { id: "como-funciona", label: "Cómo Funciona" },
+  { id: "testimonios", label: "Testimonios" },
+  { id: "contacto", label: "Contacto" },
+];
+
+export function Navbar() {
+  const [open, setOpen] = useState(false);
+  const [scrolled, setScrolled] = useState(false);
+
+  useEffect(() => {
+    const onScroll = () => setScrolled(window.scrollY > 20);
+    onScroll();
+    window.addEventListener("scroll", onScroll);
+    return () => window.removeEventListener("scroll", onScroll);
+  }, []);
+
+  const scrollTo = (id: string) => {
+    document.getElementById(id)?.scrollIntoView({ behavior: "smooth" });
+    setOpen(false);
+  };
+
+  return (
+    <nav
+      className={`fixed top-0 left-0 right-0 z-40 transition-all duration-300 ${
+        scrolled
+          ? "bg-stone-950/90 backdrop-blur-lg border-b border-stone-800/80 py-3"
+          : "bg-transparent py-4"
+      }`}
+    >
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex items-center justify-between">
+        <button
+          onClick={() => scrollTo("inicio")}
+          className="flex items-center gap-2 group"
+        >
+          <div className="w-9 h-9 rounded-full bg-gradient-to-br from-amber-400 to-yellow-600 flex items-center justify-center shadow-lg shadow-amber-500/30 group-hover:scale-110 transition-transform">
+            <Music4 className="w-5 h-5 text-stone-950" />
+          </div>
+          <span className="text-lg sm:text-xl font-extrabold bg-gradient-to-r from-amber-300 to-yellow-200 bg-clip-text text-transparent">
+            Miserenata.co
+          </span>
+        </button>
+
+        <div className="hidden md:flex items-center gap-1">
+          {LINKS.map((link) => (
+            <button
+              key={link.id}
+              onClick={() => scrollTo(link.id)}
+              className="px-3 py-2 text-sm font-medium text-stone-300 hover:text-amber-400 transition-colors"
+            >
+              {link.label}
+            </button>
+          ))}
+          <button
+            onClick={() => scrollTo("reservar")}
+            className="ml-3 bg-gradient-to-r from-amber-500 to-yellow-500 hover:from-amber-400 hover:to-yellow-400 text-stone-950 px-5 py-2 rounded-xl text-sm font-bold transition-all shadow-lg shadow-amber-500/30"
+          >
+            Reservar
+          </button>
+        </div>
+
+        <button
+          className="md:hidden text-stone-200 p-2"
+          onClick={() => setOpen(!open)}
+          aria-label="Toggle menu"
+        >
+          {open ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
+        </button>
+      </div>
+
+      {open && (
+        <div className="md:hidden bg-stone-950/95 backdrop-blur-lg border-t border-stone-800 mt-3 px-4 py-4 space-y-1">
+          {LINKS.map((link) => (
+            <button
+              key={link.id}
+              onClick={() => scrollTo(link.id)}
+              className="block w-full text-left px-3 py-2 text-stone-300 hover:text-amber-400 hover:bg-stone-900/60 rounded-lg"
+            >
+              {link.label}
+            </button>
+          ))}
+          <button
+            onClick={() => scrollTo("reservar")}
+            className="w-full mt-2 bg-gradient-to-r from-amber-500 to-yellow-500 text-stone-950 px-5 py-3 rounded-xl font-bold"
+          >
+            Reservar ahora
+          </button>
+        </div>
+      )}
+    </nav>
+  );
+}
