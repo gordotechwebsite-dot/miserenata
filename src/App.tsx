@@ -4,10 +4,15 @@ import { supabase } from "./lib/supabase";
 import { DEFAULT_PACKAGES, type PackageData } from "./lib/constants";
 import { Navbar } from "./components/Navbar";
 import { Hero } from "./components/Hero";
+import { TrustStrip } from "./components/TrustStrip";
+import { Audiences } from "./components/Audiences";
 import { Packages } from "./components/Packages";
+import { VipBanner } from "./components/VipBanner";
+import { Occasions } from "./components/Occasions";
 import { ReservationForm } from "./components/ReservationForm";
 import { HowItWorks } from "./components/HowItWorks";
 import { Testimonials } from "./components/Testimonials";
+import { Faq } from "./components/Faq";
 import { Contact } from "./components/Contact";
 import { Footer } from "./components/Footer";
 import { WhatsAppFab } from "./components/WhatsAppFab";
@@ -115,12 +120,16 @@ function App() {
     <div className="min-h-screen bg-stone-950 text-white">
       <Navbar />
       <Hero />
+      <TrustStrip />
+      <Audiences />
       <Packages
         packages={packages}
         loading={loading}
         onSelect={handleSelect}
         selectedName={selected?.name}
       />
+      <VipBanner />
+      <Occasions />
       <ReservationForm
         packages={packages}
         selected={selected}
@@ -128,6 +137,7 @@ function App() {
       />
       <HowItWorks />
       <Testimonials />
+      <Faq />
       <Contact />
       <Footer />
       <WhatsAppFab />

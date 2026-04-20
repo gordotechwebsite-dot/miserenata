@@ -1,5 +1,6 @@
-import { Star, Sparkles, ChevronDown } from "lucide-react";
+import { Star, Sparkles, ChevronDown, Music4, PartyPopper, Crown } from "lucide-react";
 import { useCounter } from "../hooks/useCounter";
+import { WHATSAPP_LINK } from "../lib/supabase";
 
 function Stats() {
   const serenatas = useCounter(500, 900, 0);
@@ -11,34 +12,34 @@ function Stats() {
       <div className="text-center">
         <div
           ref={serenatas.ref}
-          className="text-2xl sm:text-3xl md:text-4xl font-extrabold text-amber-400"
+          className="font-display text-3xl sm:text-4xl md:text-5xl font-bold text-amber-400"
         >
           {Math.round(serenatas.value)}+
         </div>
-        <div className="text-stone-400 text-xs sm:text-sm mt-1">
-          Serenatas Realizadas
+        <div className="text-stone-400 text-xs sm:text-sm mt-1 uppercase tracking-wider">
+          Eventos Realizados
         </div>
       </div>
       <div className="text-center">
         <div
           ref={years.ref}
-          className="text-2xl sm:text-3xl md:text-4xl font-extrabold text-amber-400"
+          className="font-display text-3xl sm:text-4xl md:text-5xl font-bold text-amber-400"
         >
           {Math.round(years.value)}+
         </div>
-        <div className="text-stone-400 text-xs sm:text-sm mt-1">
-          Años de Experiencia
+        <div className="text-stone-400 text-xs sm:text-sm mt-1 uppercase tracking-wider">
+          Años en Escena
         </div>
       </div>
       <div className="text-center">
         <div
           ref={rating.ref}
-          className="text-2xl sm:text-3xl md:text-4xl font-extrabold text-amber-400"
+          className="font-display text-3xl sm:text-4xl md:text-5xl font-bold text-amber-400"
         >
           {rating.value.toFixed(1)}
         </div>
-        <div className="text-stone-400 text-xs sm:text-sm mt-1">
-          Calificación Promedio
+        <div className="text-stone-400 text-xs sm:text-sm mt-1 uppercase tracking-wider">
+          Calificación ★
         </div>
       </div>
     </div>
@@ -46,74 +47,102 @@ function Stats() {
 }
 
 export function Hero() {
-  const scrollToReserve = () =>
-    document.getElementById("reservar")?.scrollIntoView({ behavior: "smooth" });
-  const scrollToServices = () =>
-    document.getElementById("servicios")?.scrollIntoView({ behavior: "smooth" });
+  const scrollTo = (id: string) =>
+    document.getElementById(id)?.scrollIntoView({ behavior: "smooth" });
+
+  const openVipQuote = () => {
+    const msg = encodeURIComponent(
+      "Hola Miserenata, me interesa una Experiencia VIP / evento a la medida. ¿Me pueden cotizar?"
+    );
+    window.open(`${WHATSAPP_LINK}?text=${msg}`, "_blank");
+  };
 
   return (
     <section
       id="inicio"
-      className="relative min-h-screen flex items-center justify-center overflow-hidden pt-24 pb-16"
+      className="relative min-h-[92vh] flex items-center justify-center overflow-hidden pt-24 pb-16 hero-grain"
     >
       <div className="absolute inset-0 z-0">
         <img
           src="/images/mariachi-hero.jpg"
-          alt="Mariachi en vivo"
-          className="w-full h-full object-cover"
+          alt="Mariachi en vivo en Boyacá"
+          className="w-full h-full object-cover scale-105"
           onError={(e) => {
             (e.target as HTMLImageElement).src =
               "https://placehold.co/1920x1080/1a1a2e/d4af37?text=Miserenata.co";
           }}
         />
-        <div className="absolute inset-0 bg-gradient-to-b from-stone-950/70 via-stone-950/80 to-stone-950" />
-        <div className="absolute inset-0 bg-gradient-to-r from-stone-950/80 via-transparent to-stone-950/80" />
+        <div className="absolute inset-0 bg-gradient-to-b from-stone-950/70 via-stone-950/85 to-stone-950" />
+        <div className="absolute inset-0 bg-gradient-to-r from-stone-950/85 via-transparent to-stone-950/80" />
       </div>
 
       <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
-        <div className="inline-flex items-center gap-2 bg-amber-500/10 border border-amber-500/30 rounded-full px-4 py-2 mb-6">
+        <div className="inline-flex items-center gap-2 bg-amber-500/10 border border-amber-500/30 rounded-full px-4 py-2 mb-6 backdrop-blur-sm">
           <Star className="w-4 h-4 text-amber-400 fill-amber-400" />
-          <span className="text-amber-300 text-sm font-medium">
-            N°1 en Serenatas en Boyacá
+          <span className="text-amber-300 text-xs sm:text-sm font-medium tracking-wide uppercase">
+            N°1 en Serenatas y Artistas en Vivo · Boyacá
           </span>
         </div>
 
-        <h1 className="text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-extrabold leading-tight mb-4 sm:mb-6">
-          <span className="bg-gradient-to-r from-amber-300 via-yellow-200 to-amber-300 bg-clip-text text-transparent">
-            Serenatas y Mariachis
+        <h1 className="font-display text-4xl sm:text-6xl md:text-7xl lg:text-[5.5rem] leading-[1.05] mb-5 sm:mb-7 font-bold">
+          <span className="bg-gradient-to-r from-amber-200 via-yellow-100 to-amber-300 bg-clip-text text-transparent italic">
+            El arte
           </span>
+          <span className="text-white"> de sorprender</span>
           <br />
-          <span className="text-white">en vivo</span>
+          <span className="text-stone-200 text-3xl sm:text-5xl md:text-6xl font-medium">
+            en cada nota.
+          </span>
         </h1>
 
-        <p className="text-lg sm:text-xl md:text-2xl text-stone-300 max-w-3xl mx-auto mb-8 sm:mb-10 leading-relaxed">
-          Sorprende a quien más quieres con la mejor música de mariachi en
+        <p className="text-base sm:text-xl md:text-2xl text-stone-300 max-w-3xl mx-auto mb-8 sm:mb-10 leading-relaxed font-light">
+          Serenatas, mariachis y artistas en vivo de la más alta categoría en
           <span className="text-amber-400 font-semibold"> Duitama</span>,
           <span className="text-amber-400 font-semibold"> Paipa</span> y
           <span className="text-amber-400 font-semibold"> Sogamoso</span>.
+          <br className="hidden sm:block" /> Convertimos tus momentos en
+          recuerdos inolvidables.
         </p>
 
-        <div className="flex flex-col sm:flex-row gap-4 justify-center items-center">
+        <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 justify-center items-stretch sm:items-center max-w-3xl mx-auto">
           <button
-            onClick={scrollToReserve}
-            className="bg-gradient-to-r from-amber-500 to-yellow-500 hover:from-amber-400 hover:to-yellow-400 text-stone-950 px-8 py-4 rounded-2xl font-bold text-base sm:text-lg shadow-2xl shadow-amber-500/40 hover:scale-105 transition-all flex items-center gap-2"
+            onClick={() => scrollTo("reservar")}
+            className="group flex-1 bg-gradient-to-r from-amber-500 to-yellow-500 hover:from-amber-400 hover:to-yellow-400 text-stone-950 px-6 py-4 rounded-2xl font-bold text-sm sm:text-base shadow-2xl shadow-amber-500/40 hover:scale-[1.03] transition-all flex items-center justify-center gap-2"
           >
-            <Sparkles className="w-5 h-5" />
-            Reserva tu Serenata
+            <Sparkles className="w-4 h-4" />
+            Reserva una serenata
           </button>
           <button
-            onClick={scrollToServices}
-            className="border border-stone-700 hover:border-amber-500/60 text-stone-200 hover:text-amber-400 px-8 py-4 rounded-2xl font-semibold text-base sm:text-lg transition-all"
+            onClick={() => scrollTo("para-quien")}
+            className="group flex-1 border border-stone-700 hover:border-amber-500/60 bg-stone-900/50 backdrop-blur-sm text-stone-100 hover:text-amber-300 px-6 py-4 rounded-2xl font-semibold text-sm sm:text-base transition-all flex items-center justify-center gap-2"
           >
-            Ver Paquetes
+            <PartyPopper className="w-4 h-4" />
+            Artistas para eventos
           </button>
+          <button
+            onClick={openVipQuote}
+            className="group flex-1 border border-amber-500/50 bg-gradient-to-r from-amber-500/10 to-yellow-500/5 hover:from-amber-500/20 hover:to-yellow-500/10 text-amber-200 hover:text-amber-100 px-6 py-4 rounded-2xl font-semibold text-sm sm:text-base transition-all flex items-center justify-center gap-2"
+          >
+            <Crown className="w-4 h-4" />
+            Experiencia VIP
+          </button>
+        </div>
+
+        <div className="mt-8 flex flex-wrap items-center justify-center gap-x-6 gap-y-2 text-xs sm:text-sm text-stone-400">
+          <span className="inline-flex items-center gap-2">
+            <Music4 className="w-4 h-4 text-amber-400" /> Mariachis y tríos
+          </span>
+          <span className="hidden sm:inline text-stone-700">·</span>
+          <span>Sonido y luces profesionales</span>
+          <span className="hidden sm:inline text-stone-700">·</span>
+          <span>Reserva con WhatsApp en minutos</span>
         </div>
 
         <Stats />
       </div>
 
-      <div className="absolute bottom-8 left-1/2 -translate-x-1/2 animate-bounce">
-        <ChevronDown className="w-8 h-8 text-amber-400/60" />
+      <div className="absolute bottom-6 left-1/2 -translate-x-1/2 animate-bounce">
+        <ChevronDown className="w-7 h-7 text-amber-400/60" />
       </div>
     </section>
   );

@@ -3,10 +3,12 @@ import { Menu, X, Music4 } from "lucide-react";
 
 const LINKS = [
   { id: "inicio", label: "Inicio" },
+  { id: "para-quien", label: "Para quién" },
   { id: "servicios", label: "Paquetes" },
+  { id: "ocasiones", label: "Ocasiones" },
   { id: "reservar", label: "Reservar" },
-  { id: "como-funciona", label: "Cómo Funciona" },
   { id: "testimonios", label: "Testimonios" },
+  { id: "faq", label: "FAQ" },
   { id: "contacto", label: "Contacto" },
 ];
 
@@ -42,8 +44,8 @@ export function Navbar() {
           <div className="w-9 h-9 rounded-full bg-gradient-to-br from-amber-400 to-yellow-600 flex items-center justify-center shadow-lg shadow-amber-500/30 group-hover:scale-110 transition-transform">
             <Music4 className="w-5 h-5 text-stone-950" />
           </div>
-          <span className="text-lg sm:text-xl font-extrabold bg-gradient-to-r from-amber-300 to-yellow-200 bg-clip-text text-transparent">
-            Miserenata.co
+          <span className="font-display text-lg sm:text-xl font-bold bg-gradient-to-r from-amber-300 to-yellow-200 bg-clip-text text-transparent tracking-tight">
+            Miserenata<span className="text-amber-400">.</span>co
           </span>
         </button>
 

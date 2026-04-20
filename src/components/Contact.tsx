@@ -9,9 +9,10 @@ export function Contact() {
     >
       <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,rgba(251,191,36,0.1),transparent_60%)] pointer-events-none" />
       <div className="relative max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
-        <h2 className="text-3xl sm:text-4xl md:text-5xl font-bold mb-4">
-          <span className="bg-gradient-to-r from-amber-400 to-yellow-200 bg-clip-text text-transparent">
-            ¿Listo para Sorprender?
+        <h2 className="font-display text-3xl sm:text-5xl md:text-6xl font-bold mb-4 text-white">
+          ¿Listo para
+          <span className="italic text-transparent bg-clip-text bg-gradient-to-r from-amber-300 to-yellow-200">
+            {" "}sorprender?
           </span>
         </h2>
         <p className="text-stone-400 text-lg max-w-2xl mx-auto mb-10">
