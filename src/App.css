@@ -70,17 +70,23 @@ body {
 
 @keyframes marqueeSlide {
   0% {
-    transform: translateX(100%);
+    transform: translateX(0);
   }
   100% {
-    transform: translateX(-100%);
+    transform: translateX(-50%);
   }
 }
 
 .marquee-track {
-  display: inline-block;
+  display: inline-flex;
+  flex-wrap: nowrap;
   animation: marqueeSlide 20s linear infinite;
   will-change: transform;
+}
+
+.marquee-chunk {
+  flex-shrink: 0;
+  padding-right: 2.5rem;
 }
 
 .hero-grain::before {

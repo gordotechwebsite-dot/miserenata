@@ -1,6 +1,12 @@
 import { useEffect, useRef, useState } from "react";
 import type { Session } from "@supabase/supabase-js";
-import { ADMIN_EMAIL, supabase } from "../lib/supabase";
+import {
+  ADMIN_EMAIL,
+  DEFAULT_BANNER_TEXT,
+  getSiteSetting,
+  setSiteSetting,
+  supabase,
+} from "../lib/supabase";
 import { DEFAULT_PACKAGES, type PackageData, formatCop } from "../lib/constants";
 import {
   Shield,
@@ -13,6 +19,7 @@ import {
   Package,
   Upload,
   AlertTriangle,
+  Megaphone,
 } from "lucide-react";
 
 const GALLERY_BUCKET = "gallery";
@@ -23,7 +30,7 @@ type GalleryFile = {
   createdAt: string | null;
 };
 
-type Tab = "packages" | "gallery";
+type Tab = "packages" | "gallery" | "banner";
 
 type PackageRow = {
   id: string;
@@ -86,6 +93,12 @@ export function AdminPanel({ onExit }: { onExit: () => void }) {
   const [deletingFile, setDeletingFile] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement | null>(null);
 
+  const [bannerText, setBannerText] = useState<string>(DEFAULT_BANNER_TEXT);
+  const [bannerLoading, setBannerLoading] = useState(false);
+  const [bannerSaving, setBannerSaving] = useState(false);
+  const [bannerError, setBannerError] = useState<string | null>(null);
+  const [bannerSavedAt, setBannerSavedAt] = useState<number | null>(null);
+
   const isAdmin = session?.user?.email === ADMIN_EMAIL;
 
   useEffect(() => {
@@ -109,7 +122,25 @@ export function AdminPanel({ onExit }: { onExit: () => void }) {
     if (!isAdmin) return;
     void loadPackages();
     void loadGallery();
+    void loadBanner();
   }, [isAdmin]);
+
+  const loadBanner = async () => {
+    setBannerLoading(true);
+    setBannerError(null);
+    const value = await getSiteSetting("banner_text");
+    if (value !== null) setBannerText(value);
+    setBannerLoading(false);
+  };
+
+  const saveBanner = async () => {
+    setBannerSaving(true);
+    setBannerError(null);
+    const { error: err } = await setSiteSetting("banner_text", bannerText);
+    if (err) setBannerError(err);
+    else setBannerSavedAt(Date.now());
+    setBannerSaving(false);
+  };
 
   const loadPackages = async () => {
     setLoadingPackages(true);
@@ -403,6 +434,16 @@ export function AdminPanel({ onExit }: { onExit: () => void }) {
                 >
                   <Images className="w-4 h-4" /> Galería
                 </button>
+                <button
+                  onClick={() => setTab("banner")}
+                  className={`flex items-center gap-2 px-4 py-1.5 rounded-lg text-sm font-semibold transition ${
+                    tab === "banner"
+                      ? "bg-amber-500/20 text-amber-200"
+                      : "text-stone-400 hover:text-stone-200"
+                  }`}
+                >
+                  <Megaphone className="w-4 h-4" /> Banner
+                </button>
               </div>
             </div>
 
@@ -595,6 +636,82 @@ export function AdminPanel({ onExit }: { onExit: () => void }) {
                   </div>
                 ))
                 )}
+              </div>
+            )}
+
+            {tab === "banner" && (
+              <div className="space-y-5">
+                <div className="bg-stone-900/60 border border-stone-800 rounded-2xl p-5 sm:p-6">
+                  <div className="flex items-center gap-3 mb-1">
+                    <Megaphone className="w-5 h-5 text-sky-400" />
+                    <div className="font-display font-bold text-lg text-white">
+                      Banner inferior
+                    </div>
+                  </div>
+                  <p className="text-stone-400 text-sm mb-4">
+                    Texto que corre de derecha a izquierda en la franja azul
+                    pegada al borde inferior de la página. Se repite en loop
+                    continuo.
+                  </p>
+
+                  <label className="block text-xs font-medium text-stone-400 mb-1">
+                    Texto del banner
+                  </label>
+                  <textarea
+                    value={bannerText}
+                    rows={3}
+                    onChange={(e) => setBannerText(e.target.value)}
+                    disabled={bannerLoading || bannerSaving}
+                    placeholder={DEFAULT_BANNER_TEXT}
+                    className="w-full bg-stone-800/80 border border-stone-700 rounded-xl px-3 py-2 text-white focus:outline-none focus:border-amber-500 disabled:opacity-50"
+                  />
+                  <div className="text-xs text-stone-500 mt-1">
+                    Si lo dejas vacío se usa el texto por defecto:{" "}
+                    <span className="text-stone-300">
+                      "{DEFAULT_BANNER_TEXT}"
+                    </span>
+                  </div>
+
+                  <div className="mt-4 rounded-xl bg-sky-400 overflow-hidden py-2 px-4">
+                    <div className="text-white font-semibold text-sm truncate">
+                      Vista previa: {bannerText || DEFAULT_BANNER_TEXT}
+                    </div>
+                  </div>
+
+                  {bannerError && (
+                    <div className="mt-4 text-sm text-red-300 bg-red-500/10 border border-red-500/30 rounded-lg px-3 py-2 flex items-start gap-2">
+                      <AlertTriangle className="w-4 h-4 mt-0.5 flex-shrink-0" />
+                      <div>
+                        <div className="font-semibold">
+                          No se pudo guardar el banner
+                        </div>
+                        <div className="text-stone-300">{bannerError}</div>
+                        <div className="text-stone-400 text-xs mt-1">
+                          Crea en Supabase la tabla{" "}
+                          <code className="text-amber-300">site_settings</code>{" "}
+                          y configura políticas RLS. Ver SUPABASE_SETUP.md en el
+                          repo.
+                        </div>
+                      </div>
+                    </div>
+                  )}
+
+                  <div className="mt-5 flex items-center gap-3">
+                    <button
+                      onClick={saveBanner}
+                      disabled={bannerSaving || bannerLoading}
+                      className="flex items-center gap-2 bg-gradient-to-r from-amber-500 to-yellow-500 text-stone-950 px-4 py-2 rounded-xl font-bold disabled:opacity-50"
+                    >
+                      <Save className="w-4 h-4" />{" "}
+                      {bannerSaving ? "Guardando..." : "Guardar"}
+                    </button>
+                    {bannerSavedAt && !bannerSaving && !bannerError && (
+                      <span className="text-sm text-emerald-300">
+                        Guardado. Recarga el sitio para ver el cambio en vivo.
+                      </span>
+                    )}
+                  </div>
+                </div>
               </div>
             )}
 

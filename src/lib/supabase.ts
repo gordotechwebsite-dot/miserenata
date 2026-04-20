@@ -25,3 +25,26 @@ const waDigits = PHONE_NUMBER.replace(/\D/g, "");
 export const WHATSAPP_LINK =
   (import.meta.env.VITE_WHATSAPP_LINK as string) ||
   `https://wa.me/${waDigits}`;
+
+export const DEFAULT_BANNER_TEXT =
+  "Reserva serenatas desde $300.000 en Duitama, Paipa y Sogamoso";
+
+export async function getSiteSetting(key: string): Promise<string | null> {
+  const { data, error } = await supabase
+    .from("site_settings")
+    .select("value")
+    .eq("key", key)
+    .maybeSingle();
+  if (error || !data) return null;
+  return (data as { value: string | null }).value;
+}
+
+export async function setSiteSetting(
+  key: string,
+  value: string
+): Promise<{ error: string | null }> {
+  const { error } = await supabase
+    .from("site_settings")
+    .upsert({ key, value }, { onConflict: "key" });
+  return { error: error?.message || null };
+}
