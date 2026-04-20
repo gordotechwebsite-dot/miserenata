@@ -30,14 +30,6 @@ export function Hero() {
           en cada nota.
         </h1>
 
-        <div className="relative -mx-4 sm:-mx-6 lg:-mx-8 mb-10 sm:mb-12 bg-sky-400 overflow-hidden py-3 shadow-lg shadow-sky-500/30">
-          <div className="marquee-track whitespace-nowrap text-white font-semibold text-base sm:text-lg tracking-wide">
-            Reserva serenatas desde $300.000 en Duitama, Paipa y Sogamoso
-            &nbsp;&nbsp;•&nbsp;&nbsp; Reserva serenatas desde $300.000 en
-            Duitama, Paipa y Sogamoso &nbsp;&nbsp;•&nbsp;&nbsp;
-          </div>
-        </div>
-
         <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 justify-center items-stretch sm:items-center max-w-2xl mx-auto">
           <button
             onClick={() => scrollTo("reservar")}

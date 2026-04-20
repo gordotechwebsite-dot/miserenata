@@ -18,6 +18,7 @@ import { Faq } from "./components/Faq";
 import { Contact } from "./components/Contact";
 import { Footer } from "./components/Footer";
 import { WhatsAppFab } from "./components/WhatsAppFab";
+import { BottomBanner } from "./components/BottomBanner";
 import { AdminPanel } from "./components/AdminPanel";
 
 type PackageRow = {
@@ -156,6 +157,7 @@ function App() {
       <Contact />
       <Footer />
       <WhatsAppFab />
+      <BottomBanner />
     </div>
   );
 }

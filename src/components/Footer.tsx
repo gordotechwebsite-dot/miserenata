@@ -4,7 +4,7 @@ import { WHATSAPP_LINK, PHONE_NUMBER, PHONE_DISPLAY } from "../lib/supabase";
 export function Footer() {
   const year = new Date().getFullYear();
   return (
-    <footer className="bg-stone-950 border-t border-stone-900 pt-14 pb-8">
+    <footer className="bg-stone-950 border-t border-stone-900 pt-14 pb-20">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="grid md:grid-cols-4 gap-10 mb-10">
           <div className="md:col-span-2">
