@@ -12,7 +12,8 @@ if (!supabaseUrl || !supabaseKey) {
 export const supabase = createClient(supabaseUrl, supabaseKey);
 
 export const ADMIN_EMAIL =
-  (import.meta.env.VITE_ADMIN_EMAIL as string) || "miseranataco@gmail.com";
+  (import.meta.env.VITE_ADMIN_EMAIL as string) ||
+  "promotionsmiserenata@gmail.com";
 
 export const PHONE_NUMBER =
   (import.meta.env.VITE_PHONE_NUMBER as string) || "+573138969608";
