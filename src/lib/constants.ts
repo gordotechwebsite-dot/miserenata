@@ -1,3 +1,5 @@
+export type GenreId = "mariachi" | "nortena" | "banda";
+
 export type PackageData = {
   id?: string;
   name: string;
@@ -13,7 +15,20 @@ export type PackageData = {
   fallbackUrl: string;
   imagePath?: string | null;
   imageUrl?: string | null;
+  genre?: GenreId | null;
 };
+
+export type GenreData = {
+  id: GenreId;
+  name: string;
+  image: string;
+};
+
+export const DEFAULT_GENRES: GenreData[] = [
+  { id: "mariachi", name: "Mariachi", image: "/images/mariachi-hero.jpg" },
+  { id: "nortena", name: "Norteña", image: "/images/guitar.jpg" },
+  { id: "banda", name: "Banda", image: "/images/trumpet.jpg" },
+];
 
 export const CITIES = ["Duitama", "Paipa", "Sogamoso"] as const;
 
@@ -46,6 +61,7 @@ export const DEFAULT_PACKAGES: PackageData[] = [
     localImage: "/images/guitar.jpg",
     fallbackUrl:
       "https://placehold.co/400x300/1a1a2e/d4af37?text=Serenata+B%C3%A1sica",
+    genre: "mariachi",
   },
   {
     name: "Serenata Estándar",
@@ -67,6 +83,7 @@ export const DEFAULT_PACKAGES: PackageData[] = [
     localImage: "/images/mariachi-hero.jpg",
     fallbackUrl:
       "https://placehold.co/400x300/1a1a2e/d4af37?text=Serenata+Est%C3%A1ndar",
+    genre: "mariachi",
   },
   {
     name: "Gran Serenata de Lujo",
@@ -91,6 +108,7 @@ export const DEFAULT_PACKAGES: PackageData[] = [
     localImage: "/images/trumpet.jpg",
     fallbackUrl:
       "https://placehold.co/400x300/1a1a2e/d4af37?text=Gran+Serenata",
+    genre: "mariachi",
   },
 ];
 

@@ -1,132 +1,94 @@
-import { Music2, Guitar, Drum } from "lucide-react";
-import { WHATSAPP_LINK } from "../lib/supabase";
+import { useEffect, useState } from "react";
+import { DEFAULT_GENRES, type GenreData, type GenreId } from "../lib/constants";
+import { getSiteSetting } from "../lib/supabase";
+import { genreHash } from "../lib/routes";
 
-const GENRES = [
-  {
-    id: "mariachi",
-    name: "Mariachi",
-    icon: Music2,
-    tagline: "El clásico que nunca falla",
-    description:
-      "Trompetas, violines y voces en vivo para declaraciones, aniversarios y despedidas. La tradición en su máxima expresión.",
-    tags: ["Rancheras", "Boleros", "Cumbia"],
-    color: "from-amber-500/20 to-red-500/10",
-    border: "border-amber-500/30",
-    accent: "text-amber-300",
-  },
-  {
-    id: "nortena",
-    name: "Norteña",
-    icon: Guitar,
-    tagline: "Acordeón con sabor",
-    description:
-      "Acordeón, bajo sexto y percusión para fiestas con energía, cumpleaños, despechos y celebraciones con amigos.",
-    tags: ["Corridos", "Cumbia norteña", "Polka"],
-    color: "from-yellow-500/20 to-orange-500/10",
-    border: "border-yellow-500/30",
-    accent: "text-yellow-300",
-  },
-  {
-    id: "banda",
-    name: "Banda",
-    icon: Drum,
-    tagline: "Sonido potente, fiesta grande",
-    description:
-      "Metales y percusión en formato completo para eventos grandes, bodas y fiestas donde la música tiene que sentirse.",
-    tags: ["Banda sinaloense", "Romántico", "Fiesta"],
-    color: "from-amber-500/20 to-purple-500/10",
-    border: "border-violet-500/30",
-    accent: "text-violet-300",
-  },
-];
+type GenreOverride = Partial<Pick<GenreData, "name" | "image">>;
+
+async function loadOverrides(): Promise<Record<GenreId, GenreOverride>> {
+  const ids: GenreId[] = ["mariachi", "nortena", "banda"];
+  const entries = await Promise.all(
+    ids.map(async (id) => {
+      const [name, image] = await Promise.all([
+        getSiteSetting(`genre_${id}_name`),
+        getSiteSetting(`genre_${id}_image`),
+      ]);
+      const override: GenreOverride = {};
+      if (name && name.trim()) override.name = name.trim();
+      if (image && image.trim()) override.image = image.trim();
+      return [id, override] as const;
+    })
+  );
+  return Object.fromEntries(entries) as Record<GenreId, GenreOverride>;
+}
 
 export function Genres() {
-  const openWa = (genre: string) =>
-    window.open(
-      `${WHATSAPP_LINK}?text=${encodeURIComponent(
-        `Hola Miserenata, me interesa contratar una ${genre}. ¿Me pueden contar más?`
-      )}`,
-      "_blank"
-    );
+  const [genres, setGenres] = useState<GenreData[]>(DEFAULT_GENRES);
+
+  useEffect(() => {
+    let mounted = true;
+    loadOverrides().then((ov) => {
+      if (!mounted) return;
+      setGenres(
+        DEFAULT_GENRES.map((g) => ({
+          ...g,
+          name: ov[g.id]?.name || g.name,
+          image: ov[g.id]?.image || g.image,
+        }))
+      );
+    });
+    return () => {
+      mounted = false;
+    };
+  }, []);
+
+  const goTo = (id: GenreId) => {
+    window.location.hash = genreHash(id);
+    window.scrollTo({ top: 0, behavior: "instant" as ScrollBehavior });
+  };
 
   return (
     <section
       id="generos"
       className="relative py-16 sm:py-24 bg-stone-950 overflow-hidden"
     >
-      <div className="absolute -top-20 -left-20 w-[400px] h-[400px] bg-amber-500/5 rounded-full blur-3xl pointer-events-none" />
-      <div className="absolute -bottom-20 -right-20 w-[400px] h-[400px] bg-violet-500/5 rounded-full blur-3xl pointer-events-none" />
-
       <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="text-center mb-12 sm:mb-16">
-          <div className="inline-flex items-center gap-2 bg-amber-500/10 border border-amber-500/30 rounded-full px-4 py-2 mb-4">
-            <Music2 className="w-4 h-4 text-amber-400" />
-            <span className="text-amber-300 text-xs font-medium tracking-wider uppercase">
-              Géneros
-            </span>
-          </div>
-          <h2 className="font-display font-black text-3xl sm:text-5xl mb-4 bg-gradient-to-br from-amber-200 via-yellow-100 to-amber-400 bg-clip-text text-transparent tracking-tight">
+        <div className="text-center mb-10 sm:mb-14">
+          <h2 className="font-display font-black text-3xl sm:text-5xl mb-3 bg-gradient-to-br from-amber-200 via-yellow-100 to-amber-400 bg-clip-text text-transparent tracking-tight">
             Elige tu estilo
           </h2>
           <p className="text-stone-400 text-base sm:text-lg max-w-2xl mx-auto">
-            Tenemos el grupo ideal para cada momento. Tres géneros, una sola
-            calidad: profesional y en vivo.
+            Cada género tiene su propia propuesta y paquetes.
           </p>
         </div>
 
-        <div className="grid gap-6 sm:gap-7 md:grid-cols-3">
-          {GENRES.map(
-            ({
-              id,
-              name,
-              icon: Icon,
-              tagline,
-              description,
-              tags,
-              color,
-              border,
-              accent,
-            }) => (
-              <button
-                key={id}
-                onClick={() => openWa(name)}
-                className={`group text-left relative rounded-3xl border ${border} bg-gradient-to-br ${color} backdrop-blur-sm p-6 sm:p-7 hover:-translate-y-1 hover:border-amber-500/60 transition-all`}
-              >
-                <div className="flex items-center gap-3 mb-4">
-                  <div className="w-12 h-12 rounded-2xl bg-stone-950/60 border border-stone-800 flex items-center justify-center">
-                    <Icon className={`w-6 h-6 ${accent}`} />
-                  </div>
-                  <div>
-                    <div className="font-display font-black text-xl sm:text-2xl text-white tracking-tight">
-                      {name}
-                    </div>
-                    <div className={`text-xs ${accent}`}>{tagline}</div>
-                  </div>
+        <div className="grid gap-5 sm:gap-6 sm:grid-cols-2 lg:grid-cols-3">
+          {genres.map((g) => (
+            <button
+              key={g.id}
+              onClick={() => goTo(g.id)}
+              className="group relative rounded-3xl overflow-hidden bg-stone-900 aspect-[4/5] w-full text-left focus:outline-none focus:ring-2 focus:ring-amber-400"
+              aria-label={`Ver paquetes de ${g.name}`}
+            >
+              <img
+                src={g.image}
+                alt={g.name}
+                className="absolute inset-0 w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
+                loading="lazy"
+                onError={(e) => {
+                  (e.target as HTMLImageElement).src =
+                    "https://placehold.co/800x1000/1a1a2e/d4af37?text=" +
+                    encodeURIComponent(g.name);
+                }}
+              />
+              <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/30 to-transparent" />
+              <div className="absolute inset-x-0 bottom-0 p-5 sm:p-6">
+                <div className="font-display font-black text-3xl sm:text-4xl text-white tracking-tight drop-shadow-[0_2px_10px_rgba(0,0,0,0.8)]">
+                  {g.name}
                 </div>
-
-                <p className="text-stone-300 text-sm sm:text-base leading-relaxed mb-5">
-                  {description}
-                </p>
-
-                <div className="flex flex-wrap gap-2 mb-5">
-                  {tags.map((t) => (
-                    <span
-                      key={t}
-                      className="text-xs bg-stone-950/60 border border-stone-800 rounded-full px-2.5 py-1 text-stone-300"
-                    >
-                      {t}
-                    </span>
-                  ))}
-                </div>
-
-                <div
-                  className={`text-sm font-semibold ${accent} group-hover:translate-x-1 transition-transform inline-flex items-center gap-1`}
-                >
-                  Cotizar {name} →
-                </div>
-              </button>
-            )
-          )}
+              </div>
+            </button>
+          ))}
         </div>
       </div>
     </section>

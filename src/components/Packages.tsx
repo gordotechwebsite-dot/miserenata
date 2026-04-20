@@ -41,13 +41,7 @@ export function Packages({ packages, loading, onSelect, selectedName }: Props) {
           </h2>
           <p className="text-stone-400 text-base sm:text-lg max-w-2xl mx-auto">
             Músicos profesionales con traje típico de gala y repertorio
-            personalizado. ¿Buscas algo a la medida?
-            <button
-              onClick={() => document.getElementById("para-quien")?.scrollIntoView({ behavior: "smooth" })}
-              className="ml-1 text-amber-400 hover:text-amber-300 underline underline-offset-4"
-            >
-              Experiencia VIP
-            </button>
+            personalizado.
           </p>
         </div>
 
