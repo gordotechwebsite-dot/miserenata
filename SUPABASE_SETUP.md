@@ -115,3 +115,41 @@ on conflict (key) do nothing;
 
 - En `#admin` → pestaña **Banner**: editar el texto y guardar.
 - El cambio se refleja en el siguiente reload del sitio (el banner consulta la tabla al cargar).
+
+---
+
+# Supabase — Paquetes por género
+
+Cada paquete tiene un género (`mariachi`, `nortena` o `banda`). En la página pública, al entrar en la tarjeta grande de un género (p.ej. `#genero-mariachi`), solo se ven los paquetes de ese género.
+
+## 1. Añadir la columna `genre` a la tabla `packages`
+
+Ejecuta una sola vez en el SQL editor de Supabase:
+
+```sql
+alter table public.packages
+  add column if not exists genre text default 'mariachi';
+
+-- Opcional: marcar los paquetes existentes como mariachi
+update public.packages set genre = 'mariachi' where genre is null;
+```
+
+## 2. Editar el género de un paquete
+
+- `#admin` → pestaña **Paquetes** → en cada paquete hay un selector **Género**.
+- Valores aceptados: `mariachi`, `nortena`, `banda` o "Sin género".
+
+---
+
+# Supabase — Editar nombre e imagen de cada género
+
+La tarjeta grande del landing (Mariachi · Norteña · Banda) y la cabecera de cada página de género usan nombre + imagen editables. Se persisten en la misma tabla `site_settings` con claves:
+
+- `genre_mariachi_name`, `genre_mariachi_image`
+- `genre_nortena_name`, `genre_nortena_image`
+- `genre_banda_name`, `genre_banda_image`
+
+No hay SQL adicional: se usa la misma tabla `site_settings` del banner.
+
+- `#admin` → pestaña **Géneros** → edita nombre e imagen, Guardar.
+- Para la imagen puedes pegar una URL pública (Supabase Storage, Cloudinary, etc.) o una ruta del repo como `/images/mariachi-hero.jpg`.

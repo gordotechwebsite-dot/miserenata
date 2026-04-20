@@ -1,16 +1,16 @@
 import { useEffect, useState } from "react";
 import "./App.css";
 import { supabase } from "./lib/supabase";
-import { DEFAULT_PACKAGES, type PackageData } from "./lib/constants";
+import {
+  DEFAULT_PACKAGES,
+  type GenreId,
+  type PackageData,
+} from "./lib/constants";
+import { parseRoute, type Route } from "./lib/routes";
 import { Navbar } from "./components/Navbar";
 import { Hero } from "./components/Hero";
 import { TrustStrip } from "./components/TrustStrip";
 import { Genres } from "./components/Genres";
-import { Packages } from "./components/Packages";
-import { VipBanner } from "./components/VipBanner";
-import { Occasions } from "./components/Occasions";
-import { ReservationForm } from "./components/ReservationForm";
-import { HowItWorks } from "./components/HowItWorks";
 import { Gallery } from "./components/Gallery";
 import { Testimonials } from "./components/Testimonials";
 import { Faq } from "./components/Faq";
@@ -19,6 +19,7 @@ import { Footer } from "./components/Footer";
 import { WhatsAppFab } from "./components/WhatsAppFab";
 import { BottomBanner } from "./components/BottomBanner";
 import { AdminPanel } from "./components/AdminPanel";
+import { GenrePage } from "./components/GenrePage";
 
 type PackageRow = {
   id: string;
@@ -34,14 +35,21 @@ type PackageRow = {
   image_path: string | null;
   image_url: string | null;
   fallback_url: string | null;
+  genre: string | null;
 };
 
 const DEFAULT_BY_NAME: Record<string, PackageData> = Object.fromEntries(
   DEFAULT_PACKAGES.map((p) => [p.name, p])
 );
 
+const GENRE_IDS = new Set<GenreId>(["mariachi", "nortena", "banda"]);
+
 function mapRow(row: PackageRow): PackageData {
   const local = DEFAULT_BY_NAME[row.name];
+  const raw = (row.genre || "").trim();
+  const genre: GenreId | null = GENRE_IDS.has(raw as GenreId)
+    ? (raw as GenreId)
+    : local?.genre ?? null;
   return {
     id: row.id,
     name: row.name,
@@ -60,19 +68,19 @@ function mapRow(row: PackageRow): PackageData {
       local?.fallbackUrl ||
       "https://placehold.co/400x300/1a1a2e/d4af37?text=Miserenata",
     localImage: local?.localImage || "/images/mariachi-hero.jpg",
+    genre,
   };
 }
 
 function App() {
-  const [isAdminRoute, setIsAdminRoute] = useState(
-    typeof window !== "undefined" && window.location.hash === "#admin"
+  const [route, setRoute] = useState<Route>(() =>
+    parseRoute(typeof window !== "undefined" ? window.location.hash : "")
   );
   const [packages, setPackages] = useState<PackageData[]>(DEFAULT_PACKAGES);
   const [loading, setLoading] = useState(true);
-  const [selected, setSelected] = useState<PackageData | null>(null);
 
   useEffect(() => {
-    const onHash = () => setIsAdminRoute(window.location.hash === "#admin");
+    const onHash = () => setRoute(parseRoute(window.location.hash));
     window.addEventListener("hashchange", onHash);
     return () => window.removeEventListener("hashchange", onHash);
   }, []);
@@ -102,17 +110,12 @@ function App() {
     };
   }, []);
 
-  const handleSelect = (pkg: PackageData) => {
-    setSelected(pkg);
-    document.getElementById("reservar")?.scrollIntoView({ behavior: "smooth" });
-  };
-
-  if (isAdminRoute) {
+  if (route.kind === "admin") {
     return (
       <AdminPanel
         onExit={() => {
           window.location.hash = "";
-          setIsAdminRoute(false);
+          setRoute({ kind: "home" });
         }}
       />
     );
@@ -132,27 +135,19 @@ function App() {
         aria-hidden="true"
       />
       <Navbar />
-      <Hero />
-      <TrustStrip />
-      <Genres />
-      <Packages
-        packages={packages}
-        loading={loading}
-        onSelect={handleSelect}
-        selectedName={selected?.name}
-      />
-      <VipBanner />
-      <Occasions />
-      <ReservationForm
-        packages={packages}
-        selected={selected}
-        onSelect={setSelected}
-      />
-      <HowItWorks />
-      <Gallery />
-      <Testimonials />
-      <Faq />
-      <Contact />
+      {route.kind === "genre" ? (
+        <GenrePage id={route.id} packages={packages} loading={loading} />
+      ) : (
+        <>
+          <Hero />
+          <TrustStrip />
+          <Genres />
+          <Gallery />
+          <Testimonials />
+          <Faq />
+          <Contact />
+        </>
+      )}
       <Footer />
       <WhatsAppFab />
       <BottomBanner />
