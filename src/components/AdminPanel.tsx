@@ -32,8 +32,21 @@ import {
 
 const GALLERY_BUCKET = "gallery";
 
+type GalleryDestination = "main" | "mariachi" | "nortena" | "banda";
+
+const GALLERY_DESTINATIONS: { id: GalleryDestination; label: string }[] = [
+  { id: "main", label: "Galería principal" },
+  { id: "mariachi", label: "Mariachi" },
+  { id: "nortena", label: "Norteña" },
+  { id: "banda", label: "Banda" },
+];
+
+const destinationToPrefix = (d: GalleryDestination) =>
+  d === "main" ? "" : d;
+
 type GalleryFile = {
   name: string;
+  path: string;
   url: string;
   createdAt: string | null;
 };
@@ -107,6 +120,8 @@ export function AdminPanel({ onExit }: { onExit: () => void }) {
   const [uploadProgress, setUploadProgress] = useState<{ done: number; total: number }>({ done: 0, total: 0 });
   const [galleryError, setGalleryError] = useState<string | null>(null);
   const [deletingFile, setDeletingFile] = useState<string | null>(null);
+  const [galleryDestination, setGalleryDestination] =
+    useState<GalleryDestination>("main");
   const fileInputRef = useRef<HTMLInputElement | null>(null);
 
   const [bannerText, setBannerText] = useState<string>(DEFAULT_BANNER_TEXT);
@@ -143,10 +158,15 @@ export function AdminPanel({ onExit }: { onExit: () => void }) {
   useEffect(() => {
     if (!isAdmin) return;
     void loadPackages();
-    void loadGallery();
     void loadBanner();
     void loadGenres();
   }, [isAdmin]);
+
+  useEffect(() => {
+    if (!isAdmin) return;
+    void loadGallery();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isAdmin, galleryDestination]);
 
   const loadBanner = async () => {
     setBannerLoading(true);
@@ -217,9 +237,10 @@ export function AdminPanel({ onExit }: { onExit: () => void }) {
   const loadGallery = async () => {
     setLoadingGallery(true);
     setGalleryError(null);
+    const prefix = destinationToPrefix(galleryDestination);
     const { data, error: err } = await supabase.storage
       .from(GALLERY_BUCKET)
-      .list("", {
+      .list(prefix, {
         limit: 200,
         sortBy: { column: "created_at", order: "desc" },
       });
@@ -239,12 +260,16 @@ export function AdminPanel({ onExit }: { onExit: () => void }) {
             !f.name.startsWith(".") &&
             /\.(jpg|jpeg|png|webp|gif|avif)$/i.test(f.name)
         )
-        .map((f) => ({
-          name: f.name,
-          url: supabase.storage.from(GALLERY_BUCKET).getPublicUrl(f.name).data
-            .publicUrl,
-          createdAt: f.created_at || null,
-        })) || [];
+        .map((f) => {
+          const path = prefix ? `${prefix}/${f.name}` : f.name;
+          return {
+            name: f.name,
+            path,
+            url: supabase.storage.from(GALLERY_BUCKET).getPublicUrl(path).data
+              .publicUrl,
+            createdAt: f.created_at || null,
+          };
+        }) || [];
     setGalleryFiles(files);
     setLoadingGallery(false);
   };
@@ -255,6 +280,8 @@ export function AdminPanel({ onExit }: { onExit: () => void }) {
     setGalleryError(null);
     setUploadProgress({ done: 0, total: files.length });
 
+    const prefix = destinationToPrefix(galleryDestination);
+
     let hadError: string | null = null;
     for (let i = 0; i < files.length; i++) {
       const file = files[i];
@@ -263,7 +290,8 @@ export function AdminPanel({ onExit }: { onExit: () => void }) {
         .replace(/\.[^.]+$/, "")
         .replace(/[^a-zA-Z0-9-_]/g, "-")
         .slice(0, 40);
-      const key = `${Date.now()}-${i}-${safe}.${ext}`;
+      const fileName = `${Date.now()}-${i}-${safe}.${ext}`;
+      const key = prefix ? `${prefix}/${fileName}` : fileName;
       const { error: err } = await supabase.storage
         .from(GALLERY_BUCKET)
         .upload(key, file, {
@@ -281,12 +309,12 @@ export function AdminPanel({ onExit }: { onExit: () => void }) {
     await loadGallery();
   };
 
-  const handleDelete = async (name: string) => {
-    if (!confirm(`¿Eliminar la foto "${name}"?`)) return;
-    setDeletingFile(name);
+  const handleDelete = async (path: string) => {
+    if (!confirm(`¿Eliminar la foto "${path.split("/").pop()}"?`)) return;
+    setDeletingFile(path);
     const { error: err } = await supabase.storage
       .from(GALLERY_BUCKET)
-      .remove([name]);
+      .remove([path]);
     if (err) setGalleryError(err.message);
     setDeletingFile(null);
     await loadGallery();
@@ -925,13 +953,45 @@ export function AdminPanel({ onExit }: { onExit: () => void }) {
             {tab === "gallery" && (
               <div className="space-y-5">
                 <div className="bg-stone-900/60 border border-stone-800 rounded-2xl p-5 sm:p-6">
+                  <div className="mb-4">
+                    <div className="font-display font-bold text-lg text-white mb-1">
+                      Destino
+                    </div>
+                    <p className="text-stone-400 text-sm mb-3">
+                      Elige dónde quieres subir/ver las fotos. "Galería
+                      principal" son las del landing; las otras aparecen dentro
+                      de cada página de género.
+                    </p>
+                    <div className="flex flex-wrap gap-2">
+                      {GALLERY_DESTINATIONS.map((d) => (
+                        <button
+                          key={d.id}
+                          onClick={() => setGalleryDestination(d.id)}
+                          className={`px-4 py-2 rounded-xl text-sm font-semibold transition ${
+                            galleryDestination === d.id
+                              ? "bg-amber-500 text-stone-950"
+                              : "bg-stone-800/70 text-stone-300 border border-stone-700 hover:border-amber-500/40"
+                          }`}
+                        >
+                          {d.label}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
                   <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-4">
                     <div>
                       <div className="font-display font-bold text-lg text-white">
                         Subir fotos
                       </div>
                       <p className="text-stone-400 text-sm">
-                        Selecciona una o varias imágenes (JPG, PNG, WEBP).
+                        Las fotos se subirán a:{" "}
+                        <span className="text-amber-300 font-semibold">
+                          {
+                            GALLERY_DESTINATIONS.find(
+                              (d) => d.id === galleryDestination
+                            )?.label
+                          }
+                        </span>
                       </p>
                     </div>
                     <div className="flex items-center gap-3">
@@ -989,7 +1049,7 @@ export function AdminPanel({ onExit }: { onExit: () => void }) {
                   <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3 sm:gap-4">
                     {galleryFiles.map((f) => (
                       <div
-                        key={f.name}
+                        key={f.path}
                         className="relative group rounded-2xl overflow-hidden border border-stone-800 bg-stone-900/60"
                       >
                         <img
@@ -999,8 +1059,8 @@ export function AdminPanel({ onExit }: { onExit: () => void }) {
                           loading="lazy"
                         />
                         <button
-                          onClick={() => handleDelete(f.name)}
-                          disabled={deletingFile === f.name}
+                          onClick={() => handleDelete(f.path)}
+                          disabled={deletingFile === f.path}
                           className="absolute top-2 right-2 w-9 h-9 rounded-full bg-red-500/80 hover:bg-red-500 text-white flex items-center justify-center opacity-0 group-hover:opacity-100 transition disabled:opacity-50"
                           aria-label="Eliminar"
                         >
