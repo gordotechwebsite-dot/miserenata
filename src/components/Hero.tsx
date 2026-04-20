@@ -1,4 +1,4 @@
-import { Sparkles, ChevronDown, PartyPopper } from "lucide-react";
+import { ChevronDown } from "lucide-react";
 
 export function Hero() {
   const scrollTo = (id: string) =>
@@ -33,16 +33,14 @@ export function Hero() {
         <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 justify-center items-stretch sm:items-center max-w-2xl mx-auto">
           <button
             onClick={() => scrollTo("reservar")}
-            className="group flex-1 bg-gradient-to-r from-amber-500 to-yellow-500 hover:from-amber-400 hover:to-yellow-400 text-stone-950 px-6 py-4 rounded-2xl font-bold text-sm sm:text-base shadow-2xl shadow-amber-500/40 hover:scale-[1.03] transition-all flex items-center justify-center gap-2"
+            className="flex-1 border border-stone-700 hover:border-amber-500/60 bg-stone-900/50 backdrop-blur-sm text-stone-100 hover:text-amber-300 px-6 py-5 rounded-2xl font-bold text-lg sm:text-xl tracking-wide transition-all"
           >
-            <Sparkles className="w-4 h-4" />
             Reserva una serenata
           </button>
           <button
             onClick={() => scrollTo("para-quien")}
-            className="group flex-1 border border-stone-700 hover:border-amber-500/60 bg-stone-900/50 backdrop-blur-sm text-stone-100 hover:text-amber-300 px-6 py-4 rounded-2xl font-semibold text-sm sm:text-base transition-all flex items-center justify-center gap-2"
+            className="flex-1 border border-stone-700 hover:border-amber-500/60 bg-stone-900/50 backdrop-blur-sm text-stone-100 hover:text-amber-300 px-6 py-5 rounded-2xl font-bold text-lg sm:text-xl tracking-wide transition-all"
           >
-            <PartyPopper className="w-4 h-4" />
             Artistas para eventos
           </button>
         </div>
