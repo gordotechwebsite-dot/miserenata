@@ -44,6 +44,30 @@ body {
     0 1px 3px rgba(0, 0, 0, 0.6);
 }
 
+@keyframes heroTitleCycle {
+  0% {
+    opacity: 0;
+    transform: translateY(12px);
+  }
+  10% {
+    opacity: 1;
+    transform: translateY(0);
+  }
+  90% {
+    opacity: 1;
+    transform: translateY(0);
+  }
+  100% {
+    opacity: 0;
+    transform: translateY(-12px);
+  }
+}
+
+.hero-title-cycle {
+  opacity: 0;
+  animation: heroTitleCycle 5s ease-in-out 10s both;
+}
+
 .hero-grain::before {
   content: "";
   position: absolute;

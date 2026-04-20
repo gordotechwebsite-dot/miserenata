@@ -1,49 +1,4 @@
 import { Sparkles, ChevronDown, PartyPopper } from "lucide-react";
-import { useCounter } from "../hooks/useCounter";
-
-function Stats() {
-  const serenatas = useCounter(500, 900, 0);
-  const years = useCounter(10, 900, 0);
-  const rating = useCounter(5, 900, 1);
-
-  return (
-    <div className="grid grid-cols-3 gap-4 sm:gap-8 mt-12 sm:mt-16 max-w-2xl mx-auto">
-      <div className="text-center">
-        <div
-          ref={serenatas.ref}
-          className="font-display text-3xl sm:text-4xl md:text-5xl font-bold text-amber-400"
-        >
-          {Math.round(serenatas.value)}+
-        </div>
-        <div className="text-stone-400 text-xs sm:text-sm mt-1 uppercase tracking-wider">
-          Eventos Realizados
-        </div>
-      </div>
-      <div className="text-center">
-        <div
-          ref={years.ref}
-          className="font-display text-3xl sm:text-4xl md:text-5xl font-bold text-amber-400"
-        >
-          {Math.round(years.value)}+
-        </div>
-        <div className="text-stone-400 text-xs sm:text-sm mt-1 uppercase tracking-wider">
-          Años en Escena
-        </div>
-      </div>
-      <div className="text-center">
-        <div
-          ref={rating.ref}
-          className="font-display text-3xl sm:text-4xl md:text-5xl font-bold text-amber-400"
-        >
-          {rating.value.toFixed(1)}
-        </div>
-        <div className="text-stone-400 text-xs sm:text-sm mt-1 uppercase tracking-wider">
-          Calificación ★
-        </div>
-      </div>
-    </div>
-  );
-}
 
 export function Hero() {
   const scrollTo = (id: string) =>
@@ -69,7 +24,7 @@ export function Hero() {
       </div>
 
       <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
-        <h1 className="font-display font-black text-4xl sm:text-5xl md:text-6xl lg:text-7xl leading-[1.08] mb-8 sm:mb-10 bg-gradient-to-br from-amber-200 via-yellow-100 to-amber-400 bg-clip-text text-transparent tracking-tight drop-shadow-[0_4px_16px_rgba(0,0,0,0.55)]">
+        <h1 className="hero-title-cycle font-display font-black text-4xl sm:text-5xl md:text-6xl lg:text-7xl leading-[1.08] mb-8 sm:mb-10 bg-gradient-to-br from-amber-200 via-yellow-100 to-amber-400 bg-clip-text text-transparent tracking-tight drop-shadow-[0_4px_16px_rgba(0,0,0,0.55)]">
           El arte de sorprender
           <br />
           en cada nota.
@@ -91,8 +46,6 @@ export function Hero() {
             Artistas para eventos
           </button>
         </div>
-
-        <Stats />
       </div>
 
       <div className="absolute bottom-6 left-1/2 -translate-x-1/2 animate-bounce">
