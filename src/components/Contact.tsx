@@ -9,14 +9,6 @@ export function Contact() {
     >
       <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,rgba(251,191,36,0.1),transparent_60%)] pointer-events-none" />
       <div className="relative max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
-        <h2 className="font-display font-black text-3xl sm:text-5xl md:text-6xl mb-4 bg-gradient-to-br from-amber-200 via-yellow-100 to-amber-400 bg-clip-text text-transparent tracking-tight">
-          ¿Listo para sorprender?
-        </h2>
-        <p className="text-stone-400 text-lg max-w-2xl mx-auto mb-10">
-          Contáctanos directamente por WhatsApp o llámanos. Estamos disponibles
-          para ti todos los días de la semana.
-        </p>
-
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-6 mb-10">
           <a
             href={WHATSAPP_LINK}
