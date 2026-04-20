@@ -36,14 +36,21 @@ export function Packages({ packages, loading, onSelect, selectedName }: Props) {
               Nuestros Paquetes
             </span>
           </div>
-          <h2 className="text-3xl sm:text-4xl md:text-5xl font-bold mb-4">
-            <span className="bg-gradient-to-r from-amber-400 to-yellow-200 bg-clip-text text-transparent">
-              Elige tu Paquete Perfecto
+          <h2 className="font-display text-3xl sm:text-5xl font-bold mb-4 text-white">
+            Elige tu
+            <span className="italic text-transparent bg-clip-text bg-gradient-to-r from-amber-300 to-yellow-200">
+              {" "}paquete perfecto
             </span>
           </h2>
-          <p className="text-stone-400 text-lg max-w-2xl mx-auto">
-            Cada paquete incluye músicos profesionales con traje típico de gala
-            y un repertorio personalizado a tu gusto.
+          <p className="text-stone-400 text-base sm:text-lg max-w-2xl mx-auto">
+            Músicos profesionales con traje típico de gala y repertorio
+            personalizado. ¿Buscas algo a la medida?
+            <button
+              onClick={() => document.getElementById("para-quien")?.scrollIntoView({ behavior: "smooth" })}
+              className="ml-1 text-amber-400 hover:text-amber-300 underline underline-offset-4"
+            >
+              Experiencia VIP
+            </button>
           </p>
         </div>
 
@@ -80,7 +87,7 @@ export function Packages({ packages, loading, onSelect, selectedName }: Props) {
                     <div className="absolute inset-0 bg-gradient-to-t from-stone-950 via-stone-950/30 to-transparent" />
                   </div>
                   <div className="p-6 sm:p-8">
-                    <h3 className="text-2xl font-extrabold text-white mb-2">
+                    <h3 className="font-display text-2xl sm:text-3xl font-bold text-white mb-2">
                       {pkg.name}
                     </h3>
                     <p className="text-stone-400 text-sm mb-6 leading-relaxed">
@@ -88,7 +95,7 @@ export function Packages({ packages, loading, onSelect, selectedName }: Props) {
                     </p>
 
                     <div className="flex items-baseline gap-1 mb-6">
-                      <span className="text-3xl sm:text-4xl font-extrabold bg-gradient-to-r from-amber-400 to-yellow-200 bg-clip-text text-transparent">
+                      <span className="font-display text-3xl sm:text-4xl font-bold bg-gradient-to-r from-amber-400 to-yellow-200 bg-clip-text text-transparent">
                         ${formatCop(pkg.priceCop)}
                       </span>
                       <span className="text-stone-500 text-sm">COP</span>
