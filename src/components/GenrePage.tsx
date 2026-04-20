@@ -10,6 +10,7 @@ import { WHATSAPP_LINK, getSiteSetting } from "../lib/supabase";
 import { Packages } from "./Packages";
 import { ReservationForm } from "./ReservationForm";
 import { HowItWorks } from "./HowItWorks";
+import { GenreGallery } from "./GenreGallery";
 
 type Props = {
   id: GenreId;
@@ -102,6 +103,8 @@ export function GenrePage({ id, packages, loading }: Props) {
           </div>
         </div>
       </section>
+
+      <GenreGallery id={id} genreName={genre.name} />
 
       {hasPackages ? (
         <>
