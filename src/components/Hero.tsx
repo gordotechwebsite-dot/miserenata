@@ -7,7 +7,7 @@ export function Hero() {
   return (
     <section
       id="inicio"
-      className="relative min-h-[92vh] flex items-center justify-center overflow-hidden pt-24 pb-16 hero-grain"
+      className="relative min-h-[92vh] flex flex-col items-center justify-start overflow-hidden pt-24 pb-16 hero-grain"
     >
       <div className="absolute inset-0 z-0">
         <img
@@ -23,12 +23,20 @@ export function Hero() {
         <div className="hidden sm:block absolute inset-0 bg-gradient-to-r from-stone-950/70 via-transparent to-stone-950/70" />
       </div>
 
-      <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
-        <h1 className="hero-title-cycle font-display font-black text-4xl sm:text-5xl md:text-6xl lg:text-7xl leading-[1.08] mb-8 sm:mb-10 bg-gradient-to-br from-amber-200 via-yellow-100 to-amber-400 bg-clip-text text-transparent tracking-tight drop-shadow-[0_4px_16px_rgba(0,0,0,0.55)]">
+      <div className="relative z-10 w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
+        <h1 className="hero-title-cycle font-display font-black text-4xl sm:text-5xl md:text-6xl lg:text-7xl leading-[1.08] mb-6 sm:mb-8 bg-gradient-to-br from-amber-200 via-yellow-100 to-amber-400 bg-clip-text text-transparent tracking-tight drop-shadow-[0_4px_16px_rgba(0,0,0,0.55)]">
           El arte de sorprender
           <br />
           en cada nota.
         </h1>
+
+        <div className="relative -mx-4 sm:-mx-6 lg:-mx-8 mb-10 sm:mb-12 bg-sky-400 overflow-hidden py-3 shadow-lg shadow-sky-500/30">
+          <div className="marquee-track whitespace-nowrap text-white font-semibold text-base sm:text-lg tracking-wide">
+            Reserva serenatas desde $300.000 en Duitama, Paipa y Sogamoso
+            &nbsp;&nbsp;•&nbsp;&nbsp; Reserva serenatas desde $300.000 en
+            Duitama, Paipa y Sogamoso &nbsp;&nbsp;•&nbsp;&nbsp;
+          </div>
+        </div>
 
         <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 justify-center items-stretch sm:items-center max-w-2xl mx-auto">
           <button

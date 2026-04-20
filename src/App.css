@@ -68,6 +68,21 @@ body {
   animation: heroTitleCycle 5s ease-in-out 10s both;
 }
 
+@keyframes marqueeSlide {
+  0% {
+    transform: translateX(100%);
+  }
+  100% {
+    transform: translateX(-100%);
+  }
+}
+
+.marquee-track {
+  display: inline-block;
+  animation: marqueeSlide 20s linear infinite;
+  will-change: transform;
+}
+
 .hero-grain::before {
   content: "";
   position: absolute;
