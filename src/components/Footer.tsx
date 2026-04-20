@@ -27,7 +27,7 @@ export function Footer() {
               Secciones
             </div>
             <ul className="space-y-2 text-stone-400 text-sm">
-              <li><a href="#para-quien" className="hover:text-amber-300">Para quién</a></li>
+              <li><a href="#generos" className="hover:text-amber-300">Géneros</a></li>
               <li><a href="#servicios" className="hover:text-amber-300">Paquetes</a></li>
               <li><a href="#ocasiones" className="hover:text-amber-300">Ocasiones</a></li>
               <li><a href="#reservar" className="hover:text-amber-300">Reservar</a></li>
