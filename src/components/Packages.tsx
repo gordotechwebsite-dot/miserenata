@@ -36,11 +36,8 @@ export function Packages({ packages, loading, onSelect, selectedName }: Props) {
               Nuestros Paquetes
             </span>
           </div>
-          <h2 className="font-display text-3xl sm:text-5xl font-bold mb-4 text-white">
-            Elige tu
-            <span className="italic text-transparent bg-clip-text bg-gradient-to-r from-amber-300 to-yellow-200">
-              {" "}paquete perfecto
-            </span>
+          <h2 className="font-display font-black text-3xl sm:text-5xl mb-4 bg-gradient-to-br from-amber-200 via-yellow-100 to-amber-400 bg-clip-text text-transparent tracking-tight">
+            Elige tu paquete perfecto
           </h2>
           <p className="text-stone-400 text-base sm:text-lg max-w-2xl mx-auto">
             Músicos profesionales con traje típico de gala y repertorio

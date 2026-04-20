@@ -11,6 +11,7 @@ import { VipBanner } from "./components/VipBanner";
 import { Occasions } from "./components/Occasions";
 import { ReservationForm } from "./components/ReservationForm";
 import { HowItWorks } from "./components/HowItWorks";
+import { Gallery } from "./components/Gallery";
 import { Testimonials } from "./components/Testimonials";
 import { Faq } from "./components/Faq";
 import { Contact } from "./components/Contact";
@@ -136,6 +137,7 @@ function App() {
         onSelect={setSelected}
       />
       <HowItWorks />
+      <Gallery />
       <Testimonials />
       <Faq />
       <Contact />

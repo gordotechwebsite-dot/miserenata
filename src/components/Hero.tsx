@@ -84,15 +84,10 @@ export function Hero() {
           </span>
         </div>
 
-        <h1 className="font-display text-4xl sm:text-6xl md:text-7xl lg:text-[5.5rem] leading-[1.05] mb-5 sm:mb-7 font-bold">
-          <span className="bg-gradient-to-r from-amber-200 via-yellow-100 to-amber-300 bg-clip-text text-transparent italic">
-            El arte
-          </span>
-          <span className="text-white"> de sorprender</span>
+        <h1 className="font-display font-black text-3xl sm:text-5xl md:text-6xl lg:text-7xl leading-[1.08] mb-5 sm:mb-7 bg-gradient-to-br from-amber-200 via-yellow-100 to-amber-400 bg-clip-text text-transparent tracking-tight">
+          El arte de sorprender
           <br />
-          <span className="text-stone-200 text-3xl sm:text-5xl md:text-6xl font-medium">
-            en cada nota.
-          </span>
+          en cada nota.
         </h1>
 
         <p className="text-base sm:text-xl md:text-2xl text-stone-300 max-w-3xl mx-auto mb-8 sm:mb-10 leading-relaxed font-light">

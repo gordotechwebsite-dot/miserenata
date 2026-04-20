@@ -12,11 +12,8 @@ export function Testimonials() {
               Lo que dicen nuestros clientes
             </span>
           </div>
-          <h2 className="font-display text-3xl sm:text-5xl font-bold mb-4 text-white">
-            Historias que
-            <span className="italic text-transparent bg-clip-text bg-gradient-to-r from-amber-300 to-yellow-200">
-              {" "}nos emocionan
-            </span>
+          <h2 className="font-display font-black text-3xl sm:text-5xl mb-4 bg-gradient-to-br from-amber-200 via-yellow-100 to-amber-400 bg-clip-text text-transparent tracking-tight">
+            Historias que nos emocionan
           </h2>
         </div>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6 lg:gap-8">
@@ -34,7 +31,7 @@ export function Testimonials() {
                   />
                 ))}
               </div>
-              <p className="font-display text-lg text-stone-200 italic leading-relaxed mb-6">
+              <p className="text-base text-stone-200 leading-relaxed mb-6">
                 "{t.text}"
               </p>
               <div className="border-t border-stone-800 pt-4">

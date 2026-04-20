@@ -107,8 +107,8 @@ export function Audiences() {
               ¿Para quién es Miserenata?
             </span>
           </div>
-          <h2 className="font-display text-3xl sm:text-5xl font-bold text-white mb-4">
-            Tres formas de <span className="italic text-amber-300">sorprender</span>
+          <h2 className="font-display font-black text-3xl sm:text-5xl mb-4 bg-gradient-to-br from-amber-200 via-yellow-100 to-amber-400 bg-clip-text text-transparent tracking-tight">
+            Tres formas de sorprender
           </h2>
           <p className="text-stone-400 text-base sm:text-lg">
             Un solo aliado para cualquier ocasión que merezca música en vivo.
