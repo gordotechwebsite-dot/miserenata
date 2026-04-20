@@ -9,7 +9,6 @@ const LINKS = [
   { id: "galeria", label: "Galería" },
   { id: "reservar", label: "Reservar" },
   { id: "faq", label: "FAQ" },
-  { id: "contacto", label: "Contacto" },
 ];
 
 export function Navbar() {
