@@ -6,6 +6,7 @@ import { Navbar } from "./components/Navbar";
 import { Hero } from "./components/Hero";
 import { TrustStrip } from "./components/TrustStrip";
 import { Audiences } from "./components/Audiences";
+import { Genres } from "./components/Genres";
 import { Packages } from "./components/Packages";
 import { VipBanner } from "./components/VipBanner";
 import { Occasions } from "./components/Occasions";
@@ -118,11 +119,23 @@ function App() {
   }
 
   return (
-    <div className="min-h-screen bg-stone-950 text-white">
+    <div className="min-h-screen text-white sm:bg-stone-950">
+      <video
+        className="fixed inset-0 w-full h-full object-cover -z-10 sm:hidden"
+        src="/video/hero-mobile.mp4"
+        poster="/video/hero-mobile-poster.jpg"
+        autoPlay
+        muted
+        loop
+        playsInline
+        preload="metadata"
+        aria-hidden="true"
+      />
       <Navbar />
       <Hero />
       <TrustStrip />
       <Audiences />
+      <Genres />
       <Packages
         packages={packages}
         loading={loading}

@@ -66,14 +66,14 @@ export function Hero() {
         <img
           src="/images/mariachi-hero.jpg"
           alt="Mariachi en vivo en Boyacá"
-          className="w-full h-full object-cover scale-105"
+          className="hidden sm:block w-full h-full object-cover scale-105"
           onError={(e) => {
             (e.target as HTMLImageElement).src =
               "https://placehold.co/1920x1080/1a1a2e/d4af37?text=Miserenata.co";
           }}
         />
-        <div className="absolute inset-0 bg-gradient-to-b from-stone-950/70 via-stone-950/85 to-stone-950" />
-        <div className="absolute inset-0 bg-gradient-to-r from-stone-950/85 via-transparent to-stone-950/80" />
+        <div className="absolute inset-0 bg-gradient-to-b from-stone-950/60 via-stone-950/80 to-stone-950" />
+        <div className="absolute inset-0 bg-gradient-to-r from-stone-950/70 via-transparent to-stone-950/70" />
       </div>
 
       <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
