@@ -15,7 +15,6 @@ import { Gallery } from "./components/Gallery";
 import { Testimonials } from "./components/Testimonials";
 import { Faq } from "./components/Faq";
 import { Contact } from "./components/Contact";
-import { Footer } from "./components/Footer";
 import { WhatsAppFab } from "./components/WhatsAppFab";
 import { BottomBanner } from "./components/BottomBanner";
 import { AdminPanel } from "./components/AdminPanel";
@@ -148,7 +147,6 @@ function App() {
           <Contact />
         </>
       )}
-      <Footer />
       <WhatsAppFab />
       <BottomBanner />
     </div>
