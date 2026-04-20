@@ -55,7 +55,7 @@ export function Footer() {
               </li>
               <li className="flex items-center gap-2">
                 <Mail className="w-4 h-4 text-amber-400" />
-                miseranataco@gmail.com
+                promotionsmiserenata@gmail.com
               </li>
               <li className="flex items-center gap-2">
                 <Instagram className="w-4 h-4 text-amber-400" />
