@@ -319,7 +319,7 @@ export function ReservationForm({
                   <div>
                     <label className="flex items-center gap-2 text-sm font-medium text-amber-300 mb-3">
                       <Sparkles className="w-4 h-4" />
-                      Adicionales para hacerla inolvidable
+                      ¿Tal vez quisieras incluir esto?
                     </label>
                     <p className="text-stone-400 text-xs mb-4">
                       Selecciona los extras que quieres incluir. Puedes elegir
