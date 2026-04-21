@@ -1,5 +1,5 @@
-import { useEffect, useState, useCallback } from "react";
-import { Camera, ChevronLeft, ChevronRight, X, ZoomIn } from "lucide-react";
+import { useEffect, useState } from "react";
+import { Camera } from "lucide-react";
 import { supabase } from "../lib/supabase";
 import { Reveal } from "./Reveal";
 
@@ -13,7 +13,6 @@ type GalleryItem = {
 export function Gallery() {
   const [items, setItems] = useState<GalleryItem[]>([]);
   const [loading, setLoading] = useState(true);
-  const [openIdx, setOpenIdx] = useState<number | null>(null);
 
   useEffect(() => {
     let mounted = true;
@@ -53,32 +52,12 @@ export function Gallery() {
     };
   }, []);
 
-  const close = useCallback(() => setOpenIdx(null), []);
-  const prev = useCallback(
-    () =>
-      setOpenIdx((i) => (i === null ? null : (i - 1 + items.length) % items.length)),
-    [items.length]
-  );
-  const next = useCallback(
-    () => setOpenIdx((i) => (i === null ? null : (i + 1) % items.length)),
-    [items.length]
-  );
-
-  useEffect(() => {
-    if (openIdx === null) return;
-    const handler = (e: KeyboardEvent) => {
-      if (e.key === "Escape") close();
-      if (e.key === "ArrowLeft") prev();
-      if (e.key === "ArrowRight") next();
-    };
-    window.addEventListener("keydown", handler);
-    return () => window.removeEventListener("keydown", handler);
-  }, [openIdx, close, prev, next]);
+  const loop = [...items, ...items];
 
   return (
     <section id="galeria" className="py-16 sm:py-24 bg-stone-950">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <Reveal className="text-center mb-12 sm:mb-16">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mb-10 sm:mb-14">
+        <Reveal className="text-center">
           <div className="inline-flex items-center gap-2 bg-amber-500/10 border border-amber-500/30 rounded-full px-4 py-2 mb-4">
             <Camera className="w-4 h-4 text-amber-400" />
             <span className="text-amber-300 text-xs font-medium tracking-wider uppercase">
@@ -92,88 +71,46 @@ export function Gallery() {
             Una mirada a serenatas, eventos y experiencias que dejaron huella.
           </p>
         </Reveal>
+      </div>
 
-        {loading ? (
-          <div className="text-stone-400 text-center py-12">
-            Cargando galería...
-          </div>
-        ) : items.length === 0 ? (
-          <div className="text-stone-400 text-center bg-stone-900/40 border border-stone-800 rounded-2xl py-12">
-            Aún no hay fotos. Pronto compartiremos momentos increíbles.
-          </div>
-        ) : (
-          <div className="columns-2 sm:columns-3 lg:columns-4 gap-4 sm:gap-5 [column-fill:_balance]">
-            {items.map((item, idx) => (
-              <button
-                key={item.name}
-                onClick={() => setOpenIdx(idx)}
-                className="group relative mb-4 sm:mb-5 block w-full overflow-hidden rounded-2xl border border-stone-800 hover:border-amber-500/50 transition-all break-inside-avoid"
+      {loading ? (
+        <div className="text-stone-400 text-center py-12">
+          Cargando galería...
+        </div>
+      ) : items.length === 0 ? (
+        <div className="max-w-3xl mx-auto px-4 text-stone-400 text-center bg-stone-900/40 border border-stone-800 rounded-2xl py-12">
+          Aún no hay fotos. Pronto compartiremos momentos increíbles.
+        </div>
+      ) : (
+        <div className="relative overflow-hidden">
+          <div
+            className="absolute inset-y-0 left-0 w-16 sm:w-24 z-10 pointer-events-none"
+            style={{
+              background:
+                "linear-gradient(to right, rgb(12 10 9) 0%, rgba(12,10,9,0) 100%)",
+            }}
+          />
+          <div
+            className="absolute inset-y-0 right-0 w-16 sm:w-24 z-10 pointer-events-none"
+            style={{
+              background:
+                "linear-gradient(to left, rgb(12 10 9) 0%, rgba(12,10,9,0) 100%)",
+            }}
+          />
+          <div className="inline-flex animate-marquee gap-4 sm:gap-5 px-4 sm:px-6 lg:px-8 will-change-transform">
+            {loop.map((item, idx) => (
+              <div
+                key={`${item.name}-${idx}`}
+                className="flex-shrink-0 w-[72vw] sm:w-[340px] lg:w-[400px] aspect-[4/3] rounded-3xl overflow-hidden border border-stone-800 bg-stone-900"
               >
                 <img
                   src={item.url}
-                  alt={`Galería ${idx + 1}`}
+                  alt={`Galería ${(idx % items.length) + 1}`}
                   loading="lazy"
-                  className="w-full h-auto object-cover transition-transform duration-500 group-hover:scale-[1.03]"
+                  className="w-full h-full object-cover"
                 />
-                <div className="absolute inset-0 bg-gradient-to-t from-stone-950/80 via-stone-950/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity flex items-end justify-center p-4">
-                  <div className="flex items-center gap-2 text-amber-200 text-sm">
-                    <ZoomIn className="w-4 h-4" />
-                    Ver en grande
-                  </div>
-                </div>
-              </button>
+              </div>
             ))}
-          </div>
-        )}
-      </div>
-
-      {openIdx !== null && items[openIdx] && (
-        <div
-          className="fixed inset-0 z-50 bg-stone-950/95 backdrop-blur-md flex items-center justify-center p-4 sm:p-8"
-          onClick={close}
-        >
-          <button
-            onClick={close}
-            className="absolute top-4 right-4 sm:top-6 sm:right-6 w-11 h-11 rounded-full bg-stone-900/80 border border-stone-700 hover:border-amber-500 text-stone-100 flex items-center justify-center transition-all z-10"
-            aria-label="Cerrar"
-          >
-            <X className="w-5 h-5" />
-          </button>
-
-          {items.length > 1 && (
-            <>
-              <button
-                onClick={(e) => {
-                  e.stopPropagation();
-                  prev();
-                }}
-                className="absolute left-3 sm:left-6 top-1/2 -translate-y-1/2 w-12 h-12 rounded-full bg-stone-900/80 border border-stone-700 hover:border-amber-500 text-stone-100 flex items-center justify-center transition-all z-10"
-                aria-label="Anterior"
-              >
-                <ChevronLeft className="w-6 h-6" />
-              </button>
-              <button
-                onClick={(e) => {
-                  e.stopPropagation();
-                  next();
-                }}
-                className="absolute right-3 sm:right-6 top-1/2 -translate-y-1/2 w-12 h-12 rounded-full bg-stone-900/80 border border-stone-700 hover:border-amber-500 text-stone-100 flex items-center justify-center transition-all z-10"
-                aria-label="Siguiente"
-              >
-                <ChevronRight className="w-6 h-6" />
-              </button>
-            </>
-          )}
-
-          <img
-            src={items[openIdx].url}
-            alt={`Galería ${openIdx + 1}`}
-            className="max-w-full max-h-full object-contain rounded-xl shadow-2xl"
-            onClick={(e) => e.stopPropagation()}
-          />
-
-          <div className="absolute bottom-6 left-1/2 -translate-x-1/2 text-stone-400 text-xs sm:text-sm bg-stone-900/70 px-3 py-1.5 rounded-full">
-            {openIdx + 1} / {items.length}
           </div>
         </div>
       )}
