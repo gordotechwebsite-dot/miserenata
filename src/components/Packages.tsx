@@ -30,12 +30,6 @@ export function Packages({ packages, loading, onSelect, selectedName }: Props) {
       <div className="absolute inset-0 bg-gradient-to-b from-stone-950 via-stone-900/60 to-stone-950 pointer-events-none" />
       <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="text-center mb-12 sm:mb-16">
-          <div className="inline-flex items-center gap-2 bg-amber-500/10 border border-amber-500/30 rounded-full px-4 py-2 mb-4">
-            <Music className="w-4 h-4 text-amber-400" />
-            <span className="text-amber-300 text-sm font-medium">
-              Nuestros Paquetes
-            </span>
-          </div>
           <h2 className="font-display font-black text-3xl sm:text-5xl mb-4 bg-gradient-to-br from-amber-200 via-yellow-100 to-amber-400 bg-clip-text text-transparent tracking-tight">
             Elige tu paquete perfecto
           </h2>
