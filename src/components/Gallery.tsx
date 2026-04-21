@@ -101,7 +101,7 @@ export function Gallery() {
             {loop.map((item, idx) => (
               <div
                 key={`${item.name}-${idx}`}
-                className="flex-shrink-0 w-[72vw] sm:w-[340px] lg:w-[400px] aspect-[4/3] rounded-3xl overflow-hidden border border-stone-800 bg-stone-900"
+                className="flex-shrink-0 w-[56vw] sm:w-[260px] lg:w-[300px] aspect-[3/4] rounded-3xl overflow-hidden border border-stone-800 bg-stone-900"
               >
                 <img
                   src={item.url}
