@@ -229,6 +229,9 @@ export function AdminPanel({ onExit }: { onExit: () => void }) {
   const [extrasSavedAt, setExtrasSavedAt] = useState<number | null>(null);
   const extraFileInputs = useRef<Record<string, HTMLInputElement | null>>({});
 
+  const [packageUploading, setPackageUploading] = useState<string | null>(null);
+  const packageFileInputs = useRef<Record<string, HTMLInputElement | null>>({});
+
   const [reservations, setReservations] = useState<ReservationRecord[]>([]);
   const [reservationsLoading, setReservationsLoading] = useState(false);
   const [reservationsError, setReservationsError] = useState<string | null>(null);
@@ -547,6 +550,65 @@ export function AdminPanel({ onExit }: { onExit: () => void }) {
     updateExtraField(id, { imageUrl: undefined });
   };
 
+  const handlePackageUpload = async (id: string, file: File | null) => {
+    if (!file) return;
+    setPackageUploading(id);
+    setError(null);
+    const ext = file.name.split(".").pop()?.toLowerCase() || "jpg";
+    const key = `packages/${id}-${Date.now()}.${ext}`;
+    const { error: upErr } = await supabase.storage
+      .from(GALLERY_BUCKET)
+      .upload(key, file, {
+        cacheControl: "3600",
+        upsert: true,
+        contentType: file.type || undefined,
+      });
+    if (upErr) {
+      setError(upErr.message);
+      setPackageUploading(null);
+      return;
+    }
+    const { data } = supabase.storage.from(GALLERY_BUCKET).getPublicUrl(key);
+    const url = data.publicUrl;
+    const { data: updated, error: dbErr } = await supabase
+      .from("packages")
+      .update({ image_url: url, image_path: null })
+      .eq("id", id)
+      .select("id");
+    if (dbErr) {
+      setError(dbErr.message);
+    } else if (!updated || updated.length === 0) {
+      setError(
+        "No se pudo guardar la foto: la base de datos rechazó la actualización (posible política RLS)."
+      );
+    } else {
+      updateField(id, { imageUrl: url, imagePath: null });
+    }
+    setPackageUploading(null);
+    const input = packageFileInputs.current[id];
+    if (input) input.value = "";
+  };
+
+  const handlePackageRemoveImage = async (id: string) => {
+    setPackageUploading(id);
+    setError(null);
+    const { data: updated, error: dbErr } = await supabase
+      .from("packages")
+      .update({ image_url: null, image_path: null })
+      .eq("id", id)
+      .select("id");
+    if (dbErr) {
+      setError(dbErr.message);
+    } else if (!updated || updated.length === 0) {
+      setError(
+        "No se pudo quitar la foto: la base de datos rechazó la actualización (posible política RLS)."
+      );
+    } else {
+      updateField(id, { imageUrl: null, imagePath: null });
+    }
+    setPackageUploading(null);
+  };
+
   const handleGenreCoverUpload = async (id: GenreId, file: File | null) => {
     if (!file) return;
     setGenreCoverUploading(id);
@@ -722,6 +784,8 @@ export function AdminPanel({ onExit }: { onExit: () => void }) {
         popular: pkg.popular,
         sort_order: pkg.sortOrder,
         genre: pkg.genre ?? null,
+        image_url: pkg.imageUrl ?? null,
+        image_path: pkg.imagePath ?? null,
       })
       .eq("id", pkg.id)
       .select("id");
@@ -1096,6 +1160,73 @@ export function AdminPanel({ onExit }: { onExit: () => void }) {
                     key={pkg.id}
                     className="bg-stone-900/60 border border-stone-800 rounded-2xl p-5 sm:p-6"
                   >
+                    <div className="mb-4 flex flex-col sm:flex-row gap-4 items-start">
+                      <div className="w-full sm:w-40 h-28 sm:h-28 flex-shrink-0 bg-stone-800 border border-stone-700 rounded-xl overflow-hidden">
+                        {pkg.imageUrl ? (
+                          <img
+                            src={pkg.imageUrl}
+                            alt={pkg.name}
+                            className="w-full h-full object-cover"
+                          />
+                        ) : (
+                          <div className="w-full h-full flex items-center justify-center text-stone-500 text-xs text-center px-2">
+                            Sin foto
+                          </div>
+                        )}
+                      </div>
+                      <div className="flex flex-col gap-2 flex-1 min-w-0">
+                        <label className="text-xs font-medium text-stone-400">
+                          Foto del paquete
+                        </label>
+                        <div className="flex flex-wrap gap-2">
+                          <input
+                            ref={(el) => {
+                              packageFileInputs.current[pkg.id!] = el;
+                            }}
+                            id={`pkg-file-${pkg.id}`}
+                            type="file"
+                            accept="image/*"
+                            className="hidden"
+                            onChange={(e) =>
+                              handlePackageUpload(
+                                pkg.id!,
+                                e.target.files?.[0] || null
+                              )
+                            }
+                          />
+                          <label
+                            htmlFor={`pkg-file-${pkg.id}`}
+                            className={`cursor-pointer inline-flex items-center gap-2 bg-stone-800 hover:bg-stone-700 text-white border border-stone-700 hover:border-amber-500/50 px-3 py-2 rounded-xl text-sm ${
+                              packageUploading === pkg.id
+                                ? "opacity-50 pointer-events-none"
+                                : ""
+                            }`}
+                          >
+                            <Upload className="w-4 h-4" />
+                            {packageUploading === pkg.id
+                              ? "Subiendo..."
+                              : pkg.imageUrl
+                              ? "Cambiar foto"
+                              : "Subir foto"}
+                          </label>
+                          {pkg.imageUrl && (
+                            <button
+                              type="button"
+                              disabled={packageUploading === pkg.id}
+                              onClick={() => handlePackageRemoveImage(pkg.id!)}
+                              className="inline-flex items-center gap-2 text-red-400 hover:text-red-300 px-3 py-2 rounded-xl text-sm disabled:opacity-50"
+                            >
+                              <Trash2 className="w-4 h-4" />
+                              Quitar foto
+                            </button>
+                          )}
+                        </div>
+                        <div className="text-xs text-stone-500">
+                          Se guarda al instante. Formatos: JPG, PNG, WEBP.
+                        </div>
+                      </div>
+                    </div>
+
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                       <div>
                         <label className="block text-xs font-medium text-stone-400 mb-1">
