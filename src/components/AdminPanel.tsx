@@ -208,6 +208,17 @@ export function AdminPanel({ onExit }: { onExit: () => void }) {
     useState<GenreId | null>(null);
   const genreFileInputs = useRef<Partial<Record<GenreId, HTMLInputElement>>>({});
 
+  type HourlyForm = { rate: string; image: string; description: string };
+  const emptyHourly: HourlyForm = { rate: "", image: "", description: "" };
+  const [genreHourly, setGenreHourly] = useState<Record<GenreId, HourlyForm>>({
+    mariachi: emptyHourly,
+    nortena: emptyHourly,
+    banda: emptyHourly,
+  });
+  const [hourlyImageUploading, setHourlyImageUploading] =
+    useState<GenreId | null>(null);
+  const hourlyFileInputs = useRef<Partial<Record<GenreId, HTMLInputElement>>>({});
+
   const todayStart = startOfDay(new Date());
   const [calView, setCalView] = useState(() => ({
     year: todayStart.getFullYear(),
@@ -428,19 +439,40 @@ export function AdminPanel({ onExit }: { onExit: () => void }) {
     setGenresError(null);
     const entries = await Promise.all(
       DEFAULT_GENRES.map(async (g) => {
-        const [name, image] = await Promise.all([
+        const [name, image, hRate, hImage, hDesc] = await Promise.all([
           getSiteSetting(`genre_${g.id}_name`),
           getSiteSetting(`genre_${g.id}_image`),
+          getSiteSetting(`genre_${g.id}_hourly_rate`),
+          getSiteSetting(`genre_${g.id}_hourly_image`),
+          getSiteSetting(`genre_${g.id}_hourly_description`),
         ]);
         return {
-          ...g,
-          name: name?.trim() || g.name,
-          image: image?.trim() || g.image,
-        } as GenreData;
+          base: {
+            ...g,
+            name: name?.trim() || g.name,
+            image: image?.trim() || g.image,
+          } as GenreData,
+          hourly: {
+            rate: hRate?.trim() || "",
+            image: hImage?.trim() || "",
+            description: hDesc?.trim() || "",
+          } as HourlyForm,
+        };
       })
     );
-    setGenres(entries);
+    setGenres(entries.map((e) => e.base));
+    setGenreHourly({
+      mariachi:
+        entries.find((e) => e.base.id === "mariachi")?.hourly || emptyHourly,
+      nortena:
+        entries.find((e) => e.base.id === "nortena")?.hourly || emptyHourly,
+      banda: entries.find((e) => e.base.id === "banda")?.hourly || emptyHourly,
+    });
     setGenresLoading(false);
+  };
+
+  const updateGenreHourly = (id: GenreId, patch: Partial<HourlyForm>) => {
+    setGenreHourly((prev) => ({ ...prev, [id]: { ...prev[id], ...patch } }));
   };
 
   const updateGenreField = (id: GenreId, patch: Partial<GenreData>) => {
@@ -450,11 +482,54 @@ export function AdminPanel({ onExit }: { onExit: () => void }) {
   const saveGenre = async (g: GenreData) => {
     setGenresSaving(g.id);
     setGenresError(null);
-    const r1 = await setSiteSetting(`genre_${g.id}_name`, g.name);
-    const r2 = await setSiteSetting(`genre_${g.id}_image`, g.image);
-    if (r1.error || r2.error) setGenresError(r1.error || r2.error || "Error");
+    const h = genreHourly[g.id] || emptyHourly;
+    const sanitizedRate = String(Number(h.rate.replace(/[^\d]/g, "")) || 0);
+    const results = await Promise.all([
+      setSiteSetting(`genre_${g.id}_name`, g.name),
+      setSiteSetting(`genre_${g.id}_image`, g.image),
+      setSiteSetting(`genre_${g.id}_hourly_rate`, sanitizedRate),
+      setSiteSetting(`genre_${g.id}_hourly_image`, h.image || ""),
+      setSiteSetting(`genre_${g.id}_hourly_description`, h.description || ""),
+    ]);
+    const firstErr = results.find((r) => r.error);
+    if (firstErr?.error) setGenresError(firstErr.error);
     else setGenresSavedId(g.id);
     setGenresSaving(null);
+  };
+
+  const handleGenreHourlyUpload = async (id: GenreId, file: File | null) => {
+    if (!file) return;
+    setHourlyImageUploading(id);
+    setGenresError(null);
+    const ext = file.name.split(".").pop()?.toLowerCase() || "jpg";
+    const key = `hourly/${id}-${Date.now()}.${ext}`;
+    const { error: upErr } = await supabase.storage
+      .from(GALLERY_BUCKET)
+      .upload(key, file, {
+        cacheControl: "3600",
+        upsert: true,
+        contentType: file.type || undefined,
+      });
+    if (upErr) {
+      setGenresError(upErr.message);
+      setHourlyImageUploading(null);
+      return;
+    }
+    const { data } = supabase.storage.from(GALLERY_BUCKET).getPublicUrl(key);
+    const url = data.publicUrl;
+    const { error: setErr } = await setSiteSetting(
+      `genre_${id}_hourly_image`,
+      url
+    );
+    if (setErr) {
+      setGenresError(setErr);
+    } else {
+      updateGenreHourly(id, { image: url });
+      setGenresSavedId(id);
+    }
+    setHourlyImageUploading(null);
+    const input = hourlyFileInputs.current[id];
+    if (input) input.value = "";
   };
 
   const loadExtras = async () => {
@@ -1615,6 +1690,116 @@ export function AdminPanel({ onExit }: { onExit: () => void }) {
                           </code>
                           .
                         </div>
+                      </div>
+
+                      <div className="mt-2 rounded-2xl border border-stone-800 bg-stone-950/40 p-4 space-y-3">
+                        <div className="flex items-start gap-2">
+                          <Sparkles className="w-4 h-4 text-amber-400 mt-0.5 flex-shrink-0" />
+                          <div>
+                            <div className="text-sm font-semibold text-amber-300">
+                              Precio por hora (opcional)
+                            </div>
+                            <div className="text-xs text-stone-500">
+                              Si pones un precio mayor a 0, este género usará
+                              cobro por hora en vez de paquetes. Deja vacío o en
+                              0 para seguir usando paquetes.
+                            </div>
+                          </div>
+                        </div>
+
+                        <div className="grid gap-3 sm:grid-cols-2">
+                          <div>
+                            <label className="block text-xs font-medium text-stone-400 mb-1">
+                              Precio por hora (COP)
+                            </label>
+                            <input
+                              value={genreHourly[g.id]?.rate ?? ""}
+                              onChange={(e) =>
+                                updateGenreHourly(g.id, {
+                                  rate: e.target.value,
+                                })
+                              }
+                              placeholder="Ej: 150000"
+                              disabled={
+                                genresLoading || genresSaving === g.id
+                              }
+                              className="w-full bg-stone-800/80 border border-stone-700 rounded-xl px-3 py-2 text-white focus:outline-none focus:border-amber-500 disabled:opacity-50"
+                            />
+                          </div>
+                          <div>
+                            <label className="block text-xs font-medium text-stone-400 mb-1">
+                              Imagen de la tarjeta por hora
+                            </label>
+                            <div className="flex items-center gap-2">
+                              <input
+                                ref={(el) => {
+                                  if (el) hourlyFileInputs.current[g.id] = el;
+                                  else delete hourlyFileInputs.current[g.id];
+                                }}
+                                type="file"
+                                accept="image/*"
+                                className="hidden"
+                                onChange={(e) =>
+                                  handleGenreHourlyUpload(
+                                    g.id,
+                                    e.target.files?.[0] || null
+                                  )
+                                }
+                              />
+                              <button
+                                onClick={() =>
+                                  hourlyFileInputs.current[g.id]?.click()
+                                }
+                                disabled={
+                                  genresLoading ||
+                                  genresSaving === g.id ||
+                                  hourlyImageUploading === g.id
+                                }
+                                className="flex items-center gap-2 bg-stone-800 hover:bg-stone-700 border border-stone-700 text-white px-3 py-2 rounded-xl text-sm font-semibold disabled:opacity-50"
+                              >
+                                <Upload className="w-4 h-4" />
+                                {hourlyImageUploading === g.id
+                                  ? "Subiendo..."
+                                  : "Subir"}
+                              </button>
+                              {genreHourly[g.id]?.image && (
+                                <img
+                                  src={genreHourly[g.id].image}
+                                  alt="hourly"
+                                  className="w-10 h-10 rounded-lg object-cover border border-stone-700"
+                                />
+                              )}
+                            </div>
+                          </div>
+                        </div>
+
+                        <div>
+                          <label className="block text-xs font-medium text-stone-400 mb-1">
+                            Descripción (opcional)
+                          </label>
+                          <textarea
+                            value={genreHourly[g.id]?.description ?? ""}
+                            onChange={(e) =>
+                              updateGenreHourly(g.id, {
+                                description: e.target.value,
+                              })
+                            }
+                            rows={2}
+                            placeholder="Ej: Grupo de 5 músicos en vivo durante tu evento."
+                            disabled={genresLoading || genresSaving === g.id}
+                            className="w-full bg-stone-800/80 border border-stone-700 rounded-xl px-3 py-2 text-white focus:outline-none focus:border-amber-500 disabled:opacity-50"
+                          />
+                        </div>
+
+                        <input
+                          value={genreHourly[g.id]?.image ?? ""}
+                          onChange={(e) =>
+                            updateGenreHourly(g.id, { image: e.target.value })
+                          }
+                          placeholder="URL de imagen por hora (opcional)"
+                          disabled={genresLoading || genresSaving === g.id}
+                          className="w-full bg-stone-800/80 border border-stone-700 rounded-xl px-3 py-2 text-white text-sm focus:outline-none focus:border-amber-500 disabled:opacity-50"
+                        />
                       </div>
 
                       <div className="flex items-center gap-3 pt-1">

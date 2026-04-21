@@ -13,12 +13,18 @@ import {
   Package as PackageIcon,
   Sparkles,
   Wallet,
+  Clock,
+  Minus,
+  Plus,
 } from "lucide-react";
 import {
   CITIES,
   DEFAULT_EXTRAS,
   type ExtraItem,
   formatCop,
+  type GenreHourlyConfig,
+  HOURLY_MAX,
+  HOURLY_MIN,
   type PackageData,
   type GenreId,
 } from "../lib/constants";
@@ -38,7 +44,15 @@ type Props = {
   initialDate?: string;
   initialTime?: string;
   genreId?: GenreId | null;
+  hourly?: GenreHourlyConfig | null;
 };
+
+const STEPS_HOURLY = [
+  { id: 1, title: "Horas" },
+  { id: 2, title: "Adicionales" },
+  { id: 3, title: "Datos" },
+  { id: 4, title: "Confirmar" },
+];
 
 const PAYMENT_OPTIONS: {
   id: PaymentMethod;
@@ -65,8 +79,11 @@ export function ReservationForm({
   initialDate,
   initialTime,
   genreId,
+  hourly,
 }: Props) {
+  const isHourly = !!hourly && hourly.rate > 0;
   const [step, setStep] = useState(1);
+  const [hours, setHours] = useState<number>(HOURLY_MIN);
   const [name, setName] = useState("");
   const [phone, setPhone] = useState("");
   const [city, setCity] = useState("");
@@ -89,6 +106,31 @@ export function ReservationForm({
   useEffect(() => {
     if (initialTime) setTime(initialTime);
   }, [initialTime]);
+
+  useEffect(() => {
+    if (!isHourly || !hourly) return;
+    const name = `${hours} hora${hours > 1 ? "s" : ""} de música en vivo`;
+    const priceCop = hourly.rate * hours;
+    const synth: PackageData = {
+      id: undefined,
+      name,
+      priceCop,
+      durationMinutes: hours * 60,
+      songsCount: 0,
+      musiciansCount: 0,
+      description: hourly.description || "",
+      features: [],
+      popular: false,
+      sortOrder: 0,
+      localImage: hourly.image || "",
+      fallbackUrl: "",
+      imageUrl: hourly.image || null,
+      imagePath: null,
+      genre: genreId ?? null,
+    };
+    onSelect(synth);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isHourly, hourly?.rate, hourly?.description, hourly?.image, hours, genreId]);
 
   useEffect(() => {
     let mounted = true;
@@ -157,8 +199,9 @@ export function ReservationForm({
     setStep(1);
   };
 
+  const stepsList = isHourly ? STEPS_HOURLY : STEPS;
   const canNext = (() => {
-    if (step === 1) return !!selected;
+    if (step === 1) return isHourly ? hours >= HOURLY_MIN : !!selected;
     if (step === 2) return true;
     if (step === 3)
       return (
@@ -288,7 +331,7 @@ export function ReservationForm({
         </div>
 
         <ol className="flex items-center justify-between gap-1 sm:gap-2 mb-6 sm:mb-8 max-w-2xl mx-auto">
-          {STEPS.map((s, i) => {
+          {stepsList.map((s, i) => {
             const active = step === s.id;
             const done = step > s.id;
             return (
@@ -317,7 +360,7 @@ export function ReservationForm({
                     {s.title}
                   </div>
                 </div>
-                {i < STEPS.length - 1 && (
+                {i < stepsList.length - 1 && (
                   <div
                     className={`h-0.5 flex-1 mx-1 sm:mx-2 -translate-y-2 ${
                       done ? "bg-amber-500/60" : "bg-stone-800"
@@ -348,7 +391,7 @@ export function ReservationForm({
 
           <form onSubmit={handleSubmit} className="space-y-6">
             <div key={step} className="animate-fade-up space-y-6">
-              {step === 1 && (
+              {step === 1 && !isHourly && (
                 <div>
                   <label className="flex items-center gap-2 text-sm font-medium text-amber-300 mb-3">
                     <PackageIcon className="w-4 h-4" />
@@ -378,6 +421,62 @@ export function ReservationForm({
                       );
                     })}
                   </div>
+                </div>
+              )}
+
+              {step === 1 && isHourly && hourly && (
+                <div>
+                  <label className="flex items-center gap-2 text-sm font-medium text-amber-300 mb-3">
+                    <Clock className="w-4 h-4" />
+                    ¿Cuántas horas de música? *
+                  </label>
+                  <div className="rounded-2xl border-2 border-amber-500/40 bg-amber-500/5 p-5 sm:p-6 flex flex-col sm:flex-row items-center gap-5 sm:gap-8">
+                    <div className="flex items-center gap-3">
+                      <button
+                        type="button"
+                        onClick={() =>
+                          setHours((h) => Math.max(HOURLY_MIN, h - 1))
+                        }
+                        disabled={hours <= HOURLY_MIN}
+                        className="w-11 h-11 rounded-full border border-stone-700 bg-stone-800/80 text-white flex items-center justify-center disabled:opacity-40 hover:border-amber-500/60"
+                        aria-label="Quitar una hora"
+                      >
+                        <Minus className="w-5 h-5" />
+                      </button>
+                      <div className="text-white font-display font-black text-4xl sm:text-5xl w-16 text-center">
+                        {hours}
+                      </div>
+                      <button
+                        type="button"
+                        onClick={() =>
+                          setHours((h) => Math.min(HOURLY_MAX, h + 1))
+                        }
+                        disabled={hours >= HOURLY_MAX}
+                        className="w-11 h-11 rounded-full border border-stone-700 bg-stone-800/80 text-white flex items-center justify-center disabled:opacity-40 hover:border-amber-500/60"
+                        aria-label="Sumar una hora"
+                      >
+                        <Plus className="w-5 h-5" />
+                      </button>
+                    </div>
+                    <div className="flex-1 text-center sm:text-left">
+                      <div className="text-stone-400 text-xs uppercase tracking-wider font-semibold">
+                        {hours} hora{hours > 1 ? "s" : ""} ·{" "}
+                        <span className="text-amber-300">
+                          ${formatCop(hourly.rate)} / hora
+                        </span>
+                      </div>
+                      <div className="text-amber-400 font-display font-black text-3xl sm:text-4xl mt-1">
+                        ${formatCop(hourly.rate * hours)}
+                      </div>
+                      <div className="text-stone-500 text-xs mt-1">
+                        COP · sin adicionales
+                      </div>
+                    </div>
+                  </div>
+                  <p className="text-stone-500 text-xs mt-3">
+                    Mínimo {HOURLY_MIN} hora · Máximo {HOURLY_MAX} horas. Para
+                    más horas, coordínalo por WhatsApp.
+                  </p>
                 </div>
               )}
 
