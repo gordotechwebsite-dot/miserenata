@@ -70,6 +70,7 @@ export function ReservationForm({
   const [name, setName] = useState("");
   const [phone, setPhone] = useState("");
   const [city, setCity] = useState("");
+  const [cityOther, setCityOther] = useState(false);
   const [date, setDate] = useState("");
   const [time, setTime] = useState("");
   const [address, setAddress] = useState("");
@@ -145,6 +146,7 @@ export function ReservationForm({
     setName("");
     setPhone("");
     setCity("");
+    setCityOther(false);
     setDate("");
     setTime("");
     setAddress("");
@@ -492,8 +494,17 @@ export function ReservationForm({
                       </label>
                       <select
                         required
-                        value={city}
-                        onChange={(e) => setCity(e.target.value)}
+                        value={cityOther ? "__other__" : city}
+                        onChange={(e) => {
+                          const v = e.target.value;
+                          if (v === "__other__") {
+                            setCityOther(true);
+                            setCity("");
+                          } else {
+                            setCityOther(false);
+                            setCity(v);
+                          }
+                        }}
                         className="w-full bg-stone-800/80 border border-stone-700 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-amber-500 focus:ring-1 focus:ring-amber-500/50 transition-all"
                       >
                         <option value="">Selecciona la ciudad</option>
@@ -502,7 +513,18 @@ export function ReservationForm({
                             {c}
                           </option>
                         ))}
+                        <option value="__other__">Otro</option>
                       </select>
+                      {cityOther && (
+                        <input
+                          type="text"
+                          required
+                          value={city}
+                          onChange={(e) => setCity(e.target.value)}
+                          placeholder="Escribe la ciudad"
+                          className="mt-2 w-full bg-stone-800/80 border border-stone-700 rounded-xl px-4 py-3 text-white placeholder-stone-500 focus:outline-none focus:border-amber-500 focus:ring-1 focus:ring-amber-500/50 transition-all"
+                        />
+                      )}
                     </div>
                     <div>
                       <label className="flex items-center gap-2 text-sm font-medium text-stone-300 mb-2">
