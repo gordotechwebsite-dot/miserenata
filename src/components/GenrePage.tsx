@@ -98,7 +98,7 @@ export function GenrePage({ id, packages, loading }: Props) {
               className="inline-flex items-center gap-2 border border-stone-700 hover:border-amber-500/60 bg-stone-900/60 backdrop-blur-sm text-stone-100 hover:text-amber-300 px-5 py-3 rounded-2xl font-bold text-base sm:text-lg tracking-wide transition-all"
             >
               <MessageCircle className="w-4 h-4" />
-              Cotizar por WhatsApp
+              Ver Disponibilidad
             </a>
           </div>
         </div>
@@ -140,7 +140,7 @@ export function GenrePage({ id, packages, loading }: Props) {
               className="inline-flex items-center gap-2 bg-gradient-to-r from-amber-500 to-yellow-500 hover:from-amber-400 hover:to-yellow-400 text-stone-950 px-6 py-4 rounded-2xl font-extrabold text-lg shadow-lg shadow-amber-500/30 transition-all"
             >
               <MessageCircle className="w-5 h-5" />
-              Escribir por WhatsApp
+              Ver Disponibilidad
             </a>
           </div>
         </section>
