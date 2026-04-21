@@ -120,6 +120,15 @@ export function Availability({
   const [notes, setNotes] = useState("");
   const [submitted, setSubmitted] = useState(false);
   const formRef = useRef<HTMLDivElement | null>(null);
+  const slotsRef = useRef<HTMLDivElement | null>(null);
+
+  const scrollToSlotsOnMobile = () => {
+    if (typeof window === "undefined") return;
+    if (window.innerWidth >= 768) return;
+    setTimeout(() => {
+      slotsRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
+    }, 60);
+  };
 
   const genre = genreId
     ? DEFAULT_GENRES.find((g) => g.id === genreId) || null
@@ -321,6 +330,7 @@ export function Availability({
                       setSelected(d);
                       setSlotTime(null);
                       setSubmitted(false);
+                      scrollToSlotsOnMobile();
                     }}
                     disabled={past}
                     className={`aspect-square rounded-xl text-sm sm:text-base font-semibold flex items-center justify-center transition-all border ${
@@ -340,7 +350,10 @@ export function Availability({
             </div>
           </div>
 
-          <div className="bg-stone-900/60 border border-stone-800 rounded-3xl p-5 sm:p-6">
+          <div
+            ref={slotsRef}
+            className="bg-stone-900/60 border border-stone-800 rounded-3xl p-5 sm:p-6 scroll-mt-24"
+          >
             <div className="flex items-center gap-2 mb-2">
               <Clock className="w-5 h-5 text-amber-400" />
               <div className="font-display font-bold text-white text-lg">
