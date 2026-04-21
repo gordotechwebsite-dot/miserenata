@@ -4,10 +4,7 @@ import { Menu, X } from "lucide-react";
 const LINKS = [
   { id: "inicio", label: "Inicio" },
   { id: "generos", label: "Géneros" },
-  { id: "servicios", label: "Paquetes" },
-  { id: "ocasiones", label: "Ocasiones" },
   { id: "galeria", label: "Galería" },
-  { id: "reservar", label: "Reservar" },
   { id: "faq", label: "FAQ" },
 ];
 
