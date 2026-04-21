@@ -120,6 +120,14 @@ export function GenrePage({ id, packages, loading }: Props) {
           const day = String(d.getDate()).padStart(2, "0");
           setPrefillDate(`${y}-${m}-${day}`);
           setPrefillTime(time);
+          setTimeout(() => {
+            const reservar = document.getElementById("reservar");
+            const servicios = document.getElementById("servicios");
+            const target = selected
+              ? reservar || servicios
+              : servicios || reservar;
+            target?.scrollIntoView({ behavior: "smooth", block: "start" });
+          }, 50);
         }}
       />
 
