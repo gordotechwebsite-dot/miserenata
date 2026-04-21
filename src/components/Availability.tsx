@@ -140,6 +140,12 @@ export function Availability({
 
   useEffect(() => {
     let mounted = true;
+    // Normalize a time string (label "12:00 PM" or 24h "12:00") to the canonical
+    // SLOTS.time (24h) so booked_slots from legacy rows still match.
+    const toCanonicalTime = (t: string): string => {
+      const hit = SLOTS.find((s) => s.time === t || s.label === t);
+      return hit ? hit.time : t;
+    };
     (async () => {
       if (genreId) {
         const [perGenre, legacy, booked] = await Promise.all([
@@ -151,7 +157,7 @@ export function Availability({
         const set = new Set<string>();
         parseUnavailable(perGenre).forEach((s) => set.add(s));
         parseUnavailable(legacy).forEach((s) => set.add(s));
-        booked.forEach((b) => set.add(`${b.date}|${b.time}`));
+        booked.forEach((b) => set.add(`${b.date}|${toCanonicalTime(b.time)}`));
         setUnavailable(set);
       } else {
         const [settings, booked] = await Promise.all([
@@ -166,7 +172,7 @@ export function Availability({
         settings.forEach((v) =>
           parseUnavailable(v).forEach((s) => set.add(s))
         );
-        booked.forEach((b) => set.add(`${b.date}|${b.time}`));
+        booked.forEach((b) => set.add(`${b.date}|${toCanonicalTime(b.time)}`));
         setUnavailable(set);
       }
     })();

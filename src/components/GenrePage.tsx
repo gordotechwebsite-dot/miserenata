@@ -114,12 +114,12 @@ export function GenrePage({ id, packages, loading }: Props) {
       <Availability
         genreId={id}
         variant="embedded"
-        onSlotSelect={(d, _time, label) => {
+        onSlotSelect={(d, time) => {
           const y = d.getFullYear();
           const m = String(d.getMonth() + 1).padStart(2, "0");
           const day = String(d.getDate()).padStart(2, "0");
           setPrefillDate(`${y}-${m}-${day}`);
-          setPrefillTime(label);
+          setPrefillTime(time);
         }}
       />
 

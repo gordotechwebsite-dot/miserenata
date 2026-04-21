@@ -22,6 +22,7 @@ import {
   type PackageData,
   type GenreId,
 } from "../lib/constants";
+import { SLOTS } from "./Availability";
 import {
   getSiteSetting,
   insertReservation,
@@ -209,6 +210,9 @@ export function ReservationForm({
       PAYMENT_OPTIONS.find((p) => p.id === paymentMethod)?.label ??
       paymentMethod;
 
+    const timeLabel =
+      SLOTS.find((s) => s.time === time || s.label === time)?.label ?? time;
+
     setSubmitting(true);
     setSubmitError(null);
     const { error } = await insertReservation({
@@ -245,7 +249,7 @@ export function ReservationForm({
       `💰 *Total estimado:* $${formatCop(grandTotal)} COP%0A` +
       `📍 *Ciudad:* ${city}%0A` +
       `📅 *Fecha:* ${date}%0A` +
-      `🕐 *Hora:* ${time}%0A` +
+      `🕐 *Hora:* ${timeLabel}%0A` +
       `🏠 *Dirección:* ${address}%0A` +
       `💬 *Mensaje:* ${message || "Sin mensaje adicional"}`;
 
