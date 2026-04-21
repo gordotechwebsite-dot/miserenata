@@ -42,7 +42,7 @@ export function Hero() {
             Reserva una serenata
           </button>
           <button
-            onClick={() => scrollTo("para-quien")}
+            onClick={() => scrollTo("generos")}
             className="flex-1 border border-stone-700 hover:border-amber-500/60 bg-stone-900/50 backdrop-blur-sm text-stone-100 hover:text-amber-300 px-6 py-5 rounded-2xl font-bold text-lg sm:text-xl tracking-wide transition-all"
           >
             Artistas para eventos
