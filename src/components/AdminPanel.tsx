@@ -135,6 +135,9 @@ export function AdminPanel({ onExit }: { onExit: () => void }) {
   const [genresSaving, setGenresSaving] = useState<GenreId | null>(null);
   const [genresError, setGenresError] = useState<string | null>(null);
   const [genresSavedId, setGenresSavedId] = useState<GenreId | null>(null);
+  const [genreCoverUploading, setGenreCoverUploading] =
+    useState<GenreId | null>(null);
+  const genreFileInputs = useRef<Partial<Record<GenreId, HTMLInputElement>>>({});
 
   const isAdmin = session?.user?.email === ADMIN_EMAIL;
 
@@ -217,6 +220,41 @@ export function AdminPanel({ onExit }: { onExit: () => void }) {
     if (r1.error || r2.error) setGenresError(r1.error || r2.error || "Error");
     else setGenresSavedId(g.id);
     setGenresSaving(null);
+  };
+
+  const handleGenreCoverUpload = async (id: GenreId, file: File | null) => {
+    if (!file) return;
+    setGenreCoverUploading(id);
+    setGenresError(null);
+    const ext = file.name.split(".").pop()?.toLowerCase() || "jpg";
+    const key = `covers/${id}-${Date.now()}.${ext}`;
+    const { error: upErr } = await supabase.storage
+      .from(GALLERY_BUCKET)
+      .upload(key, file, {
+        cacheControl: "3600",
+        upsert: true,
+        contentType: file.type || undefined,
+      });
+    if (upErr) {
+      setGenresError(upErr.message);
+      setGenreCoverUploading(null);
+      return;
+    }
+    const { data } = supabase.storage.from(GALLERY_BUCKET).getPublicUrl(key);
+    const url = data.publicUrl;
+    const current = genres.find((g) => g.id === id);
+    const name = current?.name || id;
+    const r1 = await setSiteSetting(`genre_${id}_name`, name);
+    const r2 = await setSiteSetting(`genre_${id}_image`, url);
+    if (r1.error || r2.error) {
+      setGenresError(r1.error || r2.error || "Error");
+    } else {
+      updateGenreField(id, { image: url });
+      setGenresSavedId(id);
+    }
+    setGenreCoverUploading(null);
+    const input = genreFileInputs.current[id];
+    if (input) input.value = "";
   };
 
   const loadPackages = async () => {
@@ -906,19 +944,59 @@ export function AdminPanel({ onExit }: { onExit: () => void }) {
                       </div>
                       <div>
                         <label className="block text-xs font-medium text-stone-400 mb-1">
-                          URL de la imagen
+                          Imagen
                         </label>
+                        <div className="flex items-center gap-2 mb-2">
+                          <input
+                            ref={(el) => {
+                              if (el) genreFileInputs.current[g.id] = el;
+                              else delete genreFileInputs.current[g.id];
+                            }}
+                            type="file"
+                            accept="image/*"
+                            className="hidden"
+                            onChange={(e) =>
+                              handleGenreCoverUpload(
+                                g.id,
+                                e.target.files?.[0] || null
+                              )
+                            }
+                          />
+                          <button
+                            onClick={() =>
+                              genreFileInputs.current[g.id]?.click()
+                            }
+                            disabled={
+                              genresLoading ||
+                              genresSaving === g.id ||
+                              genreCoverUploading === g.id
+                            }
+                            className="flex items-center gap-2 bg-gradient-to-r from-amber-500 to-yellow-500 text-stone-950 px-4 py-2 rounded-xl font-bold disabled:opacity-50"
+                          >
+                            <Upload className="w-4 h-4" />
+                            {genreCoverUploading === g.id
+                              ? "Subiendo..."
+                              : "Subir foto"}
+                          </button>
+                          <span className="text-xs text-stone-500">
+                            Se guarda automáticamente.
+                          </span>
+                        </div>
                         <input
                           value={g.image}
                           onChange={(e) =>
                             updateGenreField(g.id, { image: e.target.value })
                           }
-                          disabled={genresLoading || genresSaving === g.id}
+                          disabled={
+                            genresLoading ||
+                            genresSaving === g.id ||
+                            genreCoverUploading === g.id
+                          }
                           placeholder="https://..."
                           className="w-full bg-stone-800/80 border border-stone-700 rounded-xl px-3 py-2 text-white focus:outline-none focus:border-amber-500 disabled:opacity-50"
                         />
                         <div className="text-xs text-stone-500 mt-1">
-                          Pega una URL pública (Supabase Storage, Cloudinary,
+                          O pega una URL pública (Supabase Storage, Cloudinary,
                           etc.) o una ruta del repo como{" "}
                           <code className="text-amber-300">
                             /images/mariachi-hero.jpg
