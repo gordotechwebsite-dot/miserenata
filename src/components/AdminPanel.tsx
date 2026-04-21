@@ -708,6 +708,7 @@ export function AdminPanel({ onExit }: { onExit: () => void }) {
   const savePackage = async (pkg: PackageData) => {
     if (!pkg.id) return;
     setSaving(pkg.id);
+    setError(null);
     const { error: err } = await supabase
       .from("packages")
       .update({
@@ -723,7 +724,11 @@ export function AdminPanel({ onExit }: { onExit: () => void }) {
         genre: pkg.genre ?? null,
       })
       .eq("id", pkg.id);
-    if (err) setError(err.message);
+    if (err) {
+      setError(err.message);
+    } else {
+      await loadPackages();
+    }
     setSaving(null);
   };
 
