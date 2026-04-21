@@ -49,3 +49,55 @@ export async function setSiteSetting(
     .upsert({ key, value }, { onConflict: "key" });
   return { error: error?.message || null };
 }
+
+export type PaymentMethod = "nequi" | "efectivo" | "bancolombia";
+export type ReservationStatus = "pending" | "confirmed" | "cancelled";
+
+export type ReservationInsert = {
+  name: string;
+  phone: string;
+  city: string;
+  address: string;
+  message: string | null;
+  date: string; // YYYY-MM-DD
+  time: string; // HH:MM
+  genre: string | null;
+  package_id: string | null;
+  package_name: string;
+  package_price_cop: number;
+  extras: { id: string; name: string; price: string }[];
+  extras_total_cop: number;
+  total_cop: number;
+  payment_method: PaymentMethod;
+};
+
+export type ReservationRow = ReservationInsert & {
+  id: string;
+  created_at: string;
+  status: ReservationStatus;
+};
+
+export type BookedSlot = { date: string; time: string; genre: string | null };
+
+export async function insertReservation(
+  input: ReservationInsert
+): Promise<{ error: string | null; id: string | null }> {
+  const { data, error } = await supabase
+    .from("reservations")
+    .insert(input)
+    .select("id")
+    .maybeSingle();
+  if (error) return { error: error.message, id: null };
+  return { error: null, id: (data as { id: string } | null)?.id ?? null };
+}
+
+export async function fetchBookedSlots(
+  genre: string | null
+): Promise<BookedSlot[]> {
+  const query = supabase.from("booked_slots").select("date, time, genre");
+  const { data, error } = await (genre
+    ? query.or(`genre.eq.${genre},genre.is.null`)
+    : query);
+  if (error || !data) return [];
+  return data as BookedSlot[];
+}

@@ -9,7 +9,11 @@ import {
   MessageCircle,
   Send,
 } from "lucide-react";
-import { WHATSAPP_LINK, getSiteSetting } from "../lib/supabase";
+import {
+  WHATSAPP_LINK,
+  fetchBookedSlots,
+  getSiteSetting,
+} from "../lib/supabase";
 import { DEFAULT_GENRES, type GenreId } from "../lib/constants";
 
 type Props = {
@@ -138,27 +142,31 @@ export function Availability({
     let mounted = true;
     (async () => {
       if (genreId) {
-        const [perGenre, legacy] = await Promise.all([
+        const [perGenre, legacy, booked] = await Promise.all([
           getSiteSetting(unavailableKey(genreId)),
           getSiteSetting(UNAVAILABLE_SLOTS_KEY),
+          fetchBookedSlots(genreId),
         ]);
         if (!mounted) return;
         const set = new Set<string>();
         parseUnavailable(perGenre).forEach((s) => set.add(s));
         parseUnavailable(legacy).forEach((s) => set.add(s));
+        booked.forEach((b) => set.add(`${b.date}|${b.time}`));
         setUnavailable(set);
       } else {
-        const results = await Promise.all([
-          getSiteSetting(UNAVAILABLE_SLOTS_KEY),
-          ...GENRE_IDS_FOR_SLOTS.map((g) =>
-            getSiteSetting(unavailableKey(g))
-          ),
+        const [settings, booked] = await Promise.all([
+          Promise.all([
+            getSiteSetting(UNAVAILABLE_SLOTS_KEY),
+            ...GENRE_IDS_FOR_SLOTS.map((g) => getSiteSetting(unavailableKey(g))),
+          ]),
+          fetchBookedSlots(null),
         ]);
         if (!mounted) return;
         const set = new Set<string>();
-        results.forEach((v) =>
+        settings.forEach((v) =>
           parseUnavailable(v).forEach((s) => set.add(s))
         );
+        booked.forEach((b) => set.add(`${b.date}|${b.time}`));
         setUnavailable(set);
       }
     })();

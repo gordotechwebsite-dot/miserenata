@@ -35,6 +35,9 @@ import {
   ChevronRight,
   Sparkles,
   X,
+  ClipboardList,
+  Phone as PhoneIcon,
+  MapPin,
 } from "lucide-react";
 import {
   SLOTS,
@@ -70,12 +73,54 @@ type GalleryFile = {
 };
 
 type Tab =
+  | "reservations"
   | "packages"
   | "gallery"
   | "banner"
   | "genres"
   | "calendar"
   | "extras";
+
+type ReservationExtra = { id: string; name: string; price: string };
+
+type ReservationRecord = {
+  id: string;
+  created_at: string;
+  name: string;
+  phone: string;
+  city: string;
+  address: string;
+  message: string | null;
+  date: string;
+  time: string;
+  genre: string | null;
+  package_id: string | null;
+  package_name: string;
+  package_price_cop: number;
+  extras: ReservationExtra[];
+  extras_total_cop: number;
+  total_cop: number;
+  payment_method: "nequi" | "efectivo" | "bancolombia" | string;
+  status: "pending" | "confirmed" | "cancelled";
+};
+
+const PAYMENT_LABEL: Record<string, string> = {
+  nequi: "Nequi",
+  efectivo: "Efectivo",
+  bancolombia: "Bancolombia",
+};
+
+const STATUS_LABEL: Record<ReservationRecord["status"], string> = {
+  pending: "Pendiente",
+  confirmed: "Confirmada",
+  cancelled: "Cancelada",
+};
+
+const STATUS_STYLE: Record<ReservationRecord["status"], string> = {
+  pending: "bg-amber-500/10 text-amber-200 border-amber-500/40",
+  confirmed: "bg-emerald-500/10 text-emerald-200 border-emerald-500/40",
+  cancelled: "bg-stone-700/40 text-stone-300 border-stone-600",
+};
 
 const GENRE_IDS_SET = new Set<GenreId>(["mariachi", "nortena", "banda"]);
 
@@ -184,6 +229,16 @@ export function AdminPanel({ onExit }: { onExit: () => void }) {
   const [extrasSavedAt, setExtrasSavedAt] = useState<number | null>(null);
   const extraFileInputs = useRef<Record<string, HTMLInputElement | null>>({});
 
+  const [reservations, setReservations] = useState<ReservationRecord[]>([]);
+  const [reservationsLoading, setReservationsLoading] = useState(false);
+  const [reservationsError, setReservationsError] = useState<string | null>(null);
+  const [reservationStatusFilter, setReservationStatusFilter] = useState<
+    "all" | ReservationRecord["status"]
+  >("all");
+  const [reservationUpdating, setReservationUpdating] = useState<string | null>(
+    null
+  );
+
   const isAdmin = session?.user?.email === ADMIN_EMAIL;
 
   useEffect(() => {
@@ -209,6 +264,24 @@ export function AdminPanel({ onExit }: { onExit: () => void }) {
     void loadBanner();
     void loadGenres();
     void loadExtras();
+    void loadReservations();
+  }, [isAdmin]);
+
+  useEffect(() => {
+    if (!isAdmin) return;
+    const channel = supabase
+      .channel("admin-reservations")
+      .on(
+        "postgres_changes",
+        { event: "*", schema: "public", table: "reservations" },
+        () => {
+          void loadReservations();
+        }
+      )
+      .subscribe();
+    return () => {
+      void supabase.removeChannel(channel);
+    };
   }, [isAdmin]);
 
   useEffect(() => {
@@ -683,6 +756,69 @@ export function AdminPanel({ onExit }: { onExit: () => void }) {
     setCreating(false);
   };
 
+  const loadReservations = async () => {
+    setReservationsLoading(true);
+    setReservationsError(null);
+    const { data, error: err } = await supabase
+      .from("reservations")
+      .select("*")
+      .order("created_at", { ascending: false });
+    if (err) {
+      setReservationsError(err.message);
+    } else if (Array.isArray(data)) {
+      setReservations(
+        data.map((row) => {
+          const r = row as Record<string, unknown>;
+          const extras = Array.isArray(r.extras)
+            ? (r.extras as ReservationExtra[])
+            : [];
+          return {
+            id: String(r.id),
+            created_at: String(r.created_at),
+            name: String(r.name || ""),
+            phone: String(r.phone || ""),
+            city: String(r.city || ""),
+            address: String(r.address || ""),
+            message: (r.message as string | null) ?? null,
+            date: String(r.date || ""),
+            time: String(r.time || ""),
+            genre: (r.genre as string | null) ?? null,
+            package_id: (r.package_id as string | null) ?? null,
+            package_name: String(r.package_name || ""),
+            package_price_cop: Number(r.package_price_cop || 0),
+            extras,
+            extras_total_cop: Number(r.extras_total_cop || 0),
+            total_cop: Number(r.total_cop || 0),
+            payment_method: String(r.payment_method || "efectivo"),
+            status:
+              (r.status as ReservationRecord["status"]) || "pending",
+          };
+        })
+      );
+    }
+    setReservationsLoading(false);
+  };
+
+  const updateReservationStatus = async (
+    id: string,
+    status: ReservationRecord["status"]
+  ) => {
+    setReservationUpdating(id);
+    setReservationsError(null);
+    const { error: err } = await supabase
+      .from("reservations")
+      .update({ status })
+      .eq("id", id);
+    if (err) {
+      setReservationsError(err.message);
+    } else {
+      setReservations((prev) =>
+        prev.map((r) => (r.id === id ? { ...r, status } : r))
+      );
+    }
+    setReservationUpdating(null);
+  };
+
   const addNewPackage = async () => {
     setCreating(true);
     setError(null);
@@ -814,7 +950,26 @@ export function AdminPanel({ onExit }: { onExit: () => void }) {
                   {session.user?.email}
                 </span>
               </div>
-              <div className="inline-flex rounded-xl bg-stone-950/60 border border-stone-800 p-1">
+              <div className="inline-flex flex-wrap rounded-xl bg-stone-950/60 border border-stone-800 p-1">
+                <button
+                  onClick={() => setTab("reservations")}
+                  className={`flex items-center gap-2 px-4 py-1.5 rounded-lg text-sm font-semibold transition ${
+                    tab === "reservations"
+                      ? "bg-amber-500/20 text-amber-200"
+                      : "text-stone-400 hover:text-stone-200"
+                  }`}
+                >
+                  <ClipboardList className="w-4 h-4" /> Reservas
+                  {reservations.filter((r) => r.status === "pending").length >
+                    0 && (
+                    <span className="ml-1 inline-flex items-center justify-center text-[10px] font-bold rounded-full bg-amber-500 text-stone-950 w-5 h-5">
+                      {
+                        reservations.filter((r) => r.status === "pending")
+                          .length
+                      }
+                    </span>
+                  )}
+                </button>
                 <button
                   onClick={() => setTab("packages")}
                   className={`flex items-center gap-2 px-4 py-1.5 rounded-lg text-sm font-semibold transition ${
@@ -877,6 +1032,19 @@ export function AdminPanel({ onExit }: { onExit: () => void }) {
                 </button>
               </div>
             </div>
+
+            {tab === "reservations" && (
+              <ReservationsTab
+                reservations={reservations}
+                loading={reservationsLoading}
+                error={reservationsError}
+                filter={reservationStatusFilter}
+                setFilter={setReservationStatusFilter}
+                updatingId={reservationUpdating}
+                onStatusChange={updateReservationStatus}
+                onReload={loadReservations}
+              />
+            )}
 
             {tab === "packages" && (
               <div className="space-y-5">
@@ -1860,6 +2028,284 @@ export function AdminPanel({ onExit }: { onExit: () => void }) {
           </div>
         )}
       </main>
+    </div>
+  );
+}
+
+function ReservationsTab({
+  reservations,
+  loading,
+  error,
+  filter,
+  setFilter,
+  updatingId,
+  onStatusChange,
+  onReload,
+}: {
+  reservations: ReservationRecord[];
+  loading: boolean;
+  error: string | null;
+  filter: "all" | ReservationRecord["status"];
+  setFilter: (f: "all" | ReservationRecord["status"]) => void;
+  updatingId: string | null;
+  onStatusChange: (id: string, status: ReservationRecord["status"]) => void;
+  onReload: () => void;
+}) {
+  const filtered =
+    filter === "all" ? reservations : reservations.filter((r) => r.status === filter);
+
+  const counts = {
+    all: reservations.length,
+    pending: reservations.filter((r) => r.status === "pending").length,
+    confirmed: reservations.filter((r) => r.status === "confirmed").length,
+    cancelled: reservations.filter((r) => r.status === "cancelled").length,
+  };
+
+  const exportCsv = () => {
+    const rows = [
+      [
+        "Fecha creación",
+        "Estado",
+        "Nombre",
+        "Teléfono",
+        "Ciudad",
+        "Dirección",
+        "Género",
+        "Paquete",
+        "Precio paquete",
+        "Adicionales",
+        "Total",
+        "Fecha evento",
+        "Hora",
+        "Pago",
+        "Mensaje",
+      ],
+      ...reservations.map((r) => [
+        r.created_at,
+        r.status,
+        r.name,
+        r.phone,
+        r.city,
+        r.address,
+        r.genre || "",
+        r.package_name,
+        String(r.package_price_cop),
+        r.extras.map((e) => `${e.name} ($${e.price})`).join("; "),
+        String(r.total_cop),
+        r.date,
+        r.time,
+        PAYMENT_LABEL[r.payment_method] || r.payment_method,
+        (r.message || "").replace(/\n/g, " "),
+      ]),
+    ];
+    const csv = rows
+      .map((row) =>
+        row
+          .map((cell) => `"${String(cell).replace(/"/g, '""')}"`)
+          .join(",")
+      )
+      .join("\n");
+    const blob = new Blob([csv], { type: "text/csv;charset=utf-8" });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.href = url;
+    link.download = `reservas-${new Date().toISOString().slice(0, 10)}.csv`;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
+  };
+
+  return (
+    <div className="space-y-5">
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <div className="inline-flex flex-wrap gap-2">
+          {(
+            [
+              ["all", `Todas (${counts.all})`],
+              ["pending", `Pendientes (${counts.pending})`],
+              ["confirmed", `Confirmadas (${counts.confirmed})`],
+              ["cancelled", `Canceladas (${counts.cancelled})`],
+            ] as const
+          ).map(([id, label]) => (
+            <button
+              key={id}
+              onClick={() => setFilter(id)}
+              className={`px-3 py-1.5 rounded-xl text-xs font-semibold border transition ${
+                filter === id
+                  ? "bg-amber-500/20 border-amber-500/60 text-amber-200"
+                  : "bg-stone-900/60 border-stone-800 text-stone-300 hover:border-stone-600"
+              }`}
+            >
+              {label}
+            </button>
+          ))}
+        </div>
+        <div className="flex items-center gap-2">
+          <button
+            onClick={onReload}
+            className="text-xs font-semibold text-stone-300 hover:text-amber-300 bg-stone-900/60 border border-stone-800 rounded-xl px-3 py-1.5"
+          >
+            Recargar
+          </button>
+          <button
+            onClick={exportCsv}
+            disabled={reservations.length === 0}
+            className="text-xs font-semibold text-stone-950 bg-gradient-to-r from-amber-500 to-yellow-500 rounded-xl px-3 py-1.5 disabled:opacity-50"
+          >
+            Exportar CSV
+          </button>
+        </div>
+      </div>
+
+      {error && (
+        <div className="text-sm text-red-400 bg-red-500/10 border border-red-500/30 rounded-lg px-3 py-2">
+          {error}
+        </div>
+      )}
+
+      {loading ? (
+        <div className="text-stone-400 text-center py-8">
+          Cargando reservas...
+        </div>
+      ) : filtered.length === 0 ? (
+        <div className="text-center text-stone-400 bg-stone-900/60 border border-stone-800 rounded-2xl py-12">
+          No hay reservas{" "}
+          {filter !== "all" ? `con estado "${STATUS_LABEL[filter]}"` : ""}{" "}
+          todavía.
+        </div>
+      ) : (
+        <ul className="space-y-4">
+          {filtered.map((r) => {
+            const created = new Date(r.created_at);
+            const createdLabel = `${created.toLocaleDateString("es-CO")} ${created.toLocaleTimeString("es-CO", { hour: "2-digit", minute: "2-digit" })}`;
+            const paymentLabel =
+              PAYMENT_LABEL[r.payment_method] || r.payment_method;
+            return (
+              <li
+                key={r.id}
+                className="bg-stone-900/60 border border-stone-800 rounded-2xl p-5"
+              >
+                <div className="flex flex-wrap items-start justify-between gap-3 mb-3">
+                  <div>
+                    <div className="flex items-center gap-2 flex-wrap">
+                      <h3 className="font-display text-lg font-bold text-white">
+                        {r.name}
+                      </h3>
+                      <span
+                        className={`text-[10px] font-bold px-2 py-0.5 rounded-full border ${STATUS_STYLE[r.status]}`}
+                      >
+                        {STATUS_LABEL[r.status]}
+                      </span>
+                      {r.genre && (
+                        <span className="text-[10px] font-semibold text-stone-300 bg-stone-800/80 border border-stone-700 px-2 py-0.5 rounded-full uppercase">
+                          {r.genre}
+                        </span>
+                      )}
+                    </div>
+                    <div className="text-xs text-stone-500 mt-0.5">
+                      Creada {createdLabel}
+                    </div>
+                  </div>
+                  <div className="text-right">
+                    <div className="text-amber-400 font-extrabold text-lg">
+                      ${formatCop(r.total_cop)}
+                    </div>
+                    <div className="text-xs text-stone-500">
+                      {paymentLabel}
+                    </div>
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-y-2 gap-x-4 text-sm">
+                  <div className="flex items-center gap-2 text-stone-300">
+                    <CalendarDays className="w-4 h-4 text-amber-400" />
+                    {r.date} · {r.time}
+                  </div>
+                  <div className="flex items-center gap-2 text-stone-300">
+                    <PhoneIcon className="w-4 h-4 text-amber-400" />
+                    <a
+                      href={`https://wa.me/${r.phone.replace(/\D/g, "")}`}
+                      target="_blank"
+                      rel="noreferrer"
+                      className="hover:text-amber-300"
+                    >
+                      {r.phone}
+                    </a>
+                  </div>
+                  <div className="flex items-center gap-2 text-stone-300">
+                    <MapPin className="w-4 h-4 text-amber-400" />
+                    {r.city}
+                  </div>
+                  <div className="flex items-start gap-2 text-stone-300">
+                    <MapPin className="w-4 h-4 text-amber-400 mt-0.5" />
+                    <span className="break-words">{r.address}</span>
+                  </div>
+                  <div className="flex items-center gap-2 text-stone-300 sm:col-span-2">
+                    <Package className="w-4 h-4 text-amber-400" />
+                    {r.package_name} · ${formatCop(r.package_price_cop)}
+                  </div>
+                </div>
+
+                {r.extras.length > 0 && (
+                  <div className="mt-3 pt-3 border-t border-stone-800">
+                    <div className="text-xs font-semibold text-stone-400 mb-1">
+                      Adicionales
+                    </div>
+                    <ul className="flex flex-wrap gap-2">
+                      {r.extras.map((e, i) => (
+                        <li
+                          key={`${e.id}-${i}`}
+                          className="text-xs text-stone-200 bg-stone-800/60 border border-stone-700 rounded-lg px-2 py-1"
+                        >
+                          {e.name} · ${e.price}
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                )}
+
+                {r.message && (
+                  <div className="mt-3 pt-3 border-t border-stone-800">
+                    <div className="text-xs font-semibold text-stone-400 mb-1">
+                      Mensaje del cliente
+                    </div>
+                    <p className="text-sm text-stone-200 whitespace-pre-wrap">
+                      {r.message}
+                    </p>
+                  </div>
+                )}
+
+                <div className="mt-4 pt-4 border-t border-stone-800 flex flex-wrap items-center gap-2">
+                  <span className="text-xs font-semibold text-stone-400">
+                    Cambiar estado:
+                  </span>
+                  {(
+                    [
+                      ["pending", "Pendiente"],
+                      ["confirmed", "Confirmada"],
+                      ["cancelled", "Cancelada"],
+                    ] as const
+                  ).map(([s, label]) => (
+                    <button
+                      key={s}
+                      onClick={() => onStatusChange(r.id, s)}
+                      disabled={updatingId === r.id || r.status === s}
+                      className={`text-xs font-semibold px-3 py-1.5 rounded-xl border transition disabled:opacity-50 ${
+                        r.status === s
+                          ? STATUS_STYLE[s]
+                          : "bg-stone-900/60 border-stone-700 text-stone-300 hover:border-stone-500"
+                      }`}
+                    >
+                      {label}
+                    </button>
+                  ))}
+                </div>
+              </li>
+            );
+          })}
+        </ul>
+      )}
     </div>
   );
 }
