@@ -1,8 +1,12 @@
 import { ChevronDown } from "lucide-react";
+import { genreHash } from "../lib/routes";
 
 export function Hero() {
   const scrollTo = (id: string) =>
     document.getElementById(id)?.scrollIntoView({ behavior: "smooth" });
+  const goMariachi = () => {
+    window.location.hash = genreHash("mariachi");
+  };
 
   return (
     <section
@@ -32,7 +36,7 @@ export function Hero() {
 
         <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 justify-center items-stretch sm:items-center max-w-2xl mx-auto">
           <button
-            onClick={() => scrollTo("reservar")}
+            onClick={goMariachi}
             className="flex-1 border border-stone-700 hover:border-amber-500/60 bg-stone-900/50 backdrop-blur-sm text-stone-100 hover:text-amber-300 px-6 py-5 rounded-2xl font-bold text-lg sm:text-xl tracking-wide transition-all"
           >
             Reserva una serenata
