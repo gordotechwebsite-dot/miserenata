@@ -224,12 +224,6 @@ export function Availability({
     if (embedded && onSlotSelect) {
       const label = SLOTS.find((s) => s.time === time)?.label || time;
       onSlotSelect(d, time, label);
-      setTimeout(() => {
-        const target =
-          document.getElementById("servicios") ||
-          document.getElementById("reservar");
-        target?.scrollIntoView({ behavior: "smooth", block: "start" });
-      }, 50);
       return;
     }
     setTimeout(() => {
