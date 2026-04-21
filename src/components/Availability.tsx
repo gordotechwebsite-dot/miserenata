@@ -9,15 +9,30 @@ import {
   MessageCircle,
   Send,
 } from "lucide-react";
-import { WHATSAPP_LINK, getSiteSetting } from "../lib/supabase";
+import {
+  WHATSAPP_LINK,
+  fetchBookedSlots,
+  getSiteSetting,
+} from "../lib/supabase";
 import { DEFAULT_GENRES, type GenreId } from "../lib/constants";
 
 type Props = {
   genreId?: GenreId | null;
   variant?: "page" | "embedded";
+  onSlotSelect?: (date: Date, time: string, label: string) => void;
 };
 
 export const UNAVAILABLE_SLOTS_KEY = "unavailable_slots";
+
+export function unavailableKey(genreId: GenreId | null | undefined): string {
+  return genreId ? `unavailable_slots_${genreId}` : UNAVAILABLE_SLOTS_KEY;
+}
+
+export const GENRE_IDS_FOR_SLOTS: GenreId[] = [
+  "mariachi",
+  "nortena",
+  "banda",
+];
 
 export const SLOTS: { label: string; time: string }[] = [
   { label: "12:00 PM", time: "12:00" },
@@ -90,7 +105,11 @@ export function parseUnavailable(value: string | null): Set<string> {
 
 export { MONTHS_ES, DAYS_ES };
 
-export function Availability({ genreId, variant = "page" }: Props) {
+export function Availability({
+  genreId,
+  variant = "page",
+  onSlotSelect,
+}: Props) {
   const embedded = variant === "embedded";
   const today = startOfDay(new Date());
   const [view, setView] = useState(() => ({
@@ -105,6 +124,15 @@ export function Availability({ genreId, variant = "page" }: Props) {
   const [notes, setNotes] = useState("");
   const [submitted, setSubmitted] = useState(false);
   const formRef = useRef<HTMLDivElement | null>(null);
+  const slotsRef = useRef<HTMLDivElement | null>(null);
+
+  const scrollToSlotsOnMobile = () => {
+    if (typeof window === "undefined") return;
+    if (window.innerWidth >= 768) return;
+    setTimeout(() => {
+      slotsRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
+    }, 60);
+  };
 
   const genre = genreId
     ? DEFAULT_GENRES.find((g) => g.id === genreId) || null
@@ -112,13 +140,40 @@ export function Availability({ genreId, variant = "page" }: Props) {
 
   useEffect(() => {
     let mounted = true;
-    getSiteSetting(UNAVAILABLE_SLOTS_KEY).then((v) => {
-      if (mounted) setUnavailable(parseUnavailable(v));
-    });
+    (async () => {
+      if (genreId) {
+        const [perGenre, legacy, booked] = await Promise.all([
+          getSiteSetting(unavailableKey(genreId)),
+          getSiteSetting(UNAVAILABLE_SLOTS_KEY),
+          fetchBookedSlots(genreId),
+        ]);
+        if (!mounted) return;
+        const set = new Set<string>();
+        parseUnavailable(perGenre).forEach((s) => set.add(s));
+        parseUnavailable(legacy).forEach((s) => set.add(s));
+        booked.forEach((b) => set.add(`${b.date}|${b.time}`));
+        setUnavailable(set);
+      } else {
+        const [settings, booked] = await Promise.all([
+          Promise.all([
+            getSiteSetting(UNAVAILABLE_SLOTS_KEY),
+            ...GENRE_IDS_FOR_SLOTS.map((g) => getSiteSetting(unavailableKey(g))),
+          ]),
+          fetchBookedSlots(null),
+        ]);
+        if (!mounted) return;
+        const set = new Set<string>();
+        settings.forEach((v) =>
+          parseUnavailable(v).forEach((s) => set.add(s))
+        );
+        booked.forEach((b) => set.add(`${b.date}|${b.time}`));
+        setUnavailable(set);
+      }
+    })();
     return () => {
       mounted = false;
     };
-  }, []);
+  }, [genreId]);
 
   const cells = useMemo(
     () => buildMonthDays(view.year, view.month),
@@ -160,6 +215,17 @@ export function Availability({ genreId, variant = "page" }: Props) {
     setSelected(d);
     setSlotTime(time);
     setSubmitted(false);
+    if (embedded && onSlotSelect) {
+      const label = SLOTS.find((s) => s.time === time)?.label || time;
+      onSlotSelect(d, time, label);
+      setTimeout(() => {
+        const target =
+          document.getElementById("servicios") ||
+          document.getElementById("reservar");
+        target?.scrollIntoView({ behavior: "smooth", block: "start" });
+      }, 50);
+      return;
+    }
     setTimeout(() => {
       formRef.current?.scrollIntoView({ behavior: "smooth", block: "center" });
     }, 50);
@@ -168,7 +234,7 @@ export function Availability({ genreId, variant = "page" }: Props) {
   const buildWaMessage = (d: Date, slotLabel: string) => {
     const pretty = formatDateEs(d);
     const genrePart = genre ? ` de ${genre.name}` : "";
-    const header = `Hola Miserenata, quiero reservar una serenata${genrePart} para el ${pretty} a las ${slotLabel}.`;
+    const header = `Hola Musicaenvivo.co, quiero reservar una serenata${genrePart} para el ${pretty} a las ${slotLabel}.`;
     const details: string[] = [];
     if (name.trim()) details.push(`Nombre: ${name.trim()}`);
     if (phone.trim()) details.push(`Teléfono: ${phone.trim()}`);
@@ -272,6 +338,7 @@ export function Availability({ genreId, variant = "page" }: Props) {
                       setSelected(d);
                       setSlotTime(null);
                       setSubmitted(false);
+                      scrollToSlotsOnMobile();
                     }}
                     disabled={past}
                     className={`aspect-square rounded-xl text-sm sm:text-base font-semibold flex items-center justify-center transition-all border ${
@@ -291,7 +358,10 @@ export function Availability({ genreId, variant = "page" }: Props) {
             </div>
           </div>
 
-          <div className="bg-stone-900/60 border border-stone-800 rounded-3xl p-5 sm:p-6">
+          <div
+            ref={slotsRef}
+            className="bg-stone-900/60 border border-stone-800 rounded-3xl p-5 sm:p-6 scroll-mt-24"
+          >
             <div className="flex items-center gap-2 mb-2">
               <Clock className="w-5 h-5 text-amber-400" />
               <div className="font-display font-bold text-white text-lg">
@@ -324,23 +394,33 @@ export function Availability({ genreId, variant = "page" }: Props) {
                     disabled={taken}
                     className={`flex items-center justify-between px-4 py-3 rounded-2xl border transition-all text-left ${
                       taken
-                        ? "bg-stone-950/40 border-stone-900 text-stone-600 cursor-not-allowed line-through"
+                        ? "bg-emerald-500/15 border-emerald-500/60 text-emerald-100 cursor-not-allowed"
                         : active
                         ? "bg-amber-500/15 border-amber-500/60 text-amber-200"
                         : "bg-stone-800/60 border-stone-700 hover:border-amber-500/60 hover:bg-stone-800 text-stone-100"
                     }`}
                   >
-                    <span className="font-semibold">{s.label}</span>
                     <span
-                      className={`text-xs font-semibold ${
+                      className={`font-semibold ${
+                        taken ? "line-through opacity-80" : ""
+                      }`}
+                    >
+                      {s.label}
+                    </span>
+                    <span
+                      className={`text-xs font-extrabold uppercase tracking-wider px-2 py-1 rounded-full ${
                         taken
-                          ? "text-stone-600"
+                          ? "bg-emerald-500 text-stone-950"
                           : active
                           ? "text-amber-200"
                           : "text-amber-300"
                       }`}
                     >
-                      {taken ? "Ocupado" : active ? "Seleccionado" : "Disponible"}
+                      {taken
+                        ? "Reservado"
+                        : active
+                        ? "Seleccionado"
+                        : "Disponible"}
                     </span>
                   </button>
                 );
@@ -349,7 +429,7 @@ export function Availability({ genreId, variant = "page" }: Props) {
           </div>
         </div>
 
-        {selected && selectedSlot && (
+        {!embedded && selected && selectedSlot && (
           <div
             ref={formRef}
             className="mt-8 bg-stone-900/70 border border-stone-800 rounded-3xl p-5 sm:p-8"

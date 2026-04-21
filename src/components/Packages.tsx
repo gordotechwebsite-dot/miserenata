@@ -1,4 +1,4 @@
-import { Check, Clock, Music, Users, Star } from "lucide-react";
+import { Clock, Music, Users, Star } from "lucide-react";
 import { type PackageData, formatCop } from "../lib/constants";
 import { ImageWithFallback } from "./ImageWithFallback";
 import { supabase } from "../lib/supabase";
@@ -112,18 +112,6 @@ export function Packages({ packages, loading, onSelect, selectedName }: Props) {
                         </div>
                       </div>
                     </div>
-
-                    <ul className="space-y-2 mb-6">
-                      {pkg.features.map((feat, i) => (
-                        <li
-                          key={i}
-                          className="flex items-start gap-2 text-sm text-stone-300"
-                        >
-                          <Check className="w-4 h-4 text-amber-400 flex-shrink-0 mt-0.5" />
-                          <span>{feat}</span>
-                        </li>
-                      ))}
-                    </ul>
 
                     <button
                       onClick={() => onSelect(pkg)}

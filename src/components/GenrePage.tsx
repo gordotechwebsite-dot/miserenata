@@ -22,6 +22,8 @@ export function GenrePage({ id, packages, loading }: Props) {
   const base = DEFAULT_GENRES.find((g) => g.id === id)!;
   const [genre, setGenre] = useState<GenreData>(base);
   const [selected, setSelected] = useState<PackageData | null>(null);
+  const [prefillDate, setPrefillDate] = useState<string>("");
+  const [prefillTime, setPrefillTime] = useState<string>("");
 
   useEffect(() => {
     let mounted = true;
@@ -41,7 +43,8 @@ export function GenrePage({ id, packages, loading }: Props) {
     };
   }, [id, base]);
 
-  const filtered = packages.filter((p) => p.genre === id);
+  const genreFiltered = packages.filter((p) => p.genre === id);
+  const filtered = genreFiltered.length > 0 ? genreFiltered : packages;
   const hasPackages = filtered.length > 0;
 
   const goHome = () => {
@@ -56,6 +59,9 @@ export function GenrePage({ id, packages, loading }: Props) {
 
   const scrollToReservar = () =>
     document.getElementById("reservar")?.scrollIntoView({ behavior: "smooth" });
+
+  const scrollToPaquetes = () =>
+    document.getElementById("servicios")?.scrollIntoView({ behavior: "smooth" });
 
   return (
     <>
@@ -93,7 +99,7 @@ export function GenrePage({ id, packages, loading }: Props) {
             </button>
             {hasPackages && (
               <button
-                onClick={scrollToReservar}
+                onClick={scrollToPaquetes}
                 className="border border-stone-700 hover:border-amber-500/60 bg-stone-900/60 backdrop-blur-sm text-stone-100 hover:text-amber-300 px-5 py-3 rounded-2xl font-bold text-base sm:text-lg tracking-wide transition-all"
               >
                 Ver paquetes
@@ -105,7 +111,17 @@ export function GenrePage({ id, packages, loading }: Props) {
 
       <GenreGallery id={id} genreName={genre.name} />
 
-      <Availability genreId={id} variant="embedded" />
+      <Availability
+        genreId={id}
+        variant="embedded"
+        onSlotSelect={(d, _time, label) => {
+          const y = d.getFullYear();
+          const m = String(d.getMonth() + 1).padStart(2, "0");
+          const day = String(d.getDate()).padStart(2, "0");
+          setPrefillDate(`${y}-${m}-${day}`);
+          setPrefillTime(label);
+        }}
+      />
 
       {hasPackages && (
         <>
@@ -122,6 +138,9 @@ export function GenrePage({ id, packages, loading }: Props) {
             packages={filtered}
             selected={selected}
             onSelect={setSelected}
+            initialDate={prefillDate}
+            initialTime={prefillTime}
+            genreId={id}
           />
         </>
       )}

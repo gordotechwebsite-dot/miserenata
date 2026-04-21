@@ -83,7 +83,11 @@ export function Genres() {
                 }}
               />
               <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-black/90 via-black/20 to-transparent" />
-              <div className="absolute inset-x-0 bottom-0 p-5 sm:p-6">
+              <div
+                className={`absolute inset-x-0 bottom-0 p-5 sm:p-6 flex ${
+                  g.id === "nortena" ? "justify-end text-right" : ""
+                }`}
+              >
                 <div className="font-display font-black text-3xl sm:text-4xl text-white tracking-tight drop-shadow-[0_2px_10px_rgba(0,0,0,0.8)]">
                   {g.name}
                 </div>

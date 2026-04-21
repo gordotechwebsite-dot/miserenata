@@ -1,5 +1,4 @@
 import { useEffect, useState } from "react";
-import { Camera } from "lucide-react";
 import { supabase } from "../lib/supabase";
 import { Reveal } from "./Reveal";
 
@@ -58,12 +57,6 @@ export function Gallery() {
     <section id="galeria" className="py-16 sm:py-24 bg-stone-950">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mb-10 sm:mb-14">
         <Reveal className="text-center">
-          <div className="inline-flex items-center gap-2 bg-amber-500/10 border border-amber-500/30 rounded-full px-4 py-2 mb-4">
-            <Camera className="w-4 h-4 text-amber-400" />
-            <span className="text-amber-300 text-xs font-medium tracking-wider uppercase">
-              Galería
-            </span>
-          </div>
           <h2 className="font-display font-black text-3xl sm:text-5xl mb-4 bg-gradient-to-br from-amber-200 via-yellow-100 to-amber-400 bg-clip-text text-transparent tracking-tight">
             Momentos que hemos creado
           </h2>
@@ -101,7 +94,7 @@ export function Gallery() {
             {loop.map((item, idx) => (
               <div
                 key={`${item.name}-${idx}`}
-                className="flex-shrink-0 w-[72vw] sm:w-[340px] lg:w-[400px] aspect-[4/3] rounded-3xl overflow-hidden border border-stone-800 bg-stone-900"
+                className="flex-shrink-0 w-[56vw] sm:w-[260px] lg:w-[300px] aspect-[3/4] rounded-3xl overflow-hidden border border-stone-800 bg-stone-900"
               >
                 <img
                   src={item.url}

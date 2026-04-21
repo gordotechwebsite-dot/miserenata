@@ -9,7 +9,6 @@ import {
 import { parseRoute, type Route } from "./lib/routes";
 import { Navbar } from "./components/Navbar";
 import { Hero } from "./components/Hero";
-import { TrustStrip } from "./components/TrustStrip";
 import { Genres } from "./components/Genres";
 import { Gallery } from "./components/Gallery";
 import { Testimonials } from "./components/Testimonials";
@@ -64,7 +63,7 @@ function mapRow(row: PackageRow): PackageData {
     fallbackUrl:
       row.fallback_url ||
       local?.fallbackUrl ||
-      "https://placehold.co/400x300/1a1a2e/d4af37?text=Miserenata",
+      "https://placehold.co/400x300/1a1a2e/d4af37?text=Musicaenvivo",
     localImage: local?.localImage || "/images/mariachi-hero.jpg",
     genre,
   };
@@ -153,7 +152,6 @@ function App() {
       ) : (
         <>
           <Hero />
-          <TrustStrip />
           <Genres />
           <Gallery />
           <Testimonials />

@@ -19,7 +19,7 @@ export function VipBanner() {
   const openWa = () =>
     window.open(
       `${WHATSAPP_LINK}?text=${encodeURIComponent(
-        "Hola Miserenata, quiero cotizar una Experiencia VIP a la medida."
+        "Hola Musicaenvivo.co, quiero cotizar una Experiencia VIP a la medida."
       )}`,
       "_blank"
     );

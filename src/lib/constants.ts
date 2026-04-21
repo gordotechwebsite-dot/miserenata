@@ -140,7 +140,7 @@ export const TESTIMONIALS = [
   {
     name: "Daniela Suárez",
     city: "Nobsa",
-    text: "Reservamos por WhatsApp y fue súper fácil. Llegaron a tiempo, se vistieron elegantes y se notó la experiencia. Gracias Miserenata.",
+    text: "Reservamos por WhatsApp y fue súper fácil. Llegaron a tiempo, se vistieron elegantes y se notó la experiencia. Gracias Musicaenvivo.",
     rating: 5,
   },
   {
@@ -187,14 +187,25 @@ export const TESTIMONIALS = [
   },
 ] as const;
 
-export const EXTRAS = [
+export type ExtraItem = {
+  id: string;
+  name: string;
+  price: string;
+  icon: string;
+  imageUrl?: string;
+};
+
+export const DEFAULT_EXTRAS: ExtraItem[] = [
   { id: "chocolates", name: "Caja de Chocolates", price: "35.000", icon: "🍫" },
   { id: "rosas", name: "Ramo de Rosas (12)", price: "45.000", icon: "🌹" },
   { id: "globos", name: "Globos Decorativos", price: "25.000", icon: "🎈" },
   { id: "peluche", name: "Peluche Grande", price: "40.000", icon: "🧸" },
   { id: "vino", name: "Botella de Vino", price: "55.000", icon: "🍷" },
   { id: "tarjeta", name: "Tarjeta Personalizada", price: "15.000", icon: "💌" },
-] as const;
+];
+
+/** @deprecated Use DEFAULT_EXTRAS; extras are loaded dynamically from site_settings. */
+export const EXTRAS = DEFAULT_EXTRAS;
 
 export const formatCop = (value: number): string =>
   value.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ".");

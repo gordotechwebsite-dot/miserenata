@@ -59,7 +59,7 @@ export function Navbar() {
           title="Doble clic para acceso admin"
         >
           <span className="font-display text-lg sm:text-xl font-bold bg-gradient-to-r from-amber-300 to-yellow-200 bg-clip-text text-transparent tracking-tight">
-            Miserenata<span className="text-amber-400">.</span>co
+            Musicaenvivo<span className="text-amber-400">.</span>co
           </span>
         </button>
 

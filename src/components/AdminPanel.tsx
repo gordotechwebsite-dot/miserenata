@@ -8,8 +8,10 @@ import {
   supabase,
 } from "../lib/supabase";
 import {
+  DEFAULT_EXTRAS,
   DEFAULT_GENRES,
   DEFAULT_PACKAGES,
+  type ExtraItem,
   type GenreData,
   type GenreId,
   type PackageData,
@@ -31,10 +33,14 @@ import {
   CalendarDays,
   ChevronLeft,
   ChevronRight,
+  Sparkles,
+  X,
+  ClipboardList,
+  Phone as PhoneIcon,
+  MapPin,
 } from "lucide-react";
 import {
   SLOTS,
-  UNAVAILABLE_SLOTS_KEY,
   buildMonthDays,
   formatDateEs,
   MONTHS_ES,
@@ -42,6 +48,7 @@ import {
   parseUnavailable,
   slotKey,
   startOfDay,
+  unavailableKey,
 } from "./Availability";
 
 const GALLERY_BUCKET = "gallery";
@@ -65,7 +72,55 @@ type GalleryFile = {
   createdAt: string | null;
 };
 
-type Tab = "packages" | "gallery" | "banner" | "genres" | "calendar";
+type Tab =
+  | "reservations"
+  | "packages"
+  | "gallery"
+  | "banner"
+  | "genres"
+  | "calendar"
+  | "extras";
+
+type ReservationExtra = { id: string; name: string; price: string };
+
+type ReservationRecord = {
+  id: string;
+  created_at: string;
+  name: string;
+  phone: string;
+  city: string;
+  address: string;
+  message: string | null;
+  date: string;
+  time: string;
+  genre: string | null;
+  package_id: string | null;
+  package_name: string;
+  package_price_cop: number;
+  extras: ReservationExtra[];
+  extras_total_cop: number;
+  total_cop: number;
+  payment_method: "nequi" | "efectivo" | "bancolombia" | string;
+  status: "pending" | "confirmed" | "cancelled";
+};
+
+const PAYMENT_LABEL: Record<string, string> = {
+  nequi: "Nequi",
+  efectivo: "Efectivo",
+  bancolombia: "Bancolombia",
+};
+
+const STATUS_LABEL: Record<ReservationRecord["status"], string> = {
+  pending: "Pendiente",
+  confirmed: "Confirmada",
+  cancelled: "Cancelada",
+};
+
+const STATUS_STYLE: Record<ReservationRecord["status"], string> = {
+  pending: "bg-amber-500/10 text-amber-200 border-amber-500/40",
+  confirmed: "bg-emerald-500/10 text-emerald-200 border-emerald-500/40",
+  cancelled: "bg-stone-700/40 text-stone-300 border-stone-600",
+};
 
 const GENRE_IDS_SET = new Set<GenreId>(["mariachi", "nortena", "banda"]);
 
@@ -106,7 +161,7 @@ function rowToPackage(row: PackageRow): PackageData {
     imagePath: row.image_path,
     imageUrl: row.image_url,
     fallbackUrl:
-      row.fallback_url || local?.fallbackUrl || "https://placehold.co/400x300/1a1a2e/d4af37?text=Miserenata",
+      row.fallback_url || local?.fallbackUrl || "https://placehold.co/400x300/1a1a2e/d4af37?text=Musicaenvivo",
     localImage: local?.localImage || "/images/mariachi-hero.jpg",
     genre,
   };
@@ -164,6 +219,25 @@ export function AdminPanel({ onExit }: { onExit: () => void }) {
   const [calSaving, setCalSaving] = useState(false);
   const [calError, setCalError] = useState<string | null>(null);
   const [calSavedAt, setCalSavedAt] = useState<number | null>(null);
+  const [calGenre, setCalGenre] = useState<GenreId>("nortena");
+  const [calPrefilling, setCalPrefilling] = useState(false);
+
+  const [extras, setExtras] = useState<ExtraItem[]>(DEFAULT_EXTRAS);
+  const [extraUploading, setExtraUploading] = useState<string | null>(null);
+  const [extraError, setExtraError] = useState<string | null>(null);
+  const [extrasSaving, setExtrasSaving] = useState(false);
+  const [extrasSavedAt, setExtrasSavedAt] = useState<number | null>(null);
+  const extraFileInputs = useRef<Record<string, HTMLInputElement | null>>({});
+
+  const [reservations, setReservations] = useState<ReservationRecord[]>([]);
+  const [reservationsLoading, setReservationsLoading] = useState(false);
+  const [reservationsError, setReservationsError] = useState<string | null>(null);
+  const [reservationStatusFilter, setReservationStatusFilter] = useState<
+    "all" | ReservationRecord["status"]
+  >("all");
+  const [reservationUpdating, setReservationUpdating] = useState<string | null>(
+    null
+  );
 
   const isAdmin = session?.user?.email === ADMIN_EMAIL;
 
@@ -189,8 +263,32 @@ export function AdminPanel({ onExit }: { onExit: () => void }) {
     void loadPackages();
     void loadBanner();
     void loadGenres();
-    void loadCalendar();
+    void loadExtras();
+    void loadReservations();
   }, [isAdmin]);
+
+  useEffect(() => {
+    if (!isAdmin) return;
+    const channel = supabase
+      .channel("admin-reservations")
+      .on(
+        "postgres_changes",
+        { event: "*", schema: "public", table: "reservations" },
+        () => {
+          void loadReservations();
+        }
+      )
+      .subscribe();
+    return () => {
+      void supabase.removeChannel(channel);
+    };
+  }, [isAdmin]);
+
+  useEffect(() => {
+    if (!isAdmin) return;
+    void loadCalendar();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isAdmin, calGenre]);
 
   useEffect(() => {
     if (!isAdmin) return;
@@ -201,33 +299,108 @@ export function AdminPanel({ onExit }: { onExit: () => void }) {
   const loadCalendar = async () => {
     setCalLoading(true);
     setCalError(null);
-    const value = await getSiteSetting(UNAVAILABLE_SLOTS_KEY);
+    const value = await getSiteSetting(unavailableKey(calGenre));
     setCalUnavailable(parseUnavailable(value));
+    setCalSavedAt(null);
     setCalLoading(false);
   };
 
-  const toggleCalSlot = (date: Date, time: string) => {
-    const key = slotKey(date, time);
-    setCalUnavailable((prev) => {
-      const next = new Set(prev);
-      if (next.has(key)) next.delete(key);
-      else next.add(key);
-      return next;
-    });
-    setCalSavedAt(null);
-  };
-
-  const saveCalendar = async () => {
+  const persistCalendar = async (set: Set<string>) => {
     setCalSaving(true);
     setCalError(null);
-    const arr = Array.from(calUnavailable).sort();
+    const arr = Array.from(set).sort();
     const { error: err } = await setSiteSetting(
-      UNAVAILABLE_SLOTS_KEY,
+      unavailableKey(calGenre),
       JSON.stringify(arr)
     );
     if (err) setCalError(err);
     else setCalSavedAt(Date.now());
     setCalSaving(false);
+  };
+
+  const toggleCalSlot = (date: Date, time: string) => {
+    const key = slotKey(date, time);
+    const next = new Set(calUnavailable);
+    if (next.has(key)) next.delete(key);
+    else next.add(key);
+    setCalUnavailable(next);
+    void persistCalendar(next);
+  };
+
+  const saveCalendar = async () => {
+    await persistCalendar(calUnavailable);
+  };
+
+  const prefillNextMonth = async () => {
+    const ratio = calGenre === "nortena" ? 0.7 : calGenre === "mariachi" ? 0.3 : 0;
+    if (ratio <= 0) {
+      setCalError(
+        "Banda se deja libre (sin cupos pre-cargados). Cambia a Norteña o Mariachi."
+      );
+      return;
+    }
+    setCalPrefilling(true);
+    setCalError(null);
+    const now = new Date();
+    const nextMonthDate = new Date(now.getFullYear(), now.getMonth() + 1, 1);
+    const year = nextMonthDate.getFullYear();
+    const month = nextMonthDate.getMonth();
+    const days = buildMonthDays(year, month).filter(
+      (d): d is Date => d !== null
+    );
+    const seed = calGenre === "nortena" ? 101 : 307;
+    const all: { date: Date; time: string }[] = [];
+    days.forEach((d) => {
+      SLOTS.forEach((s) => all.push({ date: d, time: s.time }));
+    });
+    const ordered = all
+      .map((item, i) => ({
+        item,
+        rank: Math.abs(Math.sin((i + 1) * 12.9898 + seed * 78.233)),
+      }))
+      .sort((a, b) => a.rank - b.rank);
+    const count = Math.round(all.length * ratio);
+    const toAdd = ordered.slice(0, count).map((x) => slotKey(x.item.date, x.item.time));
+
+    const next = new Set(calUnavailable);
+    toAdd.forEach((k) => next.add(k));
+    setCalUnavailable(next);
+
+    const arr = Array.from(next).sort();
+    const { error: err } = await setSiteSetting(
+      unavailableKey(calGenre),
+      JSON.stringify(arr)
+    );
+    if (err) setCalError(err);
+    else {
+      setCalSavedAt(Date.now());
+      setCalView({ year, month });
+      setCalSelected(days[0]);
+    }
+    setCalPrefilling(false);
+  };
+
+  const clearNextMonth = async () => {
+    setCalPrefilling(true);
+    setCalError(null);
+    const now = new Date();
+    const nextMonthDate = new Date(now.getFullYear(), now.getMonth() + 1, 1);
+    const year = nextMonthDate.getFullYear();
+    const month = nextMonthDate.getMonth();
+    const next = new Set<string>();
+    calUnavailable.forEach((k) => {
+      const datePart = k.split("T")[0];
+      const d = new Date(`${datePart}T00:00:00`);
+      if (d.getFullYear() !== year || d.getMonth() !== month) next.add(k);
+    });
+    setCalUnavailable(next);
+    const { error: err } = await setSiteSetting(
+      unavailableKey(calGenre),
+      JSON.stringify(Array.from(next).sort())
+    );
+    if (err) setCalError(err);
+    else setCalSavedAt(Date.now());
+    setCalPrefilling(false);
   };
 
   const loadBanner = async () => {
@@ -279,6 +452,99 @@ export function AdminPanel({ onExit }: { onExit: () => void }) {
     if (r1.error || r2.error) setGenresError(r1.error || r2.error || "Error");
     else setGenresSavedId(g.id);
     setGenresSaving(null);
+  };
+
+  const loadExtras = async () => {
+    setExtraError(null);
+    const raw = await getSiteSetting("extras_list");
+    if (raw) {
+      try {
+        const parsed = JSON.parse(raw) as ExtraItem[];
+        if (Array.isArray(parsed)) {
+          setExtras(
+            parsed.map((x) => ({
+              id: String(x.id || ""),
+              name: String(x.name || ""),
+              price: String(x.price || ""),
+              icon: String(x.icon || "✨"),
+              imageUrl: x.imageUrl ? String(x.imageUrl) : undefined,
+            }))
+          );
+          return;
+        }
+      } catch {
+        // fallthrough to default + legacy images
+      }
+    }
+    // Legacy: per-id image keys
+    const legacy = await Promise.all(
+      DEFAULT_EXTRAS.map(async (x) => {
+        const v = await getSiteSetting(`extra_image_${x.id}`);
+        return { ...x, imageUrl: v?.trim() || undefined };
+      })
+    );
+    setExtras(legacy);
+  };
+
+  const saveExtras = async (next?: ExtraItem[]) => {
+    const list = next ?? extras;
+    setExtrasSaving(true);
+    setExtraError(null);
+    const { error: setErr } = await setSiteSetting(
+      "extras_list",
+      JSON.stringify(list)
+    );
+    if (setErr) setExtraError(setErr);
+    else setExtrasSavedAt(Date.now());
+    setExtrasSaving(false);
+  };
+
+  const updateExtraField = (id: string, patch: Partial<ExtraItem>) => {
+    setExtras((prev) =>
+      prev.map((x) => (x.id === id ? { ...x, ...patch } : x))
+    );
+  };
+
+  const addExtra = () => {
+    const id = `extra-${Date.now()}`;
+    setExtras((prev) => [
+      ...prev,
+      { id, name: "Nuevo adicional", price: "0", icon: "✨" },
+    ]);
+  };
+
+  const removeExtra = (id: string) => {
+    setExtras((prev) => prev.filter((x) => x.id !== id));
+  };
+
+  const handleExtraUpload = async (id: string, file: File | null) => {
+    if (!file) return;
+    setExtraUploading(id);
+    setExtraError(null);
+    const ext = file.name.split(".").pop()?.toLowerCase() || "jpg";
+    const key = `extras/${id}-${Date.now()}.${ext}`;
+    const { error: upErr } = await supabase.storage
+      .from(GALLERY_BUCKET)
+      .upload(key, file, {
+        cacheControl: "3600",
+        upsert: true,
+        contentType: file.type || undefined,
+      });
+    if (upErr) {
+      setExtraError(upErr.message);
+      setExtraUploading(null);
+      return;
+    }
+    const { data } = supabase.storage.from(GALLERY_BUCKET).getPublicUrl(key);
+    const url = data.publicUrl;
+    updateExtraField(id, { imageUrl: url });
+    setExtraUploading(null);
+    const input = extraFileInputs.current[id];
+    if (input) input.value = "";
+  };
+
+  const handleExtraRemoveImage = (id: string) => {
+    updateExtraField(id, { imageUrl: undefined });
   };
 
   const handleGenreCoverUpload = async (id: GenreId, file: File | null) => {
@@ -490,6 +756,93 @@ export function AdminPanel({ onExit }: { onExit: () => void }) {
     setCreating(false);
   };
 
+  const loadReservations = async () => {
+    setReservationsLoading(true);
+    setReservationsError(null);
+    const { data, error: err } = await supabase
+      .from("reservations")
+      .select("*")
+      .order("created_at", { ascending: false });
+    if (err) {
+      setReservationsError(err.message);
+    } else if (Array.isArray(data)) {
+      setReservations(
+        data.map((row) => {
+          const r = row as Record<string, unknown>;
+          const extras = Array.isArray(r.extras)
+            ? (r.extras as ReservationExtra[])
+            : [];
+          return {
+            id: String(r.id),
+            created_at: String(r.created_at),
+            name: String(r.name || ""),
+            phone: String(r.phone || ""),
+            city: String(r.city || ""),
+            address: String(r.address || ""),
+            message: (r.message as string | null) ?? null,
+            date: String(r.date || ""),
+            time: String(r.time || ""),
+            genre: (r.genre as string | null) ?? null,
+            package_id: (r.package_id as string | null) ?? null,
+            package_name: String(r.package_name || ""),
+            package_price_cop: Number(r.package_price_cop || 0),
+            extras,
+            extras_total_cop: Number(r.extras_total_cop || 0),
+            total_cop: Number(r.total_cop || 0),
+            payment_method: String(r.payment_method || "efectivo"),
+            status:
+              (r.status as ReservationRecord["status"]) || "pending",
+          };
+        })
+      );
+    }
+    setReservationsLoading(false);
+  };
+
+  const updateReservationStatus = async (
+    id: string,
+    status: ReservationRecord["status"]
+  ) => {
+    setReservationUpdating(id);
+    setReservationsError(null);
+    const { error: err } = await supabase
+      .from("reservations")
+      .update({ status })
+      .eq("id", id);
+    if (err) {
+      setReservationsError(err.message);
+    } else {
+      setReservations((prev) =>
+        prev.map((r) => (r.id === id ? { ...r, status } : r))
+      );
+    }
+    setReservationUpdating(null);
+  };
+
+  const addNewPackage = async () => {
+    setCreating(true);
+    setError(null);
+    const nextOrder =
+      packages.reduce((max, p) => Math.max(max, p.sortOrder || 0), 0) + 1;
+    const row = {
+      name: "Nuevo paquete",
+      price_cop: 0,
+      duration_minutes: 30,
+      songs_count: 5,
+      musicians_count: 4,
+      description: "",
+      features: [] as string[],
+      popular: false,
+      sort_order: nextOrder,
+      fallback_url: "https://placehold.co/400x300/1a1a2e/d4af37?text=Musicaenvivo",
+      genre: null as string | null,
+    };
+    const { error: err } = await supabase.from("packages").insert(row);
+    if (err) setError(err.message);
+    else await loadPackages();
+    setCreating(false);
+  };
+
   if (loadingAuth) {
     return (
       <div className="min-h-screen flex items-center justify-center text-stone-400">
@@ -508,7 +861,7 @@ export function AdminPanel({ onExit }: { onExit: () => void }) {
             </div>
             <div>
               <div className="font-display font-bold">Panel de Administrador</div>
-              <div className="text-xs text-stone-500">Miserenata.co</div>
+              <div className="text-xs text-stone-500">Musicaenvivo.co</div>
             </div>
           </div>
           <div className="flex items-center gap-3">
@@ -597,7 +950,26 @@ export function AdminPanel({ onExit }: { onExit: () => void }) {
                   {session.user?.email}
                 </span>
               </div>
-              <div className="inline-flex rounded-xl bg-stone-950/60 border border-stone-800 p-1">
+              <div className="inline-flex flex-wrap rounded-xl bg-stone-950/60 border border-stone-800 p-1">
+                <button
+                  onClick={() => setTab("reservations")}
+                  className={`flex items-center gap-2 px-4 py-1.5 rounded-lg text-sm font-semibold transition ${
+                    tab === "reservations"
+                      ? "bg-amber-500/20 text-amber-200"
+                      : "text-stone-400 hover:text-stone-200"
+                  }`}
+                >
+                  <ClipboardList className="w-4 h-4" /> Reservas
+                  {reservations.filter((r) => r.status === "pending").length >
+                    0 && (
+                    <span className="ml-1 inline-flex items-center justify-center text-[10px] font-bold rounded-full bg-amber-500 text-stone-950 w-5 h-5">
+                      {
+                        reservations.filter((r) => r.status === "pending")
+                          .length
+                      }
+                    </span>
+                  )}
+                </button>
                 <button
                   onClick={() => setTab("packages")}
                   className={`flex items-center gap-2 px-4 py-1.5 rounded-lg text-sm font-semibold transition ${
@@ -648,18 +1020,48 @@ export function AdminPanel({ onExit }: { onExit: () => void }) {
                 >
                   <CalendarDays className="w-4 h-4" /> Calendario
                 </button>
+                <button
+                  onClick={() => setTab("extras")}
+                  className={`flex items-center gap-2 px-4 py-1.5 rounded-lg text-sm font-semibold transition ${
+                    tab === "extras"
+                      ? "bg-amber-500/20 text-amber-200"
+                      : "text-stone-400 hover:text-stone-200"
+                  }`}
+                >
+                  <Sparkles className="w-4 h-4" /> Adicionales
+                </button>
               </div>
             </div>
 
+            {tab === "reservations" && (
+              <ReservationsTab
+                reservations={reservations}
+                loading={reservationsLoading}
+                error={reservationsError}
+                filter={reservationStatusFilter}
+                setFilter={setReservationStatusFilter}
+                updatingId={reservationUpdating}
+                onStatusChange={updateReservationStatus}
+                onReload={loadReservations}
+              />
+            )}
+
             {tab === "packages" && (
               <div className="space-y-5">
-                <div className="flex items-center justify-end">
+                <div className="flex items-center justify-end gap-3">
                   <button
                     onClick={createInitialPackages}
                     disabled={creating || packages.length > 0}
-                    className="flex items-center gap-2 bg-amber-500/10 hover:bg-amber-500/20 border border-amber-500/40 text-amber-300 px-4 py-2 rounded-xl text-sm font-semibold disabled:opacity-50"
+                    className="flex items-center gap-2 bg-stone-800/80 hover:bg-stone-700 border border-stone-700 text-stone-200 px-4 py-2 rounded-xl text-sm font-semibold disabled:opacity-50"
                   >
                     <Plus className="w-4 h-4" /> Crear paquetes iniciales
+                  </button>
+                  <button
+                    onClick={addNewPackage}
+                    disabled={creating}
+                    className="flex items-center gap-2 bg-gradient-to-r from-amber-500 to-yellow-500 text-stone-950 px-4 py-2 rounded-xl text-sm font-bold disabled:opacity-50"
+                  >
+                    <Plus className="w-4 h-4" /> Nuevo paquete
                   </button>
                 </div>
 
@@ -1108,9 +1510,74 @@ export function AdminPanel({ onExit }: { onExit: () => void }) {
                   </div>
                   <p className="text-stone-400 text-sm mb-4">
                     Haz clic en un día y luego marca los horarios que ya están
-                    ocupados. Los cupos marcados se muestran tachados en el
-                    sitio público.
+                    ocupados. Los cambios se{" "}
+                    <span className="text-amber-300 font-semibold">
+                      guardan automáticamente
+                    </span>{" "}
+                    y aparecen como{" "}
+                    <span className="text-emerald-300 font-semibold">
+                      Reservado
+                    </span>{" "}
+                    en el sitio público. Cada género tiene su propio calendario.
                   </p>
+
+                  <div className="mb-4 grid gap-3 sm:grid-cols-[auto_1fr] sm:items-center">
+                    <div className="flex flex-wrap gap-2">
+                      {(["mariachi", "nortena", "banda"] as GenreId[]).map(
+                        (g) => (
+                          <button
+                            key={g}
+                            onClick={() => setCalGenre(g)}
+                            className={`px-4 py-2 rounded-xl text-sm font-semibold transition capitalize ${
+                              calGenre === g
+                                ? "bg-amber-500 text-stone-950"
+                                : "bg-stone-800/70 text-stone-300 border border-stone-700 hover:border-amber-500/40"
+                            }`}
+                          >
+                            {g === "nortena" ? "Norteña" : g}
+                          </button>
+                        )
+                      )}
+                    </div>
+                    <div className="text-xs text-stone-500 sm:text-right">
+                      Editando:{" "}
+                      <span className="text-amber-300 font-semibold capitalize">
+                        {calGenre === "nortena" ? "Norteña" : calGenre}
+                      </span>
+                    </div>
+                  </div>
+
+                  <div className="mb-4 rounded-2xl border border-amber-500/20 bg-amber-500/5 p-4">
+                    <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+                      <div>
+                        <div className="text-sm font-bold text-amber-200">
+                          Pre-cargar próximo mes
+                        </div>
+                        <div className="text-xs text-stone-400 mt-0.5">
+                          Norteña → 70% de cupos ocupados · Mariachi → 30% ·
+                          Banda queda libre. Se distribuye en los 4 horarios.
+                        </div>
+                      </div>
+                      <div className="flex flex-wrap gap-2">
+                        <button
+                          onClick={prefillNextMonth}
+                          disabled={calPrefilling || calSaving || calLoading}
+                          className="bg-gradient-to-r from-amber-500 to-yellow-500 text-stone-950 px-4 py-2 rounded-xl text-sm font-bold disabled:opacity-50"
+                        >
+                          {calPrefilling
+                            ? "Pre-cargando..."
+                            : "Pre-cargar próximo mes"}
+                        </button>
+                        <button
+                          onClick={clearNextMonth}
+                          disabled={calPrefilling || calSaving || calLoading}
+                          className="border border-stone-700 text-stone-200 hover:border-red-500/60 hover:text-red-200 px-4 py-2 rounded-xl text-sm font-semibold disabled:opacity-50"
+                        >
+                          Limpiar próximo mes
+                        </button>
+                      </div>
+                    </div>
+                  </div>
 
                   {calError && (
                     <div className="mb-4 text-sm text-red-300 bg-red-500/10 border border-red-500/30 rounded-lg px-3 py-2 flex items-start gap-2">
@@ -1387,9 +1854,458 @@ export function AdminPanel({ onExit }: { onExit: () => void }) {
                 )}
               </div>
             )}
+
+            {tab === "extras" && (
+              <div className="space-y-5">
+                <div className="bg-stone-900/60 border border-stone-800 rounded-2xl p-5 sm:p-6">
+                  <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+                    <div>
+                      <div className="font-display font-bold text-lg text-white mb-1">
+                        Adicionales
+                      </div>
+                      <p className="text-stone-400 text-sm">
+                        Edita nombre, precio y emoji. Sube una foto (opcional).
+                        Elimina o agrega nuevos. Recuerda guardar al final.
+                      </p>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <button
+                        onClick={addExtra}
+                        className="flex items-center gap-2 bg-stone-800 hover:bg-stone-700 border border-stone-700 text-white px-3 py-2 rounded-xl text-sm font-semibold"
+                      >
+                        <Sparkles className="w-4 h-4" />
+                        Agregar
+                      </button>
+                      <button
+                        onClick={() => saveExtras()}
+                        disabled={extrasSaving}
+                        className="flex items-center gap-2 bg-gradient-to-r from-amber-500 to-yellow-500 text-stone-950 px-4 py-2 rounded-xl font-bold disabled:opacity-50"
+                      >
+                        {extrasSaving ? "Guardando..." : "Guardar cambios"}
+                      </button>
+                    </div>
+                  </div>
+                  {extraError && (
+                    <div className="mt-3 text-sm text-red-300 bg-red-500/10 border border-red-500/30 rounded-lg px-3 py-2 flex items-start gap-2">
+                      <AlertTriangle className="w-4 h-4 mt-0.5 flex-shrink-0" />
+                      <div>{extraError}</div>
+                    </div>
+                  )}
+                  {extrasSavedAt && !extrasSaving && !extraError && (
+                    <div className="mt-3 text-sm text-emerald-300">
+                      Guardado. Los clientes ya ven estos adicionales.
+                    </div>
+                  )}
+                </div>
+
+                {extras.length === 0 ? (
+                  <div className="text-center text-stone-400 bg-stone-900/60 border border-stone-800 rounded-2xl py-12">
+                    No hay adicionales. Agrega el primero con el botón "Agregar".
+                  </div>
+                ) : (
+                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                    {extras.map((x) => {
+                      const isUploading = extraUploading === x.id;
+                      return (
+                        <div
+                          key={x.id}
+                          className="bg-stone-900/60 border border-stone-800 rounded-2xl overflow-hidden"
+                        >
+                          <div className="relative aspect-square bg-stone-950 flex items-center justify-center p-2">
+                            {x.imageUrl ? (
+                              <>
+                                <img
+                                  src={x.imageUrl}
+                                  alt={x.name}
+                                  className="max-w-full max-h-full object-contain"
+                                />
+                                <button
+                                  onClick={() => handleExtraRemoveImage(x.id)}
+                                  className="absolute top-2 right-2 w-9 h-9 rounded-full bg-red-500/80 hover:bg-red-500 text-white flex items-center justify-center transition"
+                                  aria-label="Quitar foto"
+                                >
+                                  <X className="w-4 h-4" />
+                                </button>
+                              </>
+                            ) : (
+                              <div className="text-6xl">{x.icon || "✨"}</div>
+                            )}
+                          </div>
+                          <div className="p-4 space-y-2">
+                            <div>
+                              <label className="block text-xs text-stone-400 mb-1">
+                                Nombre
+                              </label>
+                              <input
+                                type="text"
+                                value={x.name}
+                                onChange={(e) =>
+                                  updateExtraField(x.id, {
+                                    name: e.target.value,
+                                  })
+                                }
+                                className="w-full bg-stone-800 border border-stone-700 rounded-lg px-3 py-1.5 text-white text-sm"
+                              />
+                            </div>
+                            <div className="grid grid-cols-[1fr_auto] gap-2">
+                              <div>
+                                <label className="block text-xs text-stone-400 mb-1">
+                                  Precio
+                                </label>
+                                <input
+                                  type="text"
+                                  value={x.price}
+                                  onChange={(e) =>
+                                    updateExtraField(x.id, {
+                                      price: e.target.value,
+                                    })
+                                  }
+                                  placeholder="25.000"
+                                  className="w-full bg-stone-800 border border-stone-700 rounded-lg px-3 py-1.5 text-white text-sm"
+                                />
+                              </div>
+                              <div className="w-20">
+                                <label className="block text-xs text-stone-400 mb-1">
+                                  Emoji
+                                </label>
+                                <input
+                                  type="text"
+                                  value={x.icon}
+                                  onChange={(e) =>
+                                    updateExtraField(x.id, {
+                                      icon: e.target.value,
+                                    })
+                                  }
+                                  className="w-full bg-stone-800 border border-stone-700 rounded-lg px-3 py-1.5 text-white text-center text-lg"
+                                />
+                              </div>
+                            </div>
+                            <input
+                              ref={(el) => {
+                                extraFileInputs.current[x.id] = el;
+                              }}
+                              type="file"
+                              accept="image/*"
+                              onChange={(e) =>
+                                handleExtraUpload(
+                                  x.id,
+                                  e.target.files?.[0] || null
+                                )
+                              }
+                              className="hidden"
+                            />
+                            <div className="flex gap-2 pt-1">
+                              <button
+                                onClick={() =>
+                                  extraFileInputs.current[x.id]?.click()
+                                }
+                                disabled={isUploading}
+                                className="flex-1 flex items-center justify-center gap-2 bg-amber-500/10 hover:bg-amber-500/20 border border-amber-500/40 text-amber-300 px-3 py-2 rounded-xl text-sm font-semibold disabled:opacity-50"
+                              >
+                                <Upload className="w-4 h-4" />
+                                {isUploading
+                                  ? "Subiendo..."
+                                  : x.imageUrl
+                                  ? "Reemplazar"
+                                  : "Subir foto"}
+                              </button>
+                              <button
+                                onClick={() => removeExtra(x.id)}
+                                className="flex items-center justify-center bg-red-500/10 hover:bg-red-500/20 border border-red-500/40 text-red-300 w-11 rounded-xl"
+                                aria-label="Eliminar adicional"
+                              >
+                                <Trash2 className="w-4 h-4" />
+                              </button>
+                            </div>
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                )}
+              </div>
+            )}
           </div>
         )}
       </main>
+    </div>
+  );
+}
+
+function ReservationsTab({
+  reservations,
+  loading,
+  error,
+  filter,
+  setFilter,
+  updatingId,
+  onStatusChange,
+  onReload,
+}: {
+  reservations: ReservationRecord[];
+  loading: boolean;
+  error: string | null;
+  filter: "all" | ReservationRecord["status"];
+  setFilter: (f: "all" | ReservationRecord["status"]) => void;
+  updatingId: string | null;
+  onStatusChange: (id: string, status: ReservationRecord["status"]) => void;
+  onReload: () => void;
+}) {
+  const filtered =
+    filter === "all" ? reservations : reservations.filter((r) => r.status === filter);
+
+  const counts = {
+    all: reservations.length,
+    pending: reservations.filter((r) => r.status === "pending").length,
+    confirmed: reservations.filter((r) => r.status === "confirmed").length,
+    cancelled: reservations.filter((r) => r.status === "cancelled").length,
+  };
+
+  const exportCsv = () => {
+    const rows = [
+      [
+        "Fecha creación",
+        "Estado",
+        "Nombre",
+        "Teléfono",
+        "Ciudad",
+        "Dirección",
+        "Género",
+        "Paquete",
+        "Precio paquete",
+        "Adicionales",
+        "Total",
+        "Fecha evento",
+        "Hora",
+        "Pago",
+        "Mensaje",
+      ],
+      ...reservations.map((r) => [
+        r.created_at,
+        r.status,
+        r.name,
+        r.phone,
+        r.city,
+        r.address,
+        r.genre || "",
+        r.package_name,
+        String(r.package_price_cop),
+        r.extras.map((e) => `${e.name} ($${e.price})`).join("; "),
+        String(r.total_cop),
+        r.date,
+        r.time,
+        PAYMENT_LABEL[r.payment_method] || r.payment_method,
+        (r.message || "").replace(/\n/g, " "),
+      ]),
+    ];
+    const csv = rows
+      .map((row) =>
+        row
+          .map((cell) => `"${String(cell).replace(/"/g, '""')}"`)
+          .join(",")
+      )
+      .join("\n");
+    const blob = new Blob([csv], { type: "text/csv;charset=utf-8" });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.href = url;
+    link.download = `reservas-${new Date().toISOString().slice(0, 10)}.csv`;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
+  };
+
+  return (
+    <div className="space-y-5">
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <div className="inline-flex flex-wrap gap-2">
+          {(
+            [
+              ["all", `Todas (${counts.all})`],
+              ["pending", `Pendientes (${counts.pending})`],
+              ["confirmed", `Confirmadas (${counts.confirmed})`],
+              ["cancelled", `Canceladas (${counts.cancelled})`],
+            ] as const
+          ).map(([id, label]) => (
+            <button
+              key={id}
+              onClick={() => setFilter(id)}
+              className={`px-3 py-1.5 rounded-xl text-xs font-semibold border transition ${
+                filter === id
+                  ? "bg-amber-500/20 border-amber-500/60 text-amber-200"
+                  : "bg-stone-900/60 border-stone-800 text-stone-300 hover:border-stone-600"
+              }`}
+            >
+              {label}
+            </button>
+          ))}
+        </div>
+        <div className="flex items-center gap-2">
+          <button
+            onClick={onReload}
+            className="text-xs font-semibold text-stone-300 hover:text-amber-300 bg-stone-900/60 border border-stone-800 rounded-xl px-3 py-1.5"
+          >
+            Recargar
+          </button>
+          <button
+            onClick={exportCsv}
+            disabled={reservations.length === 0}
+            className="text-xs font-semibold text-stone-950 bg-gradient-to-r from-amber-500 to-yellow-500 rounded-xl px-3 py-1.5 disabled:opacity-50"
+          >
+            Exportar CSV
+          </button>
+        </div>
+      </div>
+
+      {error && (
+        <div className="text-sm text-red-400 bg-red-500/10 border border-red-500/30 rounded-lg px-3 py-2">
+          {error}
+        </div>
+      )}
+
+      {loading ? (
+        <div className="text-stone-400 text-center py-8">
+          Cargando reservas...
+        </div>
+      ) : filtered.length === 0 ? (
+        <div className="text-center text-stone-400 bg-stone-900/60 border border-stone-800 rounded-2xl py-12">
+          No hay reservas{" "}
+          {filter !== "all" ? `con estado "${STATUS_LABEL[filter]}"` : ""}{" "}
+          todavía.
+        </div>
+      ) : (
+        <ul className="space-y-4">
+          {filtered.map((r) => {
+            const created = new Date(r.created_at);
+            const createdLabel = `${created.toLocaleDateString("es-CO")} ${created.toLocaleTimeString("es-CO", { hour: "2-digit", minute: "2-digit" })}`;
+            const paymentLabel =
+              PAYMENT_LABEL[r.payment_method] || r.payment_method;
+            return (
+              <li
+                key={r.id}
+                className="bg-stone-900/60 border border-stone-800 rounded-2xl p-5"
+              >
+                <div className="flex flex-wrap items-start justify-between gap-3 mb-3">
+                  <div>
+                    <div className="flex items-center gap-2 flex-wrap">
+                      <h3 className="font-display text-lg font-bold text-white">
+                        {r.name}
+                      </h3>
+                      <span
+                        className={`text-[10px] font-bold px-2 py-0.5 rounded-full border ${STATUS_STYLE[r.status]}`}
+                      >
+                        {STATUS_LABEL[r.status]}
+                      </span>
+                      {r.genre && (
+                        <span className="text-[10px] font-semibold text-stone-300 bg-stone-800/80 border border-stone-700 px-2 py-0.5 rounded-full uppercase">
+                          {r.genre}
+                        </span>
+                      )}
+                    </div>
+                    <div className="text-xs text-stone-500 mt-0.5">
+                      Creada {createdLabel}
+                    </div>
+                  </div>
+                  <div className="text-right">
+                    <div className="text-amber-400 font-extrabold text-lg">
+                      ${formatCop(r.total_cop)}
+                    </div>
+                    <div className="text-xs text-stone-500">
+                      {paymentLabel}
+                    </div>
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-y-2 gap-x-4 text-sm">
+                  <div className="flex items-center gap-2 text-stone-300">
+                    <CalendarDays className="w-4 h-4 text-amber-400" />
+                    {r.date} · {r.time}
+                  </div>
+                  <div className="flex items-center gap-2 text-stone-300">
+                    <PhoneIcon className="w-4 h-4 text-amber-400" />
+                    <a
+                      href={`https://wa.me/${r.phone.replace(/\D/g, "")}`}
+                      target="_blank"
+                      rel="noreferrer"
+                      className="hover:text-amber-300"
+                    >
+                      {r.phone}
+                    </a>
+                  </div>
+                  <div className="flex items-center gap-2 text-stone-300">
+                    <MapPin className="w-4 h-4 text-amber-400" />
+                    {r.city}
+                  </div>
+                  <div className="flex items-start gap-2 text-stone-300">
+                    <MapPin className="w-4 h-4 text-amber-400 mt-0.5" />
+                    <span className="break-words">{r.address}</span>
+                  </div>
+                  <div className="flex items-center gap-2 text-stone-300 sm:col-span-2">
+                    <Package className="w-4 h-4 text-amber-400" />
+                    {r.package_name} · ${formatCop(r.package_price_cop)}
+                  </div>
+                </div>
+
+                {r.extras.length > 0 && (
+                  <div className="mt-3 pt-3 border-t border-stone-800">
+                    <div className="text-xs font-semibold text-stone-400 mb-1">
+                      Adicionales
+                    </div>
+                    <ul className="flex flex-wrap gap-2">
+                      {r.extras.map((e, i) => (
+                        <li
+                          key={`${e.id}-${i}`}
+                          className="text-xs text-stone-200 bg-stone-800/60 border border-stone-700 rounded-lg px-2 py-1"
+                        >
+                          {e.name} · ${e.price}
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                )}
+
+                {r.message && (
+                  <div className="mt-3 pt-3 border-t border-stone-800">
+                    <div className="text-xs font-semibold text-stone-400 mb-1">
+                      Mensaje del cliente
+                    </div>
+                    <p className="text-sm text-stone-200 whitespace-pre-wrap">
+                      {r.message}
+                    </p>
+                  </div>
+                )}
+
+                <div className="mt-4 pt-4 border-t border-stone-800 flex flex-wrap items-center gap-2">
+                  <span className="text-xs font-semibold text-stone-400">
+                    Cambiar estado:
+                  </span>
+                  {(
+                    [
+                      ["pending", "Pendiente"],
+                      ["confirmed", "Confirmada"],
+                      ["cancelled", "Cancelada"],
+                    ] as const
+                  ).map(([s, label]) => (
+                    <button
+                      key={s}
+                      onClick={() => onStatusChange(r.id, s)}
+                      disabled={updatingId === r.id || r.status === s}
+                      className={`text-xs font-semibold px-3 py-1.5 rounded-xl border transition disabled:opacity-50 ${
+                        r.status === s
+                          ? STATUS_STYLE[s]
+                          : "bg-stone-900/60 border-stone-700 text-stone-300 hover:border-stone-500"
+                      }`}
+                    >
+                      {label}
+                    </button>
+                  ))}
+                </div>
+              </li>
+            );
+          })}
+        </ul>
+      )}
     </div>
   );
 }
