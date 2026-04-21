@@ -68,13 +68,13 @@ export function Genres() {
             <Reveal key={g.id} delay={idx * 120} className="h-full">
             <button
               onClick={() => goTo(g.id)}
-              className="group relative rounded-3xl overflow-hidden bg-stone-900 aspect-[4/5] w-full text-left focus:outline-none focus:ring-2 focus:ring-amber-400"
+              className="group relative rounded-3xl overflow-hidden bg-stone-900 w-full text-left focus:outline-none focus:ring-2 focus:ring-amber-400 block"
               aria-label={`Ver paquetes de ${g.name}`}
             >
               <img
                 src={g.image}
                 alt={g.name}
-                className="absolute inset-0 w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
+                className="block w-full h-auto object-contain transition-transform duration-500 group-hover:scale-105"
                 loading="lazy"
                 onError={(e) => {
                   (e.target as HTMLImageElement).src =
@@ -82,7 +82,7 @@ export function Genres() {
                     encodeURIComponent(g.name);
                 }}
               />
-              <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/30 to-transparent" />
+              <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-black/90 via-black/20 to-transparent" />
               <div className="absolute inset-x-0 bottom-0 p-5 sm:p-6">
                 <div className="font-display font-black text-3xl sm:text-4xl text-white tracking-tight drop-shadow-[0_2px_10px_rgba(0,0,0,0.8)]">
                   {g.name}
