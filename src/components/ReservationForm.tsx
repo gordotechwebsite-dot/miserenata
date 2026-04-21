@@ -16,11 +16,11 @@ import {
 import {
   CITIES,
   EXTRAS,
-  TIME_SLOTS,
   formatCop,
   type PackageData,
 } from "../lib/constants";
 import { WHATSAPP_LINK } from "../lib/supabase";
+import { SLOTS } from "./Availability";
 
 type Props = {
   packages: PackageData[];
@@ -103,6 +103,10 @@ export function ReservationForm({
 
   const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
+    if (step < 4) {
+      goNext();
+      return;
+    }
     if (!selected) return;
 
     const extrasText =
@@ -343,9 +347,9 @@ export function ReservationForm({
                       className="w-full bg-stone-800/80 border border-stone-700 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-amber-500 focus:ring-1 focus:ring-amber-500/50 transition-all"
                     >
                       <option value="">Selecciona la hora</option>
-                      {TIME_SLOTS.map((slot) => (
-                        <option key={slot} value={slot}>
-                          {slot}
+                      {SLOTS.map((s) => (
+                        <option key={s.label} value={s.label}>
+                          {s.label}
                         </option>
                       ))}
                     </select>
