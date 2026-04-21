@@ -1,5 +1,6 @@
 import { Star, Quote } from "lucide-react";
 import { TESTIMONIALS } from "../lib/constants";
+import { Reveal } from "./Reveal";
 
 export function Testimonials() {
   const loop = [...TESTIMONIALS, ...TESTIMONIALS];
@@ -7,7 +8,7 @@ export function Testimonials() {
   return (
     <section id="testimonios" className="py-16 sm:py-24 bg-stone-950">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="text-center mb-10 sm:mb-14">
+        <Reveal className="text-center mb-10 sm:mb-14">
           <div className="inline-flex items-center gap-2 bg-amber-500/10 border border-amber-500/30 rounded-full px-4 py-2 mb-4">
             <Star className="w-4 h-4 text-amber-400 fill-amber-400" />
             <span className="text-amber-300 text-sm font-medium">
@@ -17,7 +18,7 @@ export function Testimonials() {
           <h2 className="font-display font-black text-3xl sm:text-5xl mb-3 bg-gradient-to-br from-amber-200 via-yellow-100 to-amber-400 bg-clip-text text-transparent tracking-tight">
             Historias que nos emocionan
           </h2>
-        </div>
+        </Reveal>
       </div>
 
       <div className="relative overflow-hidden">

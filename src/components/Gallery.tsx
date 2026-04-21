@@ -1,6 +1,7 @@
 import { useEffect, useState, useCallback } from "react";
 import { Camera, ChevronLeft, ChevronRight, X, ZoomIn } from "lucide-react";
 import { supabase } from "../lib/supabase";
+import { Reveal } from "./Reveal";
 
 const BUCKET = "gallery";
 
@@ -77,7 +78,7 @@ export function Gallery() {
   return (
     <section id="galeria" className="py-16 sm:py-24 bg-stone-950">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="text-center mb-12 sm:mb-16">
+        <Reveal className="text-center mb-12 sm:mb-16">
           <div className="inline-flex items-center gap-2 bg-amber-500/10 border border-amber-500/30 rounded-full px-4 py-2 mb-4">
             <Camera className="w-4 h-4 text-amber-400" />
             <span className="text-amber-300 text-xs font-medium tracking-wider uppercase">
@@ -90,7 +91,7 @@ export function Gallery() {
           <p className="text-stone-400 text-base sm:text-lg max-w-2xl mx-auto">
             Una mirada a serenatas, eventos y experiencias que dejaron huella.
           </p>
-        </div>
+        </Reveal>
 
         {loading ? (
           <div className="text-stone-400 text-center py-12">

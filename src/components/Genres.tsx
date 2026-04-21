@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { DEFAULT_GENRES, type GenreData, type GenreId } from "../lib/constants";
 import { getSiteSetting } from "../lib/supabase";
 import { genreHash } from "../lib/routes";
+import { Reveal } from "./Reveal";
 
 type GenreOverride = Partial<Pick<GenreData, "name" | "image">>;
 
@@ -53,19 +54,19 @@ export function Genres() {
       className="relative py-16 sm:py-24 bg-stone-950 overflow-hidden"
     >
       <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="text-center mb-10 sm:mb-14">
+        <Reveal className="text-center mb-10 sm:mb-14">
           <h2 className="font-display font-black text-3xl sm:text-5xl mb-3 bg-gradient-to-br from-amber-200 via-yellow-100 to-amber-400 bg-clip-text text-transparent tracking-tight">
             Elige tu estilo
           </h2>
           <p className="text-stone-400 text-base sm:text-lg max-w-2xl mx-auto">
             Cada género tiene su propia propuesta y paquetes.
           </p>
-        </div>
+        </Reveal>
 
         <div className="grid gap-5 sm:gap-6 sm:grid-cols-2 lg:grid-cols-3">
-          {genres.map((g) => (
+          {genres.map((g, idx) => (
+            <Reveal key={g.id} delay={idx * 120} className="h-full">
             <button
-              key={g.id}
               onClick={() => goTo(g.id)}
               className="group relative rounded-3xl overflow-hidden bg-stone-900 aspect-[4/5] w-full text-left focus:outline-none focus:ring-2 focus:ring-amber-400"
               aria-label={`Ver paquetes de ${g.name}`}
@@ -88,6 +89,7 @@ export function Genres() {
                 </div>
               </div>
             </button>
+            </Reveal>
           ))}
         </div>
       </div>
