@@ -8,9 +8,10 @@ import {
   supabase,
 } from "../lib/supabase";
 import {
+  DEFAULT_EXTRAS,
   DEFAULT_GENRES,
   DEFAULT_PACKAGES,
-  EXTRAS,
+  type ExtraItem,
   type GenreData,
   type GenreId,
   type PackageData,
@@ -176,10 +177,11 @@ export function AdminPanel({ onExit }: { onExit: () => void }) {
   const [calGenre, setCalGenre] = useState<GenreId>("nortena");
   const [calPrefilling, setCalPrefilling] = useState(false);
 
-  const [extraImages, setExtraImages] = useState<Record<string, string>>({});
+  const [extras, setExtras] = useState<ExtraItem[]>(DEFAULT_EXTRAS);
   const [extraUploading, setExtraUploading] = useState<string | null>(null);
   const [extraError, setExtraError] = useState<string | null>(null);
-  const [extraSavedId, setExtraSavedId] = useState<string | null>(null);
+  const [extrasSaving, setExtrasSaving] = useState(false);
+  const [extrasSavedAt, setExtrasSavedAt] = useState<number | null>(null);
   const extraFileInputs = useRef<Record<string, HTMLInputElement | null>>({});
 
   const isAdmin = session?.user?.email === ADMIN_EMAIL;
@@ -379,15 +381,65 @@ export function AdminPanel({ onExit }: { onExit: () => void }) {
 
   const loadExtras = async () => {
     setExtraError(null);
-    const entries = await Promise.all(
-      EXTRAS.map(async (x) => {
+    const raw = await getSiteSetting("extras_list");
+    if (raw) {
+      try {
+        const parsed = JSON.parse(raw) as ExtraItem[];
+        if (Array.isArray(parsed)) {
+          setExtras(
+            parsed.map((x) => ({
+              id: String(x.id || ""),
+              name: String(x.name || ""),
+              price: String(x.price || ""),
+              icon: String(x.icon || "✨"),
+              imageUrl: x.imageUrl ? String(x.imageUrl) : undefined,
+            }))
+          );
+          return;
+        }
+      } catch {
+        // fallthrough to default + legacy images
+      }
+    }
+    // Legacy: per-id image keys
+    const legacy = await Promise.all(
+      DEFAULT_EXTRAS.map(async (x) => {
         const v = await getSiteSetting(`extra_image_${x.id}`);
-        return [x.id, v?.trim() || ""] as const;
+        return { ...x, imageUrl: v?.trim() || undefined };
       })
     );
-    const map: Record<string, string> = {};
-    for (const [id, url] of entries) if (url) map[id] = url;
-    setExtraImages(map);
+    setExtras(legacy);
+  };
+
+  const saveExtras = async (next?: ExtraItem[]) => {
+    const list = next ?? extras;
+    setExtrasSaving(true);
+    setExtraError(null);
+    const { error: setErr } = await setSiteSetting(
+      "extras_list",
+      JSON.stringify(list)
+    );
+    if (setErr) setExtraError(setErr);
+    else setExtrasSavedAt(Date.now());
+    setExtrasSaving(false);
+  };
+
+  const updateExtraField = (id: string, patch: Partial<ExtraItem>) => {
+    setExtras((prev) =>
+      prev.map((x) => (x.id === id ? { ...x, ...patch } : x))
+    );
+  };
+
+  const addExtra = () => {
+    const id = `extra-${Date.now()}`;
+    setExtras((prev) => [
+      ...prev,
+      { id, name: "Nuevo adicional", price: "0", icon: "✨" },
+    ]);
+  };
+
+  const removeExtra = (id: string) => {
+    setExtras((prev) => prev.filter((x) => x.id !== id));
   };
 
   const handleExtraUpload = async (id: string, file: File | null) => {
@@ -410,33 +462,14 @@ export function AdminPanel({ onExit }: { onExit: () => void }) {
     }
     const { data } = supabase.storage.from(GALLERY_BUCKET).getPublicUrl(key);
     const url = data.publicUrl;
-    const { error: setErr } = await setSiteSetting(`extra_image_${id}`, url);
-    if (setErr) {
-      setExtraError(setErr);
-    } else {
-      setExtraImages((prev) => ({ ...prev, [id]: url }));
-      setExtraSavedId(id);
-      setTimeout(() => setExtraSavedId(null), 1500);
-    }
+    updateExtraField(id, { imageUrl: url });
     setExtraUploading(null);
     const input = extraFileInputs.current[id];
     if (input) input.value = "";
   };
 
-  const handleExtraRemove = async (id: string) => {
-    setExtraError(null);
-    const { error: setErr } = await setSiteSetting(`extra_image_${id}`, "");
-    if (setErr) {
-      setExtraError(setErr);
-      return;
-    }
-    setExtraImages((prev) => {
-      const next = { ...prev };
-      delete next[id];
-      return next;
-    });
-    setExtraSavedId(id);
-    setTimeout(() => setExtraSavedId(null), 1500);
+  const handleExtraRemoveImage = (id: string) => {
+    updateExtraField(id, { imageUrl: undefined });
   };
 
   const handleGenreCoverUpload = async (id: GenreId, file: File | null) => {
@@ -1620,98 +1653,171 @@ export function AdminPanel({ onExit }: { onExit: () => void }) {
             {tab === "extras" && (
               <div className="space-y-5">
                 <div className="bg-stone-900/60 border border-stone-800 rounded-2xl p-5 sm:p-6">
-                  <div className="font-display font-bold text-lg text-white mb-1">
-                    Fotos de adicionales
+                  <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+                    <div>
+                      <div className="font-display font-bold text-lg text-white mb-1">
+                        Adicionales
+                      </div>
+                      <p className="text-stone-400 text-sm">
+                        Edita nombre, precio y emoji. Sube una foto (opcional).
+                        Elimina o agrega nuevos. Recuerda guardar al final.
+                      </p>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <button
+                        onClick={addExtra}
+                        className="flex items-center gap-2 bg-stone-800 hover:bg-stone-700 border border-stone-700 text-white px-3 py-2 rounded-xl text-sm font-semibold"
+                      >
+                        <Sparkles className="w-4 h-4" />
+                        Agregar
+                      </button>
+                      <button
+                        onClick={() => saveExtras()}
+                        disabled={extrasSaving}
+                        className="flex items-center gap-2 bg-gradient-to-r from-amber-500 to-yellow-500 text-stone-950 px-4 py-2 rounded-xl font-bold disabled:opacity-50"
+                      >
+                        {extrasSaving ? "Guardando..." : "Guardar cambios"}
+                      </button>
+                    </div>
                   </div>
-                  <p className="text-stone-400 text-sm">
-                    Sube una foto para cada adicional. Si no subes ninguna, se
-                    muestra el emoji por defecto en el wizard.
-                  </p>
                   {extraError && (
                     <div className="mt-3 text-sm text-red-300 bg-red-500/10 border border-red-500/30 rounded-lg px-3 py-2 flex items-start gap-2">
                       <AlertTriangle className="w-4 h-4 mt-0.5 flex-shrink-0" />
                       <div>{extraError}</div>
                     </div>
                   )}
+                  {extrasSavedAt && !extrasSaving && !extraError && (
+                    <div className="mt-3 text-sm text-emerald-300">
+                      Guardado. Los clientes ya ven estos adicionales.
+                    </div>
+                  )}
                 </div>
 
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-                  {EXTRAS.map((x) => {
-                    const img = extraImages[x.id];
-                    const isUploading = extraUploading === x.id;
-                    const saved = extraSavedId === x.id;
-                    return (
-                      <div
-                        key={x.id}
-                        className="bg-stone-900/60 border border-stone-800 rounded-2xl overflow-hidden"
-                      >
-                        <div className="relative aspect-square bg-stone-950 flex items-center justify-center">
-                          {img ? (
-                            <>
-                              <img
-                                src={img}
-                                alt={x.name}
-                                className="w-full h-full object-cover"
+                {extras.length === 0 ? (
+                  <div className="text-center text-stone-400 bg-stone-900/60 border border-stone-800 rounded-2xl py-12">
+                    No hay adicionales. Agrega el primero con el botón "Agregar".
+                  </div>
+                ) : (
+                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                    {extras.map((x) => {
+                      const isUploading = extraUploading === x.id;
+                      return (
+                        <div
+                          key={x.id}
+                          className="bg-stone-900/60 border border-stone-800 rounded-2xl overflow-hidden"
+                        >
+                          <div className="relative aspect-square bg-stone-950 flex items-center justify-center">
+                            {x.imageUrl ? (
+                              <>
+                                <img
+                                  src={x.imageUrl}
+                                  alt={x.name}
+                                  className="w-full h-full object-cover"
+                                />
+                                <button
+                                  onClick={() => handleExtraRemoveImage(x.id)}
+                                  className="absolute top-2 right-2 w-9 h-9 rounded-full bg-red-500/80 hover:bg-red-500 text-white flex items-center justify-center transition"
+                                  aria-label="Quitar foto"
+                                >
+                                  <X className="w-4 h-4" />
+                                </button>
+                              </>
+                            ) : (
+                              <div className="text-6xl">{x.icon || "✨"}</div>
+                            )}
+                          </div>
+                          <div className="p-4 space-y-2">
+                            <div>
+                              <label className="block text-xs text-stone-400 mb-1">
+                                Nombre
+                              </label>
+                              <input
+                                type="text"
+                                value={x.name}
+                                onChange={(e) =>
+                                  updateExtraField(x.id, {
+                                    name: e.target.value,
+                                  })
+                                }
+                                className="w-full bg-stone-800 border border-stone-700 rounded-lg px-3 py-1.5 text-white text-sm"
                               />
-                              <button
-                                onClick={() => handleExtraRemove(x.id)}
-                                className="absolute top-2 right-2 w-9 h-9 rounded-full bg-red-500/80 hover:bg-red-500 text-white flex items-center justify-center transition"
-                                aria-label="Quitar foto"
-                              >
-                                <X className="w-4 h-4" />
-                              </button>
-                            </>
-                          ) : (
-                            <div className="text-6xl">{x.icon}</div>
-                          )}
-                        </div>
-                        <div className="p-4">
-                          <div className="flex items-center justify-between gap-2 mb-2">
-                            <div className="text-white font-bold text-sm">
-                              {x.name}
                             </div>
-                            <div className="text-amber-400 text-xs">
-                              ${x.price}
+                            <div className="grid grid-cols-[1fr_auto] gap-2">
+                              <div>
+                                <label className="block text-xs text-stone-400 mb-1">
+                                  Precio
+                                </label>
+                                <input
+                                  type="text"
+                                  value={x.price}
+                                  onChange={(e) =>
+                                    updateExtraField(x.id, {
+                                      price: e.target.value,
+                                    })
+                                  }
+                                  placeholder="25.000"
+                                  className="w-full bg-stone-800 border border-stone-700 rounded-lg px-3 py-1.5 text-white text-sm"
+                                />
+                              </div>
+                              <div className="w-20">
+                                <label className="block text-xs text-stone-400 mb-1">
+                                  Emoji
+                                </label>
+                                <input
+                                  type="text"
+                                  value={x.icon}
+                                  onChange={(e) =>
+                                    updateExtraField(x.id, {
+                                      icon: e.target.value,
+                                    })
+                                  }
+                                  className="w-full bg-stone-800 border border-stone-700 rounded-lg px-3 py-1.5 text-white text-center text-lg"
+                                />
+                              </div>
+                            </div>
+                            <input
+                              ref={(el) => {
+                                extraFileInputs.current[x.id] = el;
+                              }}
+                              type="file"
+                              accept="image/*"
+                              onChange={(e) =>
+                                handleExtraUpload(
+                                  x.id,
+                                  e.target.files?.[0] || null
+                                )
+                              }
+                              className="hidden"
+                            />
+                            <div className="flex gap-2 pt-1">
+                              <button
+                                onClick={() =>
+                                  extraFileInputs.current[x.id]?.click()
+                                }
+                                disabled={isUploading}
+                                className="flex-1 flex items-center justify-center gap-2 bg-amber-500/10 hover:bg-amber-500/20 border border-amber-500/40 text-amber-300 px-3 py-2 rounded-xl text-sm font-semibold disabled:opacity-50"
+                              >
+                                <Upload className="w-4 h-4" />
+                                {isUploading
+                                  ? "Subiendo..."
+                                  : x.imageUrl
+                                  ? "Reemplazar"
+                                  : "Subir foto"}
+                              </button>
+                              <button
+                                onClick={() => removeExtra(x.id)}
+                                className="flex items-center justify-center bg-red-500/10 hover:bg-red-500/20 border border-red-500/40 text-red-300 w-11 rounded-xl"
+                                aria-label="Eliminar adicional"
+                              >
+                                <Trash2 className="w-4 h-4" />
+                              </button>
                             </div>
                           </div>
-                          <input
-                            ref={(el) => {
-                              extraFileInputs.current[x.id] = el;
-                            }}
-                            type="file"
-                            accept="image/*"
-                            onChange={(e) =>
-                              handleExtraUpload(
-                                x.id,
-                                e.target.files?.[0] || null
-                              )
-                            }
-                            className="hidden"
-                          />
-                          <button
-                            onClick={() =>
-                              extraFileInputs.current[x.id]?.click()
-                            }
-                            disabled={isUploading}
-                            className="w-full flex items-center justify-center gap-2 bg-amber-500/10 hover:bg-amber-500/20 border border-amber-500/40 text-amber-300 px-3 py-2 rounded-xl text-sm font-semibold disabled:opacity-50"
-                          >
-                            <Upload className="w-4 h-4" />
-                            {isUploading
-                              ? "Subiendo..."
-                              : img
-                              ? "Reemplazar foto"
-                              : "Subir foto"}
-                          </button>
-                          {saved && (
-                            <div className="mt-2 text-xs text-emerald-300 text-center">
-                              Guardado
-                            </div>
-                          )}
                         </div>
-                      </div>
-                    );
-                  })}
-                </div>
+                      );
+                    })}
+                  </div>
+                )}
               </div>
             )}
           </div>

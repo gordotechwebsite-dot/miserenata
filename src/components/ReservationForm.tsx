@@ -16,11 +16,12 @@ import {
 } from "lucide-react";
 import {
   CITIES,
-  EXTRAS,
+  DEFAULT_EXTRAS,
+  type ExtraItem,
   formatCop,
   type PackageData,
 } from "../lib/constants";
-import { supabase, WHATSAPP_LINK } from "../lib/supabase";
+import { getSiteSetting, supabase, WHATSAPP_LINK } from "../lib/supabase";
 import { SLOTS } from "./Availability";
 
 type Props = {
@@ -56,7 +57,7 @@ export function ReservationForm({
   const [extras, setExtras] = useState<string[]>([]);
   const [termsAccepted, setTermsAccepted] = useState(false);
   const [submitted, setSubmitted] = useState(false);
-  const [extraImages, setExtraImages] = useState<Record<string, string>>({});
+  const [extrasList, setExtrasList] = useState<ExtraItem[]>(DEFAULT_EXTRAS);
 
   const today = new Date().toISOString().split("T")[0];
 
@@ -70,18 +71,43 @@ export function ReservationForm({
   useEffect(() => {
     let mounted = true;
     const load = async () => {
-      const keys = EXTRAS.map((e) => `extra_image_${e.id}`);
+      const raw = await getSiteSetting("extras_list");
+      if (raw) {
+        try {
+          const parsed = JSON.parse(raw) as ExtraItem[];
+          if (mounted && Array.isArray(parsed) && parsed.length > 0) {
+            setExtrasList(
+              parsed.map((x) => ({
+                id: String(x.id || ""),
+                name: String(x.name || ""),
+                price: String(x.price || ""),
+                icon: String(x.icon || "✨"),
+                imageUrl: x.imageUrl ? String(x.imageUrl) : undefined,
+              }))
+            );
+            return;
+          }
+        } catch {
+          // fall through to legacy
+        }
+      }
+      // Legacy fallback: per-id image keys
+      const keys = DEFAULT_EXTRAS.map((e) => `extra_image_${e.id}`);
       const { data } = await supabase
         .from("site_settings")
         .select("key, value")
         .in("key", keys);
-      if (!mounted || !data) return;
-      const map: Record<string, string> = {};
-      for (const row of data as { key: string; value: string }[]) {
-        const id = row.key.replace(/^extra_image_/, "");
-        if (row.value) map[id] = row.value;
+      if (!mounted) return;
+      const imgMap: Record<string, string> = {};
+      if (data) {
+        for (const row of data as { key: string; value: string }[]) {
+          const id = row.key.replace(/^extra_image_/, "");
+          if (row.value) imgMap[id] = row.value;
+        }
       }
-      setExtraImages(map);
+      setExtrasList(
+        DEFAULT_EXTRAS.map((x) => ({ ...x, imageUrl: imgMap[x.id] }))
+      );
     };
     void load();
     return () => {
@@ -129,7 +155,7 @@ export function ReservationForm({
   const goPrev = () => setStep((s) => Math.max(1, s - 1));
 
   const extrasTotal = extras.reduce((acc, id) => {
-    const extra = EXTRAS.find((x) => x.id === id);
+    const extra = extrasList.find((x) => x.id === id);
     if (!extra) return acc;
     return acc + Number(String(extra.price).replace(/\./g, ""));
   }, 0);
@@ -149,7 +175,7 @@ export function ReservationForm({
       extras.length > 0
         ? extras
             .map((id) => {
-              const extra = EXTRAS.find((x) => x.id === id);
+              const extra = extrasList.find((x) => x.id === id);
               return extra ? `${extra.name} ($${extra.price})` : "";
             })
             .filter(Boolean)
@@ -300,9 +326,9 @@ export function ReservationForm({
                       varios o ninguno.
                     </p>
                     <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
-                      {EXTRAS.map((extra) => {
+                      {extrasList.map((extra) => {
                         const active = extras.includes(extra.id);
-                        const img = extraImages[extra.id];
+                        const img = extra.imageUrl;
                         return (
                           <button
                             type="button"
@@ -500,7 +526,7 @@ export function ReservationForm({
                         ) : (
                           <ul className="space-y-1.5">
                             {extras.map((id) => {
-                              const ex = EXTRAS.find((x) => x.id === id);
+                              const ex = extrasList.find((x) => x.id === id);
                               if (!ex) return null;
                               return (
                                 <li
