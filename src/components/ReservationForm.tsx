@@ -319,7 +319,7 @@ export function ReservationForm({
                   <div>
                     <label className="flex items-center gap-2 text-sm font-medium text-amber-300 mb-3">
                       <Sparkles className="w-4 h-4" />
-                      Adicionales para hacerla inolvidable
+                      ¿Tal vez quisieras incluir esto?
                     </label>
                     <p className="text-stone-400 text-xs mb-4">
                       Selecciona los extras que quieres incluir. Puedes elegir
@@ -340,12 +340,12 @@ export function ReservationForm({
                                 : "border-stone-700 bg-stone-800/60 hover:border-amber-500/50"
                             }`}
                           >
-                            <div className="aspect-square w-full bg-stone-900 flex items-center justify-center overflow-hidden">
+                            <div className="aspect-square w-full bg-stone-900 flex items-center justify-center overflow-hidden p-2">
                               {img ? (
                                 <img
                                   src={img}
                                   alt={extra.name}
-                                  className="w-full h-full object-cover group-hover:scale-105 transition-transform"
+                                  className="max-w-full max-h-full object-contain group-hover:scale-105 transition-transform"
                                 />
                               ) : (
                                 <div className="text-5xl">{extra.icon}</div>
