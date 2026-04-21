@@ -709,7 +709,7 @@ export function AdminPanel({ onExit }: { onExit: () => void }) {
     if (!pkg.id) return;
     setSaving(pkg.id);
     setError(null);
-    const { error: err } = await supabase
+    const { data, error: err } = await supabase
       .from("packages")
       .update({
         name: pkg.name,
@@ -723,9 +723,14 @@ export function AdminPanel({ onExit }: { onExit: () => void }) {
         sort_order: pkg.sortOrder,
         genre: pkg.genre ?? null,
       })
-      .eq("id", pkg.id);
+      .eq("id", pkg.id)
+      .select("id");
     if (err) {
       setError(err.message);
+    } else if (!data || data.length === 0) {
+      setError(
+        "No se pudo guardar: la base de datos rechazó la actualización (posible política RLS). Ejecuta el SQL del README de admin para habilitar UPDATE en `packages`."
+      );
     } else {
       await loadPackages();
     }
