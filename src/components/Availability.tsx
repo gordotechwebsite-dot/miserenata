@@ -15,6 +15,7 @@ import { DEFAULT_GENRES, type GenreId } from "../lib/constants";
 type Props = {
   genreId?: GenreId | null;
   variant?: "page" | "embedded";
+  onSlotSelect?: (date: Date, time: string, label: string) => void;
 };
 
 export const UNAVAILABLE_SLOTS_KEY = "unavailable_slots";
@@ -100,7 +101,11 @@ export function parseUnavailable(value: string | null): Set<string> {
 
 export { MONTHS_ES, DAYS_ES };
 
-export function Availability({ genreId, variant = "page" }: Props) {
+export function Availability({
+  genreId,
+  variant = "page",
+  onSlotSelect,
+}: Props) {
   const embedded = variant === "embedded";
   const today = startOfDay(new Date());
   const [view, setView] = useState(() => ({
@@ -193,6 +198,16 @@ export function Availability({ genreId, variant = "page" }: Props) {
     setSelected(d);
     setSlotTime(time);
     setSubmitted(false);
+    if (embedded && onSlotSelect) {
+      const label = SLOTS.find((s) => s.time === time)?.label || time;
+      onSlotSelect(d, time, label);
+      setTimeout(() => {
+        document
+          .getElementById("reservar")
+          ?.scrollIntoView({ behavior: "smooth", block: "start" });
+      }, 50);
+      return;
+    }
     setTimeout(() => {
       formRef.current?.scrollIntoView({ behavior: "smooth", block: "center" });
     }, 50);
@@ -392,7 +407,7 @@ export function Availability({ genreId, variant = "page" }: Props) {
           </div>
         </div>
 
-        {selected && selectedSlot && (
+        {!embedded && selected && selectedSlot && (
           <div
             ref={formRef}
             className="mt-8 bg-stone-900/70 border border-stone-800 rounded-3xl p-5 sm:p-8"
