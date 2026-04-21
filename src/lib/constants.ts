@@ -24,6 +24,15 @@ export type GenreData = {
   image: string;
 };
 
+export type GenreHourlyConfig = {
+  rate: number;
+  image?: string;
+  description?: string;
+};
+
+export const HOURLY_MIN = 1;
+export const HOURLY_MAX = 5;
+
 export const DEFAULT_GENRES: GenreData[] = [
   { id: "mariachi", name: "Mariachi", image: "/images/mariachi-hero.jpg" },
   { id: "nortena", name: "Norteña", image: "/images/guitar.jpg" },
