@@ -340,12 +340,12 @@ export function ReservationForm({
                                 : "border-stone-700 bg-stone-800/60 hover:border-amber-500/50"
                             }`}
                           >
-                            <div className="aspect-square w-full bg-stone-900 flex items-center justify-center overflow-hidden">
+                            <div className="aspect-square w-full bg-stone-900 flex items-center justify-center overflow-hidden p-2">
                               {img ? (
                                 <img
                                   src={img}
                                   alt={extra.name}
-                                  className="w-full h-full object-cover group-hover:scale-105 transition-transform"
+                                  className="max-w-full max-h-full object-contain group-hover:scale-105 transition-transform"
                                 />
                               ) : (
                                 <div className="text-5xl">{extra.icon}</div>

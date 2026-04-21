@@ -1706,13 +1706,13 @@ export function AdminPanel({ onExit }: { onExit: () => void }) {
                           key={x.id}
                           className="bg-stone-900/60 border border-stone-800 rounded-2xl overflow-hidden"
                         >
-                          <div className="relative aspect-square bg-stone-950 flex items-center justify-center">
+                          <div className="relative aspect-square bg-stone-950 flex items-center justify-center p-2">
                             {x.imageUrl ? (
                               <>
                                 <img
                                   src={x.imageUrl}
                                   alt={x.name}
-                                  className="w-full h-full object-cover"
+                                  className="max-w-full max-h-full object-contain"
                                 />
                                 <button
                                   onClick={() => handleExtraRemoveImage(x.id)}
