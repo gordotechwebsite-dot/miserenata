@@ -516,14 +516,19 @@ export function ReservationForm({
                         <option value="__other__">Otro</option>
                       </select>
                       {cityOther && (
-                        <input
-                          type="text"
-                          required
-                          value={city}
-                          onChange={(e) => setCity(e.target.value)}
-                          placeholder="Escribe la ciudad"
-                          className="mt-2 w-full bg-stone-800/80 border border-stone-700 rounded-xl px-4 py-3 text-white placeholder-stone-500 focus:outline-none focus:border-amber-500 focus:ring-1 focus:ring-amber-500/50 transition-all"
-                        />
+                        <>
+                          <input
+                            type="text"
+                            required
+                            value={city}
+                            onChange={(e) => setCity(e.target.value)}
+                            placeholder="Escribe la ciudad"
+                            className="mt-2 w-full bg-stone-800/80 border border-stone-700 rounded-xl px-4 py-3 text-white placeholder-stone-500 focus:outline-none focus:border-amber-500 focus:ring-1 focus:ring-amber-500/50 transition-all"
+                          />
+                          <p className="mt-1 text-[11px] text-red-400 whitespace-nowrap overflow-hidden text-ellipsis leading-tight">
+                            Ten en cuenta que el valor incrementará en función de tu distancia
+                          </p>
+                        </>
                       )}
                     </div>
                     <div>
