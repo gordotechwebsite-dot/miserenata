@@ -34,7 +34,6 @@ import {
 } from "lucide-react";
 import {
   SLOTS,
-  UNAVAILABLE_SLOTS_KEY,
   buildMonthDays,
   formatDateEs,
   MONTHS_ES,
@@ -42,6 +41,7 @@ import {
   parseUnavailable,
   slotKey,
   startOfDay,
+  unavailableKey,
 } from "./Availability";
 
 const GALLERY_BUCKET = "gallery";
@@ -164,6 +164,8 @@ export function AdminPanel({ onExit }: { onExit: () => void }) {
   const [calSaving, setCalSaving] = useState(false);
   const [calError, setCalError] = useState<string | null>(null);
   const [calSavedAt, setCalSavedAt] = useState<number | null>(null);
+  const [calGenre, setCalGenre] = useState<GenreId>("nortena");
+  const [calPrefilling, setCalPrefilling] = useState(false);
 
   const isAdmin = session?.user?.email === ADMIN_EMAIL;
 
@@ -189,8 +191,13 @@ export function AdminPanel({ onExit }: { onExit: () => void }) {
     void loadPackages();
     void loadBanner();
     void loadGenres();
-    void loadCalendar();
   }, [isAdmin]);
+
+  useEffect(() => {
+    if (!isAdmin) return;
+    void loadCalendar();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isAdmin, calGenre]);
 
   useEffect(() => {
     if (!isAdmin) return;
@@ -201,8 +208,9 @@ export function AdminPanel({ onExit }: { onExit: () => void }) {
   const loadCalendar = async () => {
     setCalLoading(true);
     setCalError(null);
-    const value = await getSiteSetting(UNAVAILABLE_SLOTS_KEY);
+    const value = await getSiteSetting(unavailableKey(calGenre));
     setCalUnavailable(parseUnavailable(value));
+    setCalSavedAt(null);
     setCalLoading(false);
   };
 
@@ -222,12 +230,84 @@ export function AdminPanel({ onExit }: { onExit: () => void }) {
     setCalError(null);
     const arr = Array.from(calUnavailable).sort();
     const { error: err } = await setSiteSetting(
-      UNAVAILABLE_SLOTS_KEY,
+      unavailableKey(calGenre),
       JSON.stringify(arr)
     );
     if (err) setCalError(err);
     else setCalSavedAt(Date.now());
     setCalSaving(false);
+  };
+
+  const prefillNextMonth = async () => {
+    const ratio = calGenre === "nortena" ? 0.7 : calGenre === "mariachi" ? 0.3 : 0;
+    if (ratio <= 0) {
+      setCalError(
+        "Banda se deja libre (sin cupos pre-cargados). Cambia a Norteña o Mariachi."
+      );
+      return;
+    }
+    setCalPrefilling(true);
+    setCalError(null);
+    const now = new Date();
+    const nextMonthDate = new Date(now.getFullYear(), now.getMonth() + 1, 1);
+    const year = nextMonthDate.getFullYear();
+    const month = nextMonthDate.getMonth();
+    const days = buildMonthDays(year, month).filter(
+      (d): d is Date => d !== null
+    );
+    const seed = calGenre === "nortena" ? 101 : 307;
+    const all: { date: Date; time: string }[] = [];
+    days.forEach((d) => {
+      SLOTS.forEach((s) => all.push({ date: d, time: s.time }));
+    });
+    const ordered = all
+      .map((item, i) => ({
+        item,
+        rank: Math.abs(Math.sin((i + 1) * 12.9898 + seed * 78.233)),
+      }))
+      .sort((a, b) => a.rank - b.rank);
+    const count = Math.round(all.length * ratio);
+    const toAdd = ordered.slice(0, count).map((x) => slotKey(x.item.date, x.item.time));
+
+    const next = new Set(calUnavailable);
+    toAdd.forEach((k) => next.add(k));
+    setCalUnavailable(next);
+
+    const arr = Array.from(next).sort();
+    const { error: err } = await setSiteSetting(
+      unavailableKey(calGenre),
+      JSON.stringify(arr)
+    );
+    if (err) setCalError(err);
+    else {
+      setCalSavedAt(Date.now());
+      setCalView({ year, month });
+      setCalSelected(days[0]);
+    }
+    setCalPrefilling(false);
+  };
+
+  const clearNextMonth = async () => {
+    setCalPrefilling(true);
+    setCalError(null);
+    const now = new Date();
+    const nextMonthDate = new Date(now.getFullYear(), now.getMonth() + 1, 1);
+    const year = nextMonthDate.getFullYear();
+    const month = nextMonthDate.getMonth();
+    const next = new Set<string>();
+    calUnavailable.forEach((k) => {
+      const datePart = k.split("T")[0];
+      const d = new Date(`${datePart}T00:00:00`);
+      if (d.getFullYear() !== year || d.getMonth() !== month) next.add(k);
+    });
+    setCalUnavailable(next);
+    const { error: err } = await setSiteSetting(
+      unavailableKey(calGenre),
+      JSON.stringify(Array.from(next).sort())
+    );
+    if (err) setCalError(err);
+    else setCalSavedAt(Date.now());
+    setCalPrefilling(false);
   };
 
   const loadBanner = async () => {
@@ -1108,9 +1188,70 @@ export function AdminPanel({ onExit }: { onExit: () => void }) {
                   </div>
                   <p className="text-stone-400 text-sm mb-4">
                     Haz clic en un día y luego marca los horarios que ya están
-                    ocupados. Los cupos marcados se muestran tachados en el
-                    sitio público.
+                    ocupados. Los cupos marcados se muestran como{" "}
+                    <span className="text-emerald-300 font-semibold">
+                      Reservado
+                    </span>{" "}
+                    en el sitio público. Cada género tiene su propio calendario.
                   </p>
+
+                  <div className="mb-4 grid gap-3 sm:grid-cols-[auto_1fr] sm:items-center">
+                    <div className="flex flex-wrap gap-2">
+                      {(["mariachi", "nortena", "banda"] as GenreId[]).map(
+                        (g) => (
+                          <button
+                            key={g}
+                            onClick={() => setCalGenre(g)}
+                            className={`px-4 py-2 rounded-xl text-sm font-semibold transition capitalize ${
+                              calGenre === g
+                                ? "bg-amber-500 text-stone-950"
+                                : "bg-stone-800/70 text-stone-300 border border-stone-700 hover:border-amber-500/40"
+                            }`}
+                          >
+                            {g === "nortena" ? "Norteña" : g}
+                          </button>
+                        )
+                      )}
+                    </div>
+                    <div className="text-xs text-stone-500 sm:text-right">
+                      Editando:{" "}
+                      <span className="text-amber-300 font-semibold capitalize">
+                        {calGenre === "nortena" ? "Norteña" : calGenre}
+                      </span>
+                    </div>
+                  </div>
+
+                  <div className="mb-4 rounded-2xl border border-amber-500/20 bg-amber-500/5 p-4">
+                    <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+                      <div>
+                        <div className="text-sm font-bold text-amber-200">
+                          Pre-cargar próximo mes
+                        </div>
+                        <div className="text-xs text-stone-400 mt-0.5">
+                          Norteña → 70% de cupos ocupados · Mariachi → 30% ·
+                          Banda queda libre. Se distribuye en los 4 horarios.
+                        </div>
+                      </div>
+                      <div className="flex flex-wrap gap-2">
+                        <button
+                          onClick={prefillNextMonth}
+                          disabled={calPrefilling || calSaving || calLoading}
+                          className="bg-gradient-to-r from-amber-500 to-yellow-500 text-stone-950 px-4 py-2 rounded-xl text-sm font-bold disabled:opacity-50"
+                        >
+                          {calPrefilling
+                            ? "Pre-cargando..."
+                            : "Pre-cargar próximo mes"}
+                        </button>
+                        <button
+                          onClick={clearNextMonth}
+                          disabled={calPrefilling || calSaving || calLoading}
+                          className="border border-stone-700 text-stone-200 hover:border-red-500/60 hover:text-red-200 px-4 py-2 rounded-xl text-sm font-semibold disabled:opacity-50"
+                        >
+                          Limpiar próximo mes
+                        </button>
+                      </div>
+                    </div>
+                  </div>
 
                   {calError && (
                     <div className="mb-4 text-sm text-red-300 bg-red-500/10 border border-red-500/30 rounded-lg px-3 py-2 flex items-start gap-2">
