@@ -59,6 +59,9 @@ export function GenrePage({ id, packages, loading }: Props) {
   const scrollToReservar = () =>
     document.getElementById("reservar")?.scrollIntoView({ behavior: "smooth" });
 
+  const scrollToPaquetes = () =>
+    document.getElementById("servicios")?.scrollIntoView({ behavior: "smooth" });
+
   return (
     <>
       <section className="relative min-h-[60vh] sm:min-h-[75vh] flex items-end overflow-hidden">
@@ -95,7 +98,7 @@ export function GenrePage({ id, packages, loading }: Props) {
             </button>
             {hasPackages && (
               <button
-                onClick={scrollToReservar}
+                onClick={scrollToPaquetes}
                 className="border border-stone-700 hover:border-amber-500/60 bg-stone-900/60 backdrop-blur-sm text-stone-100 hover:text-amber-300 px-5 py-3 rounded-2xl font-bold text-base sm:text-lg tracking-wide transition-all"
               >
                 Ver paquetes
