@@ -12,6 +12,7 @@ import {
   ChevronRight,
   Package as PackageIcon,
   Sparkles,
+  Wallet,
 } from "lucide-react";
 import {
   CITIES,
@@ -19,8 +20,15 @@ import {
   type ExtraItem,
   formatCop,
   type PackageData,
+  type GenreId,
 } from "../lib/constants";
-import { getSiteSetting, supabase, WHATSAPP_LINK } from "../lib/supabase";
+import {
+  getSiteSetting,
+  insertReservation,
+  supabase,
+  WHATSAPP_LINK,
+  type PaymentMethod,
+} from "../lib/supabase";
 
 type Props = {
   packages: PackageData[];
@@ -28,7 +36,19 @@ type Props = {
   onSelect: (pkg: PackageData) => void;
   initialDate?: string;
   initialTime?: string;
+  genreId?: GenreId | null;
 };
+
+const PAYMENT_OPTIONS: {
+  id: PaymentMethod;
+  label: string;
+  detail: string;
+  emoji: string;
+}[] = [
+  { id: "nequi", label: "Nequi", detail: "Transferencia al número", emoji: "📱" },
+  { id: "bancolombia", label: "Bancolombia", detail: "Transferencia bancaria", emoji: "🏦" },
+  { id: "efectivo", label: "Efectivo", detail: "Paga al llegar", emoji: "💵" },
+];
 
 const STEPS = [
   { id: 1, title: "Paquete" },
@@ -43,6 +63,7 @@ export function ReservationForm({
   onSelect,
   initialDate,
   initialTime,
+  genreId,
 }: Props) {
   const [step, setStep] = useState(1);
   const [name, setName] = useState("");
@@ -53,8 +74,11 @@ export function ReservationForm({
   const [address, setAddress] = useState("");
   const [message, setMessage] = useState("");
   const [extras, setExtras] = useState<string[]>([]);
+  const [paymentMethod, setPaymentMethod] = useState<PaymentMethod | "">("");
   const [termsAccepted, setTermsAccepted] = useState(false);
   const [submitted, setSubmitted] = useState(false);
+  const [submitting, setSubmitting] = useState(false);
+  const [submitError, setSubmitError] = useState<string | null>(null);
   const [extrasList, setExtrasList] = useState<ExtraItem[]>(DEFAULT_EXTRAS);
 
   useEffect(() => {
@@ -125,6 +149,7 @@ export function ReservationForm({
     setAddress("");
     setMessage("");
     setExtras([]);
+    setPaymentMethod("");
     setTermsAccepted(false);
     setStep(1);
   };
@@ -144,6 +169,8 @@ export function ReservationForm({
     return true;
   })();
 
+  const canSubmit = !!selected && !!paymentMethod && termsAccepted && !submitting;
+
   const goNext = () => {
     if (!canNext) return;
     setStep((s) => Math.min(4, s + 1));
@@ -158,7 +185,7 @@ export function ReservationForm({
   const packagePrice = selected?.priceCop ?? 0;
   const grandTotal = packagePrice + extrasTotal;
 
-  const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
+  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     if (step < 4) {
       goNext();
@@ -166,17 +193,47 @@ export function ReservationForm({
     }
     if (!selected) return;
     if (!termsAccepted) return;
+    if (!paymentMethod) return;
+
+    const selectedExtras = extras
+      .map((id) => extrasList.find((x) => x.id === id))
+      .filter((x): x is ExtraItem => !!x)
+      .map((x) => ({ id: x.id, name: x.name, price: String(x.price) }));
 
     const extrasText =
-      extras.length > 0
-        ? extras
-            .map((id) => {
-              const extra = extrasList.find((x) => x.id === id);
-              return extra ? `${extra.name} ($${extra.price})` : "";
-            })
-            .filter(Boolean)
-            .join(", ")
+      selectedExtras.length > 0
+        ? selectedExtras.map((x) => `${x.name} ($${x.price})`).join(", ")
         : "Ninguno";
+
+    const paymentLabel =
+      PAYMENT_OPTIONS.find((p) => p.id === paymentMethod)?.label ??
+      paymentMethod;
+
+    setSubmitting(true);
+    setSubmitError(null);
+    const { error } = await insertReservation({
+      name: name.trim(),
+      phone: phone.trim(),
+      city: city.trim(),
+      address: address.trim(),
+      message: message.trim() || null,
+      date,
+      time,
+      genre: genreId ?? null,
+      package_id: selected.id ?? null,
+      package_name: selected.name,
+      package_price_cop: selected.priceCop,
+      extras: selectedExtras,
+      extras_total_cop: extrasTotal,
+      total_cop: grandTotal,
+      payment_method: paymentMethod,
+    });
+    setSubmitting(false);
+    if (error) {
+      setSubmitError(
+        "No pudimos guardar la reserva automáticamente, pero igual te abrimos WhatsApp para confirmarla con el equipo."
+      );
+    }
 
     const messageText =
       `🎺 *Nueva Reserva de Serenata*%0A%0A` +
@@ -184,6 +241,7 @@ export function ReservationForm({
       `📱 *Teléfono:* ${phone}%0A` +
       `🎶 *Paquete:* ${selected.name} ($${formatCop(selected.priceCop)} COP)%0A` +
       `🎁 *Adicionales:* ${extrasText}%0A` +
+      `💳 *Forma de pago:* ${paymentLabel}%0A` +
       `💰 *Total estimado:* $${formatCop(grandTotal)} COP%0A` +
       `📍 *Ciudad:* ${city}%0A` +
       `📅 *Fecha:* ${date}%0A` +
@@ -270,8 +328,15 @@ export function ReservationForm({
             <div className="mb-6 p-4 bg-green-500/10 border border-green-500/40 rounded-xl flex items-center gap-3">
               <CheckCircle2 className="w-6 h-6 text-green-400 flex-shrink-0" />
               <div className="text-sm text-green-200">
-                ¡Listo! Te redirigimos a WhatsApp para confirmar tu reserva.
+                ¡Listo! Tu reserva quedó guardada y te abrimos WhatsApp para
+                confirmarla con el equipo.
               </div>
+            </div>
+          )}
+
+          {submitError && (
+            <div className="mb-6 p-4 bg-red-500/10 border border-red-500/40 rounded-xl text-sm text-red-200">
+              {submitError}
             </div>
           )}
 
@@ -503,6 +568,41 @@ export function ReservationForm({
                     Resumen de tu reserva
                   </div>
 
+                  <div>
+                    <label className="flex items-center gap-2 text-sm font-medium text-amber-300 mb-3">
+                      <Wallet className="w-4 h-4" />
+                      ¿Cómo prefieres pagar? *
+                    </label>
+                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                      {PAYMENT_OPTIONS.map((opt) => {
+                        const active = paymentMethod === opt.id;
+                        return (
+                          <button
+                            type="button"
+                            key={opt.id}
+                            onClick={() => setPaymentMethod(opt.id)}
+                            className={`p-4 rounded-2xl border-2 text-left transition-all ${
+                              active
+                                ? "border-amber-500 bg-amber-500/10 shadow-lg shadow-amber-500/20"
+                                : "border-stone-700 bg-stone-800/60 hover:border-amber-500/50"
+                            }`}
+                          >
+                            <div className="text-2xl mb-1">{opt.emoji}</div>
+                            <div className="text-white text-sm font-bold">
+                              {opt.label}
+                            </div>
+                            <div className="text-xs text-stone-400 mt-0.5">
+                              {opt.detail}
+                            </div>
+                          </button>
+                        );
+                      })}
+                    </div>
+                    <p className="text-xs text-stone-500 mt-2">
+                      La forma de pago se confirma por WhatsApp con el equipo.
+                    </p>
+                  </div>
+
                   <div className="rounded-2xl border border-stone-800 bg-stone-900/80 overflow-hidden">
                     <div className="px-4 py-3 bg-stone-800/60 border-b border-stone-800 flex items-center justify-between">
                       <div className="text-white font-bold">
@@ -548,6 +648,15 @@ export function ReservationForm({
                           </ul>
                         )}
                       </div>
+                      {paymentMethod && (
+                        <SummaryRow
+                          label="Forma de pago"
+                          value={
+                            PAYMENT_OPTIONS.find((p) => p.id === paymentMethod)
+                              ?.label ?? paymentMethod
+                          }
+                        />
+                      )}
                       {message && (
                         <SummaryRow label="Mensaje" value={message} />
                       )}
@@ -608,11 +717,11 @@ export function ReservationForm({
               ) : (
                 <button
                   type="submit"
-                  disabled={!termsAccepted}
+                  disabled={!canSubmit}
                   className="inline-flex items-center gap-2 bg-gradient-to-r from-amber-500 to-yellow-500 hover:from-amber-400 hover:to-yellow-400 disabled:opacity-50 disabled:cursor-not-allowed text-stone-950 px-5 py-3 rounded-xl font-extrabold text-sm sm:text-base shadow-lg shadow-amber-500/30 transition-all"
                 >
                   <Send className="w-4 h-4" />
-                  Confirmar y enviar
+                  {submitting ? "Guardando..." : "Confirmar y enviar"}
                 </button>
               )}
             </div>

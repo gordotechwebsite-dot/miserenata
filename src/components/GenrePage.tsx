@@ -43,7 +43,8 @@ export function GenrePage({ id, packages, loading }: Props) {
     };
   }, [id, base]);
 
-  const filtered = packages.filter((p) => p.genre === id);
+  const genreFiltered = packages.filter((p) => p.genre === id);
+  const filtered = genreFiltered.length > 0 ? genreFiltered : packages;
   const hasPackages = filtered.length > 0;
 
   const goHome = () => {
@@ -139,6 +140,7 @@ export function GenrePage({ id, packages, loading }: Props) {
             onSelect={setSelected}
             initialDate={prefillDate}
             initialTime={prefillTime}
+            genreId={id}
           />
         </>
       )}
