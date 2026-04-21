@@ -140,7 +140,7 @@ export const TESTIMONIALS = [
   {
     name: "Daniela Suárez",
     city: "Nobsa",
-    text: "Reservamos por WhatsApp y fue súper fácil. Llegaron a tiempo, se vistieron elegantes y se notó la experiencia. Gracias Miserenata.",
+    text: "Reservamos por WhatsApp y fue súper fácil. Llegaron a tiempo, se vistieron elegantes y se notó la experiencia. Gracias Musicaenvivo.",
     rating: 5,
   },
   {

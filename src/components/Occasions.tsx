@@ -25,7 +25,7 @@ export function Occasions() {
   const openWa = () =>
     window.open(
       `${WHATSAPP_LINK}?text=${encodeURIComponent(
-        "Hola Miserenata, quiero cotizar para una ocasión especial."
+        "Hola Musicaenvivo.co, quiero cotizar para una ocasión especial."
       )}`,
       "_blank"
     );

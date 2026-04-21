@@ -64,7 +64,7 @@ function mapRow(row: PackageRow): PackageData {
     fallbackUrl:
       row.fallback_url ||
       local?.fallbackUrl ||
-      "https://placehold.co/400x300/1a1a2e/d4af37?text=Miserenata",
+      "https://placehold.co/400x300/1a1a2e/d4af37?text=Musicaenvivo",
     localImage: local?.localImage || "/images/mariachi-hero.jpg",
     genre,
   };

@@ -16,7 +16,7 @@ export function Hero() {
           className="hidden sm:block w-full h-full object-cover scale-105"
           onError={(e) => {
             (e.target as HTMLImageElement).src =
-              "https://placehold.co/1920x1080/1a1a2e/d4af37?text=Miserenata.co";
+              "https://placehold.co/1920x1080/1a1a2e/d4af37?text=Musicaenvivo.co";
           }}
         />
         <div className="hidden sm:block absolute inset-0 bg-gradient-to-b from-stone-950/60 via-stone-950/80 to-stone-950" />
@@ -24,10 +24,10 @@ export function Hero() {
       </div>
 
       <div className="relative z-10 w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
-        <h1 className="hero-title-cycle font-display font-black text-4xl sm:text-5xl md:text-6xl lg:text-7xl leading-[1.08] mb-6 sm:mb-8 bg-gradient-to-br from-amber-200 via-yellow-100 to-amber-400 bg-clip-text text-transparent tracking-tight drop-shadow-[0_4px_16px_rgba(0,0,0,0.55)]">
-          El arte de sorprender
+        <h1 className="hero-title-cycle font-display font-black text-center text-6xl sm:text-7xl md:text-8xl lg:text-9xl leading-[0.95] mb-8 sm:mb-10 bg-gradient-to-br from-amber-200 via-yellow-100 to-amber-400 bg-clip-text text-transparent tracking-tight drop-shadow-[0_4px_24px_rgba(0,0,0,0.7)]">
+          Música
           <br />
-          en cada nota.
+          en vivo
         </h1>
 
         <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 justify-center items-stretch sm:items-center max-w-2xl mx-auto">

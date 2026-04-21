@@ -168,7 +168,7 @@ export function Availability({ genreId, variant = "page" }: Props) {
   const buildWaMessage = (d: Date, slotLabel: string) => {
     const pretty = formatDateEs(d);
     const genrePart = genre ? ` de ${genre.name}` : "";
-    const header = `Hola Miserenata, quiero reservar una serenata${genrePart} para el ${pretty} a las ${slotLabel}.`;
+    const header = `Hola Musicaenvivo.co, quiero reservar una serenata${genrePart} para el ${pretty} a las ${slotLabel}.`;
     const details: string[] = [];
     if (name.trim()) details.push(`Nombre: ${name.trim()}`);
     if (phone.trim()) details.push(`Teléfono: ${phone.trim()}`);

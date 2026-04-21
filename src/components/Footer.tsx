@@ -13,7 +13,7 @@ export function Footer() {
                 <Music4 className="w-5 h-5 text-stone-950" />
               </div>
               <span className="font-display text-xl font-bold bg-gradient-to-r from-amber-300 to-yellow-200 bg-clip-text text-transparent">
-                Miserenata<span className="text-amber-400">.</span>co
+                Musicaenvivo<span className="text-amber-400">.</span>co
               </span>
             </div>
             <p className="text-stone-400 text-sm max-w-sm leading-relaxed">
@@ -59,7 +59,7 @@ export function Footer() {
               </li>
               <li className="flex items-center gap-2">
                 <Instagram className="w-4 h-4 text-amber-400" />
-                @miserenata.co
+                @musicaenvivo.co
               </li>
               <li>
                 <a
@@ -77,7 +77,7 @@ export function Footer() {
 
         <div className="border-t border-stone-900 pt-6 flex flex-col sm:flex-row items-center justify-between gap-3">
           <p className="text-stone-500 text-xs sm:text-sm text-center">
-            © {year} Miserenata.co · El arte de sorprender. Todos los derechos
+            © {year} Musicaenvivo.co · El arte de sorprender. Todos los derechos
             reservados.
           </p>
           <p className="text-stone-600 text-xs">Hecho con amor en Boyacá.</p>

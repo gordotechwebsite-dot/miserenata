@@ -106,7 +106,7 @@ function rowToPackage(row: PackageRow): PackageData {
     imagePath: row.image_path,
     imageUrl: row.image_url,
     fallbackUrl:
-      row.fallback_url || local?.fallbackUrl || "https://placehold.co/400x300/1a1a2e/d4af37?text=Miserenata",
+      row.fallback_url || local?.fallbackUrl || "https://placehold.co/400x300/1a1a2e/d4af37?text=Musicaenvivo",
     localImage: local?.localImage || "/images/mariachi-hero.jpg",
     genre,
   };
@@ -508,7 +508,7 @@ export function AdminPanel({ onExit }: { onExit: () => void }) {
             </div>
             <div>
               <div className="font-display font-bold">Panel de Administrador</div>
-              <div className="text-xs text-stone-500">Miserenata.co</div>
+              <div className="text-xs text-stone-500">Musicaenvivo.co</div>
             </div>
           </div>
           <div className="flex items-center gap-3">
