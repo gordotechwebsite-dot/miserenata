@@ -1,15 +1,50 @@
-import { useState } from "react";
-import { Calendar, Clock, MapPin, Phone, User, MessageSquare, Gift, Send, CheckCircle2 } from "lucide-react";
-import { CITIES, EXTRAS, TIME_SLOTS, formatCop, type PackageData } from "../lib/constants";
+import { useEffect, useState } from "react";
+import {
+  Calendar,
+  Clock,
+  MapPin,
+  Phone,
+  User,
+  MessageSquare,
+  Gift,
+  Send,
+  CheckCircle2,
+  ChevronLeft,
+  ChevronRight,
+  Package as PackageIcon,
+} from "lucide-react";
+import {
+  CITIES,
+  EXTRAS,
+  formatCop,
+  type PackageData,
+} from "../lib/constants";
 import { WHATSAPP_LINK } from "../lib/supabase";
+import { SLOTS } from "./Availability";
 
 type Props = {
   packages: PackageData[];
   selected: PackageData | null;
   onSelect: (pkg: PackageData) => void;
+  initialDate?: string;
+  initialTime?: string;
 };
 
-export function ReservationForm({ packages, selected, onSelect }: Props) {
+const STEPS = [
+  { id: 1, title: "Paquete" },
+  { id: 2, title: "Fecha y datos" },
+  { id: 3, title: "Adicionales" },
+  { id: 4, title: "Confirmar" },
+];
+
+export function ReservationForm({
+  packages,
+  selected,
+  onSelect,
+  initialDate,
+  initialTime,
+}: Props) {
+  const [step, setStep] = useState(1);
   const [name, setName] = useState("");
   const [phone, setPhone] = useState("");
   const [city, setCity] = useState("");
@@ -21,6 +56,13 @@ export function ReservationForm({ packages, selected, onSelect }: Props) {
   const [submitted, setSubmitted] = useState(false);
 
   const today = new Date().toISOString().split("T")[0];
+
+  useEffect(() => {
+    if (initialDate) setDate(initialDate);
+  }, [initialDate]);
+  useEffect(() => {
+    if (initialTime) setTime(initialTime);
+  }, [initialTime]);
 
   const toggleExtra = (id: string) =>
     setExtras((prev) =>
@@ -36,10 +78,35 @@ export function ReservationForm({ packages, selected, onSelect }: Props) {
     setAddress("");
     setMessage("");
     setExtras([]);
+    setStep(1);
   };
+
+  const canNext = (() => {
+    if (step === 1) return !!selected;
+    if (step === 2)
+      return (
+        name.trim() !== "" &&
+        phone.trim() !== "" &&
+        city.trim() !== "" &&
+        address.trim() !== "" &&
+        date !== "" &&
+        time !== ""
+      );
+    return true;
+  })();
+
+  const goNext = () => {
+    if (!canNext) return;
+    setStep((s) => Math.min(4, s + 1));
+  };
+  const goPrev = () => setStep((s) => Math.max(1, s - 1));
 
   const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
+    if (step < 4) {
+      goNext();
+      return;
+    }
     if (!selected) return;
 
     const extrasText =
@@ -79,7 +146,7 @@ export function ReservationForm({ packages, selected, onSelect }: Props) {
       className="py-16 sm:py-24 bg-gradient-to-b from-stone-950 via-stone-900 to-stone-950"
     >
       <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="text-center mb-10 sm:mb-14">
+        <div className="text-center mb-8 sm:mb-10">
           <div className="inline-flex items-center gap-2 bg-amber-500/10 border border-amber-500/30 rounded-full px-4 py-2 mb-4">
             <Calendar className="w-4 h-4 text-amber-400" />
             <span className="text-amber-300 text-sm font-medium">
@@ -92,10 +159,52 @@ export function ReservationForm({ packages, selected, onSelect }: Props) {
             </span>
           </h2>
           <p className="text-stone-400 max-w-2xl mx-auto">
-            Completa el formulario y te contactaremos por WhatsApp para
-            confirmar todos los detalles.
+            Completa los pasos y te contactaremos por WhatsApp para confirmar
+            todos los detalles.
           </p>
         </div>
+
+        <ol className="flex items-center justify-between gap-1 sm:gap-2 mb-6 sm:mb-8 max-w-2xl mx-auto">
+          {STEPS.map((s, i) => {
+            const active = step === s.id;
+            const done = step > s.id;
+            return (
+              <li key={s.id} className="flex items-center flex-1 min-w-0">
+                <div className="flex flex-col items-center gap-1.5 flex-shrink-0">
+                  <div
+                    className={`w-8 h-8 sm:w-9 sm:h-9 rounded-full flex items-center justify-center text-xs sm:text-sm font-bold border-2 transition-all ${
+                      active
+                        ? "bg-gradient-to-br from-amber-500 to-yellow-500 text-stone-950 border-amber-400 shadow-lg shadow-amber-500/30"
+                        : done
+                        ? "bg-amber-500/20 text-amber-300 border-amber-500/60"
+                        : "bg-stone-900 text-stone-500 border-stone-700"
+                    }`}
+                  >
+                    {done ? <CheckCircle2 className="w-4 h-4" /> : s.id}
+                  </div>
+                  <div
+                    className={`text-[10px] sm:text-xs font-semibold text-center ${
+                      active
+                        ? "text-amber-300"
+                        : done
+                        ? "text-stone-300"
+                        : "text-stone-500"
+                    }`}
+                  >
+                    {s.title}
+                  </div>
+                </div>
+                {i < STEPS.length - 1 && (
+                  <div
+                    className={`h-0.5 flex-1 mx-1 sm:mx-2 -translate-y-2 ${
+                      done ? "bg-amber-500/60" : "bg-stone-800"
+                    }`}
+                  />
+                )}
+              </li>
+            );
+          })}
+        </ol>
 
         <div className="bg-stone-900/80 backdrop-blur border border-stone-800 rounded-3xl p-6 sm:p-10 shadow-2xl">
           {submitted && (
@@ -108,194 +217,269 @@ export function ReservationForm({ packages, selected, onSelect }: Props) {
           )}
 
           <form onSubmit={handleSubmit} className="space-y-6">
-            <div>
-              <label className="flex items-center gap-2 text-sm font-medium text-amber-300 mb-3">
-                <Send className="w-4 h-4" />
-                Paquete Seleccionado *
-              </label>
-              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-                {packages.map((pkg) => {
-                  const active = selected?.name === pkg.name;
-                  return (
-                    <button
-                      type="button"
-                      key={pkg.id || pkg.name}
-                      onClick={() => onSelect(pkg)}
-                      className={`p-3 rounded-xl border-2 text-left transition-all ${
-                        active
-                          ? "border-amber-500 bg-amber-500/10"
-                          : "border-stone-700 bg-stone-800/60 hover:border-amber-500/50"
-                      }`}
+           <div key={step} className="animate-fade-up space-y-6">
+            {step === 1 && (
+              <div>
+                <label className="flex items-center gap-2 text-sm font-medium text-amber-300 mb-3">
+                  <PackageIcon className="w-4 h-4" />
+                  Paquete *
+                </label>
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                  {packages.map((pkg) => {
+                    const active = selected?.name === pkg.name;
+                    return (
+                      <button
+                        type="button"
+                        key={pkg.id || pkg.name}
+                        onClick={() => onSelect(pkg)}
+                        className={`p-4 rounded-xl border-2 text-left transition-all ${
+                          active
+                            ? "border-amber-500 bg-amber-500/10"
+                            : "border-stone-700 bg-stone-800/60 hover:border-amber-500/50"
+                        }`}
+                      >
+                        <div className="text-white text-sm font-bold">
+                          {pkg.name}
+                        </div>
+                        <div className="text-xs text-amber-400 mt-1">
+                          ${formatCop(pkg.priceCop)} COP
+                        </div>
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+            )}
+
+            {step === 2 && (
+              <>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <div>
+                    <label className="flex items-center gap-2 text-sm font-medium text-stone-300 mb-2">
+                      <User className="w-4 h-4 text-amber-400" />
+                      Nombre Completo *
+                    </label>
+                    <input
+                      type="text"
+                      required
+                      value={name}
+                      onChange={(e) => setName(e.target.value)}
+                      placeholder="Tu nombre completo"
+                      className="w-full bg-stone-800/80 border border-stone-700 rounded-xl px-4 py-3 text-white placeholder-stone-500 focus:outline-none focus:border-amber-500 focus:ring-1 focus:ring-amber-500/50 transition-all"
+                    />
+                  </div>
+                  <div>
+                    <label className="flex items-center gap-2 text-sm font-medium text-stone-300 mb-2">
+                      <Phone className="w-4 h-4 text-amber-400" />
+                      Teléfono / WhatsApp *
+                    </label>
+                    <input
+                      type="tel"
+                      required
+                      value={phone}
+                      onChange={(e) => setPhone(e.target.value)}
+                      placeholder="Ej: 300 123 4567"
+                      className="w-full bg-stone-800/80 border border-stone-700 rounded-xl px-4 py-3 text-white placeholder-stone-500 focus:outline-none focus:border-amber-500 focus:ring-1 focus:ring-amber-500/50 transition-all"
+                    />
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <div>
+                    <label className="flex items-center gap-2 text-sm font-medium text-stone-300 mb-2">
+                      <MapPin className="w-4 h-4 text-amber-400" />
+                      Ciudad *
+                    </label>
+                    <select
+                      required
+                      value={city}
+                      onChange={(e) => setCity(e.target.value)}
+                      className="w-full bg-stone-800/80 border border-stone-700 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-amber-500 focus:ring-1 focus:ring-amber-500/50 transition-all"
                     >
-                      <div className="text-white text-sm font-bold">
-                        {pkg.name}
-                      </div>
-                      <div className="text-xs text-amber-400 mt-1">
-                        ${formatCop(pkg.priceCop)} COP
-                      </div>
-                    </button>
-                  );
-                })}
-              </div>
-            </div>
+                      <option value="">Selecciona la ciudad</option>
+                      {CITIES.map((c) => (
+                        <option key={c} value={c}>
+                          {c}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                  <div>
+                    <label className="flex items-center gap-2 text-sm font-medium text-stone-300 mb-2">
+                      <MapPin className="w-4 h-4 text-amber-400" />
+                      Dirección de la Serenata *
+                    </label>
+                    <input
+                      type="text"
+                      required
+                      value={address}
+                      onChange={(e) => setAddress(e.target.value)}
+                      placeholder="Dirección completa donde será la serenata"
+                      className="w-full bg-stone-800/80 border border-stone-700 rounded-xl px-4 py-3 text-white placeholder-stone-500 focus:outline-none focus:border-amber-500 focus:ring-1 focus:ring-amber-500/50 transition-all"
+                    />
+                  </div>
+                </div>
 
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              <div>
-                <label className="flex items-center gap-2 text-sm font-medium text-stone-300 mb-2">
-                  <User className="w-4 h-4 text-amber-400" />
-                  Nombre Completo *
-                </label>
-                <input
-                  type="text"
-                  required
-                  value={name}
-                  onChange={(e) => setName(e.target.value)}
-                  placeholder="Tu nombre completo"
-                  className="w-full bg-stone-800/80 border border-stone-700 rounded-xl px-4 py-3 text-white placeholder-stone-500 focus:outline-none focus:border-amber-500 focus:ring-1 focus:ring-amber-500/50 transition-all"
-                />
-              </div>
-              <div>
-                <label className="flex items-center gap-2 text-sm font-medium text-stone-300 mb-2">
-                  <Phone className="w-4 h-4 text-amber-400" />
-                  Teléfono / WhatsApp *
-                </label>
-                <input
-                  type="tel"
-                  required
-                  value={phone}
-                  onChange={(e) => setPhone(e.target.value)}
-                  placeholder="Ej: 300 123 4567"
-                  className="w-full bg-stone-800/80 border border-stone-700 rounded-xl px-4 py-3 text-white placeholder-stone-500 focus:outline-none focus:border-amber-500 focus:ring-1 focus:ring-amber-500/50 transition-all"
-                />
-              </div>
-            </div>
-
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              <div>
-                <label className="flex items-center gap-2 text-sm font-medium text-stone-300 mb-2">
-                  <MapPin className="w-4 h-4 text-amber-400" />
-                  Ciudad *
-                </label>
-                <select
-                  required
-                  value={city}
-                  onChange={(e) => setCity(e.target.value)}
-                  className="w-full bg-stone-800/80 border border-stone-700 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-amber-500 focus:ring-1 focus:ring-amber-500/50 transition-all"
-                >
-                  <option value="">Selecciona la ciudad</option>
-                  {CITIES.map((c) => (
-                    <option key={c} value={c}>
-                      {c}
-                    </option>
-                  ))}
-                </select>
-              </div>
-              <div>
-                <label className="flex items-center gap-2 text-sm font-medium text-stone-300 mb-2">
-                  <MapPin className="w-4 h-4 text-amber-400" />
-                  Dirección de la Serenata *
-                </label>
-                <input
-                  type="text"
-                  required
-                  value={address}
-                  onChange={(e) => setAddress(e.target.value)}
-                  placeholder="Dirección completa donde será la serenata"
-                  className="w-full bg-stone-800/80 border border-stone-700 rounded-xl px-4 py-3 text-white placeholder-stone-500 focus:outline-none focus:border-amber-500 focus:ring-1 focus:ring-amber-500/50 transition-all"
-                />
-              </div>
-            </div>
-
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              <div>
-                <label className="flex items-center gap-2 text-sm font-medium text-stone-300 mb-2">
-                  <Calendar className="w-4 h-4 text-amber-400" />
-                  Fecha de la Serenata *
-                </label>
-                <input
-                  type="date"
-                  required
-                  min={today}
-                  value={date}
-                  onChange={(e) => setDate(e.target.value)}
-                  className="w-full bg-stone-800/80 border border-stone-700 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-amber-500 focus:ring-1 focus:ring-amber-500/50 transition-all"
-                />
-              </div>
-              <div>
-                <label className="flex items-center gap-2 text-sm font-medium text-stone-300 mb-2">
-                  <Clock className="w-4 h-4 text-amber-400" />
-                  Hora de la Serenata *
-                </label>
-                <select
-                  required
-                  value={time}
-                  onChange={(e) => setTime(e.target.value)}
-                  className="w-full bg-stone-800/80 border border-stone-700 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-amber-500 focus:ring-1 focus:ring-amber-500/50 transition-all"
-                >
-                  <option value="">Selecciona la hora</option>
-                  {TIME_SLOTS.map((slot) => (
-                    <option key={slot} value={slot}>
-                      {slot}
-                    </option>
-                  ))}
-                </select>
-              </div>
-            </div>
-
-            <div>
-              <label className="flex items-center gap-2 text-sm font-medium text-amber-300 mb-3">
-                <Gift className="w-4 h-4" />
-                Detalles Adicionales (Opcional)
-              </label>
-              <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
-                {EXTRAS.map((extra) => {
-                  const active = extras.includes(extra.id);
-                  return (
-                    <button
-                      type="button"
-                      key={extra.id}
-                      onClick={() => toggleExtra(extra.id)}
-                      className={`flex flex-col items-center gap-1.5 p-3 rounded-xl border-2 transition-all duration-200 ${
-                        active
-                          ? "border-amber-500 bg-amber-500/10"
-                          : "border-stone-700 bg-stone-800/60 hover:border-amber-500/50"
-                      }`}
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <div>
+                    <label className="flex items-center gap-2 text-sm font-medium text-stone-300 mb-2">
+                      <Calendar className="w-4 h-4 text-amber-400" />
+                      Fecha de la Serenata *
+                    </label>
+                    <input
+                      type="date"
+                      required
+                      min={today}
+                      value={date}
+                      onChange={(e) => setDate(e.target.value)}
+                      className="w-full bg-stone-800/80 border border-stone-700 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-amber-500 focus:ring-1 focus:ring-amber-500/50 transition-all"
+                    />
+                  </div>
+                  <div>
+                    <label className="flex items-center gap-2 text-sm font-medium text-stone-300 mb-2">
+                      <Clock className="w-4 h-4 text-amber-400" />
+                      Hora de la Serenata *
+                    </label>
+                    <select
+                      required
+                      value={time}
+                      onChange={(e) => setTime(e.target.value)}
+                      className="w-full bg-stone-800/80 border border-stone-700 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-amber-500 focus:ring-1 focus:ring-amber-500/50 transition-all"
                     >
-                      <div className="text-2xl">{extra.icon}</div>
-                      <div className="text-white text-xs font-semibold text-center">
-                        {extra.name}
-                      </div>
-                      <div className="text-amber-400 text-xs">
-                        ${extra.price}
-                      </div>
-                    </button>
-                  );
-                })}
+                      <option value="">Selecciona la hora</option>
+                      {SLOTS.map((s) => (
+                        <option key={s.label} value={s.label}>
+                          {s.label}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                </div>
+              </>
+            )}
+
+            {step === 3 && (
+              <>
+                <div>
+                  <label className="flex items-center gap-2 text-sm font-medium text-amber-300 mb-3">
+                    <Gift className="w-4 h-4" />
+                    Detalles Adicionales (Opcional)
+                  </label>
+                  <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+                    {EXTRAS.map((extra) => {
+                      const active = extras.includes(extra.id);
+                      return (
+                        <button
+                          type="button"
+                          key={extra.id}
+                          onClick={() => toggleExtra(extra.id)}
+                          className={`flex flex-col items-center gap-1.5 p-3 rounded-xl border-2 transition-all duration-200 ${
+                            active
+                              ? "border-amber-500 bg-amber-500/10"
+                              : "border-stone-700 bg-stone-800/60 hover:border-amber-500/50"
+                          }`}
+                        >
+                          <div className="text-2xl">{extra.icon}</div>
+                          <div className="text-white text-xs font-semibold text-center">
+                            {extra.name}
+                          </div>
+                          <div className="text-amber-400 text-xs">
+                            ${extra.price}
+                          </div>
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
+
+                <div>
+                  <label className="flex items-center gap-2 text-sm font-medium text-stone-300 mb-2">
+                    <MessageSquare className="w-4 h-4 text-amber-400" />
+                    Mensaje adicional
+                  </label>
+                  <textarea
+                    rows={3}
+                    value={message}
+                    onChange={(e) => setMessage(e.target.value)}
+                    placeholder="¿Alguna canción especial? ¿Instrucciones de dirección? ¡Cuéntanos!"
+                    className="w-full bg-stone-800/80 border border-stone-700 rounded-xl px-4 py-3 text-white placeholder-stone-500 focus:outline-none focus:border-amber-500 focus:ring-1 focus:ring-amber-500/50 transition-all"
+                  />
+                </div>
+              </>
+            )}
+
+            {step === 4 && (
+              <div className="space-y-3">
+                <div className="text-sm font-semibold text-amber-300 mb-2">
+                  Revisa tu reserva
+                </div>
+                <dl className="grid gap-2 text-sm">
+                  <SummaryRow
+                    label="Paquete"
+                    value={selected ? selected.name : "—"}
+                  />
+                  <SummaryRow label="Nombre" value={name} />
+                  <SummaryRow label="Teléfono" value={phone} />
+                  <SummaryRow label="Ciudad" value={city} />
+                  <SummaryRow label="Dirección" value={address} />
+                  <SummaryRow label="Fecha" value={date} />
+                  <SummaryRow label="Hora" value={time} />
+                  <SummaryRow
+                    label="Adicionales"
+                    value={
+                      extras.length > 0
+                        ? extras
+                            .map((id) => EXTRAS.find((x) => x.id === id)?.name)
+                            .filter(Boolean)
+                            .join(", ")
+                        : "Ninguno"
+                    }
+                  />
+                  {message && <SummaryRow label="Mensaje" value={message} />}
+                </dl>
+                <div className="mt-4 p-4 rounded-2xl bg-amber-500/10 border border-amber-500/30 text-amber-100 text-sm flex items-start gap-3">
+                  <span className="text-2xl">🎉</span>
+                  <div>
+                    ¡Ya casi! Al enviar, abriremos WhatsApp con todo prellenado
+                    para confirmar tu reserva.
+                  </div>
+                </div>
               </div>
+            )}
+           </div>
+
+            <div className="flex items-center justify-between gap-3 pt-2">
+              <button
+                type="button"
+                onClick={goPrev}
+                disabled={step === 1}
+                className="inline-flex items-center gap-2 border border-stone-700 hover:border-amber-500/60 bg-stone-900/60 text-stone-100 hover:text-amber-300 disabled:opacity-40 disabled:cursor-not-allowed px-4 py-3 rounded-xl font-semibold text-sm sm:text-base transition-all"
+              >
+                <ChevronLeft className="w-4 h-4" />
+                Anterior
+              </button>
+
+              {step < 4 ? (
+                <button
+                  type="button"
+                  onClick={goNext}
+                  disabled={!canNext}
+                  className="inline-flex items-center gap-2 bg-gradient-to-r from-amber-500 to-yellow-500 hover:from-amber-400 hover:to-yellow-400 disabled:opacity-50 disabled:cursor-not-allowed text-stone-950 px-5 py-3 rounded-xl font-extrabold text-sm sm:text-base shadow-lg shadow-amber-500/30 transition-all"
+                >
+                  Siguiente
+                  <ChevronRight className="w-4 h-4" />
+                </button>
+              ) : (
+                <button
+                  type="submit"
+                  className="inline-flex items-center gap-2 bg-gradient-to-r from-amber-500 to-yellow-500 hover:from-amber-400 hover:to-yellow-400 text-stone-950 px-5 py-3 rounded-xl font-extrabold text-sm sm:text-base shadow-lg shadow-amber-500/30 transition-all"
+                >
+                  <Send className="w-4 h-4" />
+                  Enviar por WhatsApp
+                </button>
+              )}
             </div>
 
-            <div>
-              <label className="flex items-center gap-2 text-sm font-medium text-stone-300 mb-2">
-                <MessageSquare className="w-4 h-4 text-amber-400" />
-                Mensaje adicional
-              </label>
-              <textarea
-                rows={3}
-                value={message}
-                onChange={(e) => setMessage(e.target.value)}
-                placeholder="¿Alguna canción especial? ¿Instrucciones de dirección? ¡Cuéntanos!"
-                className="w-full bg-stone-800/80 border border-stone-700 rounded-xl px-4 py-3 text-white placeholder-stone-500 focus:outline-none focus:border-amber-500 focus:ring-1 focus:ring-amber-500/50 transition-all"
-              />
-            </div>
-
-            <button
-              type="submit"
-              disabled={!selected}
-              className="w-full bg-gradient-to-r from-amber-500 to-yellow-500 hover:from-amber-400 hover:to-yellow-400 disabled:opacity-50 disabled:cursor-not-allowed text-stone-950 py-4 rounded-xl font-extrabold text-base sm:text-lg shadow-xl shadow-amber-500/30 transition-all flex items-center justify-center gap-2"
-            >
-              <Send className="w-5 h-5" />
-              Enviar Reserva por WhatsApp
-            </button>
             <p className="text-stone-500 text-xs text-center">
               Al enviar, serás redirigido a WhatsApp para confirmar tu reserva
               directamente con nuestro equipo.
@@ -304,5 +488,16 @@ export function ReservationForm({ packages, selected, onSelect }: Props) {
         </div>
       </div>
     </section>
+  );
+}
+
+function SummaryRow({ label, value }: { label: string; value: string }) {
+  return (
+    <div className="flex items-start justify-between gap-3 border-b border-stone-800 py-2">
+      <dt className="text-stone-400 font-semibold">{label}</dt>
+      <dd className="text-white text-right break-words max-w-[70%]">
+        {value || "—"}
+      </dd>
+    </div>
   );
 }

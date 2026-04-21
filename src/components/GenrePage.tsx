@@ -22,6 +22,8 @@ export function GenrePage({ id, packages, loading }: Props) {
   const base = DEFAULT_GENRES.find((g) => g.id === id)!;
   const [genre, setGenre] = useState<GenreData>(base);
   const [selected, setSelected] = useState<PackageData | null>(null);
+  const [prefillDate, setPrefillDate] = useState<string>("");
+  const [prefillTime, setPrefillTime] = useState<string>("");
 
   useEffect(() => {
     let mounted = true;
@@ -105,7 +107,17 @@ export function GenrePage({ id, packages, loading }: Props) {
 
       <GenreGallery id={id} genreName={genre.name} />
 
-      <Availability genreId={id} variant="embedded" />
+      <Availability
+        genreId={id}
+        variant="embedded"
+        onSlotSelect={(d, _time, label) => {
+          const y = d.getFullYear();
+          const m = String(d.getMonth() + 1).padStart(2, "0");
+          const day = String(d.getDate()).padStart(2, "0");
+          setPrefillDate(`${y}-${m}-${day}`);
+          setPrefillTime(label);
+        }}
+      />
 
       {hasPackages && (
         <>
@@ -122,6 +134,8 @@ export function GenrePage({ id, packages, loading }: Props) {
             packages={filtered}
             selected={selected}
             onSelect={setSelected}
+            initialDate={prefillDate}
+            initialTime={prefillTime}
           />
         </>
       )}
