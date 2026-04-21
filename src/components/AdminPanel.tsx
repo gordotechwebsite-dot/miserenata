@@ -28,7 +28,21 @@ import {
   AlertTriangle,
   Megaphone,
   Music2,
+  CalendarDays,
+  ChevronLeft,
+  ChevronRight,
 } from "lucide-react";
+import {
+  SLOTS,
+  UNAVAILABLE_SLOTS_KEY,
+  buildMonthDays,
+  formatDateEs,
+  MONTHS_ES,
+  DAYS_ES,
+  parseUnavailable,
+  slotKey,
+  startOfDay,
+} from "./Availability";
 
 const GALLERY_BUCKET = "gallery";
 
@@ -51,7 +65,7 @@ type GalleryFile = {
   createdAt: string | null;
 };
 
-type Tab = "packages" | "gallery" | "banner" | "genres";
+type Tab = "packages" | "gallery" | "banner" | "genres" | "calendar";
 
 const GENRE_IDS_SET = new Set<GenreId>(["mariachi", "nortena", "banda"]);
 
@@ -139,6 +153,18 @@ export function AdminPanel({ onExit }: { onExit: () => void }) {
     useState<GenreId | null>(null);
   const genreFileInputs = useRef<Partial<Record<GenreId, HTMLInputElement>>>({});
 
+  const todayStart = startOfDay(new Date());
+  const [calView, setCalView] = useState(() => ({
+    year: todayStart.getFullYear(),
+    month: todayStart.getMonth(),
+  }));
+  const [calSelected, setCalSelected] = useState<Date>(todayStart);
+  const [calUnavailable, setCalUnavailable] = useState<Set<string>>(new Set());
+  const [calLoading, setCalLoading] = useState(false);
+  const [calSaving, setCalSaving] = useState(false);
+  const [calError, setCalError] = useState<string | null>(null);
+  const [calSavedAt, setCalSavedAt] = useState<number | null>(null);
+
   const isAdmin = session?.user?.email === ADMIN_EMAIL;
 
   useEffect(() => {
@@ -163,6 +189,7 @@ export function AdminPanel({ onExit }: { onExit: () => void }) {
     void loadPackages();
     void loadBanner();
     void loadGenres();
+    void loadCalendar();
   }, [isAdmin]);
 
   useEffect(() => {
@@ -170,6 +197,38 @@ export function AdminPanel({ onExit }: { onExit: () => void }) {
     void loadGallery();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isAdmin, galleryDestination]);
+
+  const loadCalendar = async () => {
+    setCalLoading(true);
+    setCalError(null);
+    const value = await getSiteSetting(UNAVAILABLE_SLOTS_KEY);
+    setCalUnavailable(parseUnavailable(value));
+    setCalLoading(false);
+  };
+
+  const toggleCalSlot = (date: Date, time: string) => {
+    const key = slotKey(date, time);
+    setCalUnavailable((prev) => {
+      const next = new Set(prev);
+      if (next.has(key)) next.delete(key);
+      else next.add(key);
+      return next;
+    });
+    setCalSavedAt(null);
+  };
+
+  const saveCalendar = async () => {
+    setCalSaving(true);
+    setCalError(null);
+    const arr = Array.from(calUnavailable).sort();
+    const { error: err } = await setSiteSetting(
+      UNAVAILABLE_SLOTS_KEY,
+      JSON.stringify(arr)
+    );
+    if (err) setCalError(err);
+    else setCalSavedAt(Date.now());
+    setCalSaving(false);
+  };
 
   const loadBanner = async () => {
     setBannerLoading(true);
@@ -578,6 +637,16 @@ export function AdminPanel({ onExit }: { onExit: () => void }) {
                   }`}
                 >
                   <Music2 className="w-4 h-4" /> Géneros
+                </button>
+                <button
+                  onClick={() => setTab("calendar")}
+                  className={`flex items-center gap-2 px-4 py-1.5 rounded-lg text-sm font-semibold transition ${
+                    tab === "calendar"
+                      ? "bg-amber-500/20 text-amber-200"
+                      : "text-stone-400 hover:text-stone-200"
+                  }`}
+                >
+                  <CalendarDays className="w-4 h-4" /> Calendario
                 </button>
               </div>
             </div>
@@ -1025,6 +1094,171 @@ export function AdminPanel({ onExit }: { onExit: () => void }) {
                     </div>
                   </div>
                 ))}
+              </div>
+            )}
+
+            {tab === "calendar" && (
+              <div className="space-y-5">
+                <div className="bg-stone-900/60 border border-stone-800 rounded-2xl p-5 sm:p-6">
+                  <div className="flex items-center gap-3 mb-1">
+                    <CalendarDays className="w-5 h-5 text-amber-400" />
+                    <div className="font-display font-bold text-lg text-white">
+                      Calendario de disponibilidad
+                    </div>
+                  </div>
+                  <p className="text-stone-400 text-sm mb-4">
+                    Haz clic en un día y luego marca los horarios que ya están
+                    ocupados. Los cupos marcados se muestran tachados en el
+                    sitio público.
+                  </p>
+
+                  {calError && (
+                    <div className="mb-4 text-sm text-red-300 bg-red-500/10 border border-red-500/30 rounded-lg px-3 py-2 flex items-start gap-2">
+                      <AlertTriangle className="w-4 h-4 mt-0.5 flex-shrink-0" />
+                      <div>
+                        <div className="font-semibold">
+                          No se pudo guardar el calendario
+                        </div>
+                        <div className="text-stone-300">{calError}</div>
+                      </div>
+                    </div>
+                  )}
+
+                  <div className="grid gap-5 md:grid-cols-[minmax(0,1fr)_320px]">
+                    <div className="bg-stone-950/40 border border-stone-800 rounded-2xl p-4">
+                      <div className="flex items-center justify-between mb-3">
+                        <button
+                          onClick={() =>
+                            setCalView((v) => {
+                              const d = new Date(v.year, v.month - 1, 1);
+                              return {
+                                year: d.getFullYear(),
+                                month: d.getMonth(),
+                              };
+                            })
+                          }
+                          className="w-9 h-9 rounded-xl bg-stone-800/60 border border-stone-700 text-stone-200 hover:text-amber-300 flex items-center justify-center"
+                          aria-label="Mes anterior"
+                        >
+                          <ChevronLeft className="w-4 h-4" />
+                        </button>
+                        <div className="font-display font-bold text-white capitalize">
+                          {MONTHS_ES[calView.month]} {calView.year}
+                        </div>
+                        <button
+                          onClick={() =>
+                            setCalView((v) => {
+                              const d = new Date(v.year, v.month + 1, 1);
+                              return {
+                                year: d.getFullYear(),
+                                month: d.getMonth(),
+                              };
+                            })
+                          }
+                          className="w-9 h-9 rounded-xl bg-stone-800/60 border border-stone-700 text-stone-200 hover:text-amber-300 flex items-center justify-center"
+                          aria-label="Mes siguiente"
+                        >
+                          <ChevronRight className="w-4 h-4" />
+                        </button>
+                      </div>
+
+                      <div className="grid grid-cols-7 gap-1 mb-1">
+                        {DAYS_ES.map((d) => (
+                          <div
+                            key={d}
+                            className="text-center text-[10px] font-semibold text-stone-500 uppercase tracking-wider py-1"
+                          >
+                            {d}
+                          </div>
+                        ))}
+                      </div>
+                      <div className="grid grid-cols-7 gap-1">
+                        {buildMonthDays(calView.year, calView.month).map(
+                          (d, i) => {
+                            if (!d) return <div key={i} />;
+                            const sel =
+                              calSelected &&
+                              d.getFullYear() === calSelected.getFullYear() &&
+                              d.getMonth() === calSelected.getMonth() &&
+                              d.getDate() === calSelected.getDate();
+                            const hasAny = SLOTS.some((s) =>
+                              calUnavailable.has(slotKey(d, s.time))
+                            );
+                            return (
+                              <button
+                                key={i}
+                                onClick={() => setCalSelected(d)}
+                                className={`aspect-square rounded-lg text-sm font-semibold flex items-center justify-center border relative transition ${
+                                  sel
+                                    ? "bg-gradient-to-br from-amber-500 to-yellow-500 text-stone-950 border-amber-400"
+                                    : "bg-stone-900/60 border-stone-800 text-stone-200 hover:border-amber-500/40"
+                                }`}
+                              >
+                                {d.getDate()}
+                                {hasAny && !sel && (
+                                  <span className="absolute bottom-1 right-1 w-1.5 h-1.5 rounded-full bg-red-400" />
+                                )}
+                              </button>
+                            );
+                          }
+                        )}
+                      </div>
+                    </div>
+
+                    <div className="bg-stone-950/40 border border-stone-800 rounded-2xl p-4">
+                      <div className="text-white font-display font-bold mb-1">
+                        {formatDateEs(calSelected)}
+                      </div>
+                      <p className="text-stone-400 text-xs mb-3">
+                        Clic para marcar como ocupado / liberar.
+                      </p>
+                      <div className="grid gap-2">
+                        {SLOTS.map((s) => {
+                          const blocked = calUnavailable.has(
+                            slotKey(calSelected, s.time)
+                          );
+                          return (
+                            <button
+                              key={s.time}
+                              onClick={() =>
+                                toggleCalSlot(calSelected, s.time)
+                              }
+                              className={`flex items-center justify-between px-3 py-2.5 rounded-xl border transition text-sm font-semibold ${
+                                blocked
+                                  ? "bg-red-500/15 border-red-500/50 text-red-200"
+                                  : "bg-stone-800/60 border-stone-700 text-stone-100 hover:border-amber-500/40"
+                              }`}
+                            >
+                              <span>{s.label}</span>
+                              <span className="text-xs">
+                                {blocked ? "Ocupado" : "Disponible"}
+                              </span>
+                            </button>
+                          );
+                        })}
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="mt-5 flex items-center gap-3">
+                    <button
+                      onClick={saveCalendar}
+                      disabled={calSaving || calLoading}
+                      className="flex items-center gap-2 bg-gradient-to-r from-amber-500 to-yellow-500 text-stone-950 px-4 py-2 rounded-xl font-bold disabled:opacity-50"
+                    >
+                      <Save className="w-4 h-4" />{" "}
+                      {calSaving ? "Guardando..." : "Guardar calendario"}
+                    </button>
+                    {calSavedAt && !calSaving && !calError && (
+                      <span className="text-sm text-emerald-300">
+                        Guardado. Recarga el sitio público para ver el cambio.
+                      </span>
+                    )}
+                    <span className="text-xs text-stone-500 ml-auto">
+                      Total ocupados: {calUnavailable.size}
+                    </span>
+                  </div>
+                </div>
               </div>
             )}
 
