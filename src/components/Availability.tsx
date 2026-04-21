@@ -19,6 +19,16 @@ type Props = {
 
 export const UNAVAILABLE_SLOTS_KEY = "unavailable_slots";
 
+export function unavailableKey(genreId: GenreId | null | undefined): string {
+  return genreId ? `unavailable_slots_${genreId}` : UNAVAILABLE_SLOTS_KEY;
+}
+
+export const GENRE_IDS_FOR_SLOTS: GenreId[] = [
+  "mariachi",
+  "nortena",
+  "banda",
+];
+
 export const SLOTS: { label: string; time: string }[] = [
   { label: "12:00 PM", time: "12:00" },
   { label: "4:00 PM", time: "16:00" },
@@ -112,13 +122,36 @@ export function Availability({ genreId, variant = "page" }: Props) {
 
   useEffect(() => {
     let mounted = true;
-    getSiteSetting(UNAVAILABLE_SLOTS_KEY).then((v) => {
-      if (mounted) setUnavailable(parseUnavailable(v));
-    });
+    (async () => {
+      if (genreId) {
+        const [perGenre, legacy] = await Promise.all([
+          getSiteSetting(unavailableKey(genreId)),
+          getSiteSetting(UNAVAILABLE_SLOTS_KEY),
+        ]);
+        if (!mounted) return;
+        const set = new Set<string>();
+        parseUnavailable(perGenre).forEach((s) => set.add(s));
+        parseUnavailable(legacy).forEach((s) => set.add(s));
+        setUnavailable(set);
+      } else {
+        const results = await Promise.all([
+          getSiteSetting(UNAVAILABLE_SLOTS_KEY),
+          ...GENRE_IDS_FOR_SLOTS.map((g) =>
+            getSiteSetting(unavailableKey(g))
+          ),
+        ]);
+        if (!mounted) return;
+        const set = new Set<string>();
+        results.forEach((v) =>
+          parseUnavailable(v).forEach((s) => set.add(s))
+        );
+        setUnavailable(set);
+      }
+    })();
     return () => {
       mounted = false;
     };
-  }, []);
+  }, [genreId]);
 
   const cells = useMemo(
     () => buildMonthDays(view.year, view.month),
@@ -324,23 +357,33 @@ export function Availability({ genreId, variant = "page" }: Props) {
                     disabled={taken}
                     className={`flex items-center justify-between px-4 py-3 rounded-2xl border transition-all text-left ${
                       taken
-                        ? "bg-stone-950/40 border-stone-900 text-stone-600 cursor-not-allowed line-through"
+                        ? "bg-emerald-500/15 border-emerald-500/60 text-emerald-100 cursor-not-allowed"
                         : active
                         ? "bg-amber-500/15 border-amber-500/60 text-amber-200"
                         : "bg-stone-800/60 border-stone-700 hover:border-amber-500/60 hover:bg-stone-800 text-stone-100"
                     }`}
                   >
-                    <span className="font-semibold">{s.label}</span>
                     <span
-                      className={`text-xs font-semibold ${
+                      className={`font-semibold ${
+                        taken ? "line-through opacity-80" : ""
+                      }`}
+                    >
+                      {s.label}
+                    </span>
+                    <span
+                      className={`text-xs font-extrabold uppercase tracking-wider px-2 py-1 rounded-full ${
                         taken
-                          ? "text-stone-600"
+                          ? "bg-emerald-500 text-stone-950"
                           : active
                           ? "text-amber-200"
                           : "text-amber-300"
                       }`}
                     >
-                      {taken ? "Ocupado" : active ? "Seleccionado" : "Disponible"}
+                      {taken
+                        ? "Reservado"
+                        : active
+                        ? "Seleccionado"
+                        : "Disponible"}
                     </span>
                   </button>
                 );
