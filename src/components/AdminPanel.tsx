@@ -683,6 +683,30 @@ export function AdminPanel({ onExit }: { onExit: () => void }) {
     setCreating(false);
   };
 
+  const addNewPackage = async () => {
+    setCreating(true);
+    setError(null);
+    const nextOrder =
+      packages.reduce((max, p) => Math.max(max, p.sortOrder || 0), 0) + 1;
+    const row = {
+      name: "Nuevo paquete",
+      price_cop: 0,
+      duration_minutes: 30,
+      songs_count: 5,
+      musicians_count: 4,
+      description: "",
+      features: [] as string[],
+      popular: false,
+      sort_order: nextOrder,
+      fallback_url: "https://placehold.co/400x300/1a1a2e/d4af37?text=Musicaenvivo",
+      genre: null as string | null,
+    };
+    const { error: err } = await supabase.from("packages").insert(row);
+    if (err) setError(err.message);
+    else await loadPackages();
+    setCreating(false);
+  };
+
   if (loadingAuth) {
     return (
       <div className="min-h-screen flex items-center justify-center text-stone-400">
@@ -856,13 +880,20 @@ export function AdminPanel({ onExit }: { onExit: () => void }) {
 
             {tab === "packages" && (
               <div className="space-y-5">
-                <div className="flex items-center justify-end">
+                <div className="flex items-center justify-end gap-3">
                   <button
                     onClick={createInitialPackages}
                     disabled={creating || packages.length > 0}
-                    className="flex items-center gap-2 bg-amber-500/10 hover:bg-amber-500/20 border border-amber-500/40 text-amber-300 px-4 py-2 rounded-xl text-sm font-semibold disabled:opacity-50"
+                    className="flex items-center gap-2 bg-stone-800/80 hover:bg-stone-700 border border-stone-700 text-stone-200 px-4 py-2 rounded-xl text-sm font-semibold disabled:opacity-50"
                   >
                     <Plus className="w-4 h-4" /> Crear paquetes iniciales
+                  </button>
+                  <button
+                    onClick={addNewPackage}
+                    disabled={creating}
+                    className="flex items-center gap-2 bg-gradient-to-r from-amber-500 to-yellow-500 text-stone-950 px-4 py-2 rounded-xl text-sm font-bold disabled:opacity-50"
+                  >
+                    <Plus className="w-4 h-4" /> Nuevo paquete
                   </button>
                 </div>
 
