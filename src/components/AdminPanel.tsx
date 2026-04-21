@@ -232,21 +232,10 @@ export function AdminPanel({ onExit }: { onExit: () => void }) {
     setCalLoading(false);
   };
 
-  const toggleCalSlot = (date: Date, time: string) => {
-    const key = slotKey(date, time);
-    setCalUnavailable((prev) => {
-      const next = new Set(prev);
-      if (next.has(key)) next.delete(key);
-      else next.add(key);
-      return next;
-    });
-    setCalSavedAt(null);
-  };
-
-  const saveCalendar = async () => {
+  const persistCalendar = async (set: Set<string>) => {
     setCalSaving(true);
     setCalError(null);
-    const arr = Array.from(calUnavailable).sort();
+    const arr = Array.from(set).sort();
     const { error: err } = await setSiteSetting(
       unavailableKey(calGenre),
       JSON.stringify(arr)
@@ -254,6 +243,19 @@ export function AdminPanel({ onExit }: { onExit: () => void }) {
     if (err) setCalError(err);
     else setCalSavedAt(Date.now());
     setCalSaving(false);
+  };
+
+  const toggleCalSlot = (date: Date, time: string) => {
+    const key = slotKey(date, time);
+    const next = new Set(calUnavailable);
+    if (next.has(key)) next.delete(key);
+    else next.add(key);
+    setCalUnavailable(next);
+    void persistCalendar(next);
+  };
+
+  const saveCalendar = async () => {
+    await persistCalendar(calUnavailable);
   };
 
   const prefillNextMonth = async () => {
@@ -1309,7 +1311,11 @@ export function AdminPanel({ onExit }: { onExit: () => void }) {
                   </div>
                   <p className="text-stone-400 text-sm mb-4">
                     Haz clic en un día y luego marca los horarios que ya están
-                    ocupados. Los cupos marcados se muestran como{" "}
+                    ocupados. Los cambios se{" "}
+                    <span className="text-amber-300 font-semibold">
+                      guardan automáticamente
+                    </span>{" "}
+                    y aparecen como{" "}
                     <span className="text-emerald-300 font-semibold">
                       Reservado
                     </span>{" "}
