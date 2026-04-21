@@ -12,6 +12,7 @@ import {
   ChevronLeft,
   ChevronRight,
   Package as PackageIcon,
+  Sparkles,
 } from "lucide-react";
 import {
   CITIES,
@@ -19,7 +20,7 @@ import {
   formatCop,
   type PackageData,
 } from "../lib/constants";
-import { WHATSAPP_LINK } from "../lib/supabase";
+import { supabase, WHATSAPP_LINK } from "../lib/supabase";
 import { SLOTS } from "./Availability";
 
 type Props = {
@@ -32,8 +33,8 @@ type Props = {
 
 const STEPS = [
   { id: 1, title: "Paquete" },
-  { id: 2, title: "Fecha y datos" },
-  { id: 3, title: "Adicionales" },
+  { id: 2, title: "Adicionales" },
+  { id: 3, title: "Datos" },
   { id: 4, title: "Confirmar" },
 ];
 
@@ -53,7 +54,9 @@ export function ReservationForm({
   const [address, setAddress] = useState("");
   const [message, setMessage] = useState("");
   const [extras, setExtras] = useState<string[]>([]);
+  const [termsAccepted, setTermsAccepted] = useState(false);
   const [submitted, setSubmitted] = useState(false);
+  const [extraImages, setExtraImages] = useState<Record<string, string>>({});
 
   const today = new Date().toISOString().split("T")[0];
 
@@ -63,6 +66,28 @@ export function ReservationForm({
   useEffect(() => {
     if (initialTime) setTime(initialTime);
   }, [initialTime]);
+
+  useEffect(() => {
+    let mounted = true;
+    const load = async () => {
+      const keys = EXTRAS.map((e) => `extra_image_${e.id}`);
+      const { data } = await supabase
+        .from("site_settings")
+        .select("key, value")
+        .in("key", keys);
+      if (!mounted || !data) return;
+      const map: Record<string, string> = {};
+      for (const row of data as { key: string; value: string }[]) {
+        const id = row.key.replace(/^extra_image_/, "");
+        if (row.value) map[id] = row.value;
+      }
+      setExtraImages(map);
+    };
+    void load();
+    return () => {
+      mounted = false;
+    };
+  }, []);
 
   const toggleExtra = (id: string) =>
     setExtras((prev) =>
@@ -78,12 +103,14 @@ export function ReservationForm({
     setAddress("");
     setMessage("");
     setExtras([]);
+    setTermsAccepted(false);
     setStep(1);
   };
 
   const canNext = (() => {
     if (step === 1) return !!selected;
-    if (step === 2)
+    if (step === 2) return true;
+    if (step === 3)
       return (
         name.trim() !== "" &&
         phone.trim() !== "" &&
@@ -101,6 +128,14 @@ export function ReservationForm({
   };
   const goPrev = () => setStep((s) => Math.max(1, s - 1));
 
+  const extrasTotal = extras.reduce((acc, id) => {
+    const extra = EXTRAS.find((x) => x.id === id);
+    if (!extra) return acc;
+    return acc + Number(String(extra.price).replace(/\./g, ""));
+  }, 0);
+  const packagePrice = selected?.priceCop ?? 0;
+  const grandTotal = packagePrice + extrasTotal;
+
   const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     if (step < 4) {
@@ -108,6 +143,7 @@ export function ReservationForm({
       return;
     }
     if (!selected) return;
+    if (!termsAccepted) return;
 
     const extrasText =
       extras.length > 0
@@ -124,8 +160,9 @@ export function ReservationForm({
       `🎺 *Nueva Reserva de Serenata*%0A%0A` +
       `👤 *Nombre:* ${name}%0A` +
       `📱 *Teléfono:* ${phone}%0A` +
-      `🎶 *Paquete:* ${selected.name}%0A` +
+      `🎶 *Paquete:* ${selected.name} ($${formatCop(selected.priceCop)} COP)%0A` +
       `🎁 *Adicionales:* ${extrasText}%0A` +
+      `💰 *Total estimado:* $${formatCop(grandTotal)} COP%0A` +
       `📍 *Ciudad:* ${city}%0A` +
       `📅 *Fecha:* ${date}%0A` +
       `🕐 *Hora:* ${time}%0A` +
@@ -217,236 +254,306 @@ export function ReservationForm({
           )}
 
           <form onSubmit={handleSubmit} className="space-y-6">
-           <div key={step} className="animate-fade-up space-y-6">
-            {step === 1 && (
-              <div>
-                <label className="flex items-center gap-2 text-sm font-medium text-amber-300 mb-3">
-                  <PackageIcon className="w-4 h-4" />
-                  Paquete *
-                </label>
-                <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-                  {packages.map((pkg) => {
-                    const active = selected?.name === pkg.name;
-                    return (
-                      <button
-                        type="button"
-                        key={pkg.id || pkg.name}
-                        onClick={() => onSelect(pkg)}
-                        className={`p-4 rounded-xl border-2 text-left transition-all ${
-                          active
-                            ? "border-amber-500 bg-amber-500/10"
-                            : "border-stone-700 bg-stone-800/60 hover:border-amber-500/50"
-                        }`}
-                      >
-                        <div className="text-white text-sm font-bold">
-                          {pkg.name}
-                        </div>
-                        <div className="text-xs text-amber-400 mt-1">
-                          ${formatCop(pkg.priceCop)} COP
-                        </div>
-                      </button>
-                    );
-                  })}
-                </div>
-              </div>
-            )}
-
-            {step === 2 && (
-              <>
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                  <div>
-                    <label className="flex items-center gap-2 text-sm font-medium text-stone-300 mb-2">
-                      <User className="w-4 h-4 text-amber-400" />
-                      Nombre Completo *
-                    </label>
-                    <input
-                      type="text"
-                      required
-                      value={name}
-                      onChange={(e) => setName(e.target.value)}
-                      placeholder="Tu nombre completo"
-                      className="w-full bg-stone-800/80 border border-stone-700 rounded-xl px-4 py-3 text-white placeholder-stone-500 focus:outline-none focus:border-amber-500 focus:ring-1 focus:ring-amber-500/50 transition-all"
-                    />
-                  </div>
-                  <div>
-                    <label className="flex items-center gap-2 text-sm font-medium text-stone-300 mb-2">
-                      <Phone className="w-4 h-4 text-amber-400" />
-                      Teléfono / WhatsApp *
-                    </label>
-                    <input
-                      type="tel"
-                      required
-                      value={phone}
-                      onChange={(e) => setPhone(e.target.value)}
-                      placeholder="Ej: 300 123 4567"
-                      className="w-full bg-stone-800/80 border border-stone-700 rounded-xl px-4 py-3 text-white placeholder-stone-500 focus:outline-none focus:border-amber-500 focus:ring-1 focus:ring-amber-500/50 transition-all"
-                    />
-                  </div>
-                </div>
-
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                  <div>
-                    <label className="flex items-center gap-2 text-sm font-medium text-stone-300 mb-2">
-                      <MapPin className="w-4 h-4 text-amber-400" />
-                      Ciudad *
-                    </label>
-                    <select
-                      required
-                      value={city}
-                      onChange={(e) => setCity(e.target.value)}
-                      className="w-full bg-stone-800/80 border border-stone-700 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-amber-500 focus:ring-1 focus:ring-amber-500/50 transition-all"
-                    >
-                      <option value="">Selecciona la ciudad</option>
-                      {CITIES.map((c) => (
-                        <option key={c} value={c}>
-                          {c}
-                        </option>
-                      ))}
-                    </select>
-                  </div>
-                  <div>
-                    <label className="flex items-center gap-2 text-sm font-medium text-stone-300 mb-2">
-                      <MapPin className="w-4 h-4 text-amber-400" />
-                      Dirección de la Serenata *
-                    </label>
-                    <input
-                      type="text"
-                      required
-                      value={address}
-                      onChange={(e) => setAddress(e.target.value)}
-                      placeholder="Dirección completa donde será la serenata"
-                      className="w-full bg-stone-800/80 border border-stone-700 rounded-xl px-4 py-3 text-white placeholder-stone-500 focus:outline-none focus:border-amber-500 focus:ring-1 focus:ring-amber-500/50 transition-all"
-                    />
-                  </div>
-                </div>
-
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                  <div>
-                    <label className="flex items-center gap-2 text-sm font-medium text-stone-300 mb-2">
-                      <Calendar className="w-4 h-4 text-amber-400" />
-                      Fecha de la Serenata *
-                    </label>
-                    <input
-                      type="date"
-                      required
-                      min={today}
-                      value={date}
-                      onChange={(e) => setDate(e.target.value)}
-                      className="w-full bg-stone-800/80 border border-stone-700 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-amber-500 focus:ring-1 focus:ring-amber-500/50 transition-all"
-                    />
-                  </div>
-                  <div>
-                    <label className="flex items-center gap-2 text-sm font-medium text-stone-300 mb-2">
-                      <Clock className="w-4 h-4 text-amber-400" />
-                      Hora de la Serenata *
-                    </label>
-                    <select
-                      required
-                      value={time}
-                      onChange={(e) => setTime(e.target.value)}
-                      className="w-full bg-stone-800/80 border border-stone-700 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-amber-500 focus:ring-1 focus:ring-amber-500/50 transition-all"
-                    >
-                      <option value="">Selecciona la hora</option>
-                      {SLOTS.map((s) => (
-                        <option key={s.label} value={s.label}>
-                          {s.label}
-                        </option>
-                      ))}
-                    </select>
-                  </div>
-                </div>
-              </>
-            )}
-
-            {step === 3 && (
-              <>
+            <div key={step} className="animate-fade-up space-y-6">
+              {step === 1 && (
                 <div>
                   <label className="flex items-center gap-2 text-sm font-medium text-amber-300 mb-3">
-                    <Gift className="w-4 h-4" />
-                    Detalles Adicionales (Opcional)
+                    <PackageIcon className="w-4 h-4" />
+                    Elige el paquete perfecto *
                   </label>
-                  <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
-                    {EXTRAS.map((extra) => {
-                      const active = extras.includes(extra.id);
+                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                    {packages.map((pkg) => {
+                      const active = selected?.name === pkg.name;
                       return (
                         <button
                           type="button"
-                          key={extra.id}
-                          onClick={() => toggleExtra(extra.id)}
-                          className={`flex flex-col items-center gap-1.5 p-3 rounded-xl border-2 transition-all duration-200 ${
+                          key={pkg.id || pkg.name}
+                          onClick={() => onSelect(pkg)}
+                          className={`p-4 rounded-xl border-2 text-left transition-all ${
                             active
-                              ? "border-amber-500 bg-amber-500/10"
+                              ? "border-amber-500 bg-amber-500/10 shadow-lg shadow-amber-500/20"
                               : "border-stone-700 bg-stone-800/60 hover:border-amber-500/50"
                           }`}
                         >
-                          <div className="text-2xl">{extra.icon}</div>
-                          <div className="text-white text-xs font-semibold text-center">
-                            {extra.name}
+                          <div className="text-white text-sm font-bold">
+                            {pkg.name}
                           </div>
-                          <div className="text-amber-400 text-xs">
-                            ${extra.price}
+                          <div className="text-xs text-amber-400 mt-1">
+                            ${formatCop(pkg.priceCop)} COP
                           </div>
                         </button>
                       );
                     })}
                   </div>
                 </div>
+              )}
 
-                <div>
-                  <label className="flex items-center gap-2 text-sm font-medium text-stone-300 mb-2">
-                    <MessageSquare className="w-4 h-4 text-amber-400" />
-                    Mensaje adicional
-                  </label>
-                  <textarea
-                    rows={3}
-                    value={message}
-                    onChange={(e) => setMessage(e.target.value)}
-                    placeholder="¿Alguna canción especial? ¿Instrucciones de dirección? ¡Cuéntanos!"
-                    className="w-full bg-stone-800/80 border border-stone-700 rounded-xl px-4 py-3 text-white placeholder-stone-500 focus:outline-none focus:border-amber-500 focus:ring-1 focus:ring-amber-500/50 transition-all"
-                  />
-                </div>
-              </>
-            )}
-
-            {step === 4 && (
-              <div className="space-y-3">
-                <div className="text-sm font-semibold text-amber-300 mb-2">
-                  Revisa tu reserva
-                </div>
-                <dl className="grid gap-2 text-sm">
-                  <SummaryRow
-                    label="Paquete"
-                    value={selected ? selected.name : "—"}
-                  />
-                  <SummaryRow label="Nombre" value={name} />
-                  <SummaryRow label="Teléfono" value={phone} />
-                  <SummaryRow label="Ciudad" value={city} />
-                  <SummaryRow label="Dirección" value={address} />
-                  <SummaryRow label="Fecha" value={date} />
-                  <SummaryRow label="Hora" value={time} />
-                  <SummaryRow
-                    label="Adicionales"
-                    value={
-                      extras.length > 0
-                        ? extras
-                            .map((id) => EXTRAS.find((x) => x.id === id)?.name)
-                            .filter(Boolean)
-                            .join(", ")
-                        : "Ninguno"
-                    }
-                  />
-                  {message && <SummaryRow label="Mensaje" value={message} />}
-                </dl>
-                <div className="mt-4 p-4 rounded-2xl bg-amber-500/10 border border-amber-500/30 text-amber-100 text-sm flex items-start gap-3">
-                  <span className="text-2xl">🎉</span>
+              {step === 2 && (
+                <>
                   <div>
-                    ¡Ya casi! Al enviar, abriremos WhatsApp con todo prellenado
-                    para confirmar tu reserva.
+                    <label className="flex items-center gap-2 text-sm font-medium text-amber-300 mb-3">
+                      <Sparkles className="w-4 h-4" />
+                      Adicionales para hacerla inolvidable
+                    </label>
+                    <p className="text-stone-400 text-xs mb-4">
+                      Selecciona los extras que quieres incluir. Puedes elegir
+                      varios o ninguno.
+                    </p>
+                    <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+                      {EXTRAS.map((extra) => {
+                        const active = extras.includes(extra.id);
+                        const img = extraImages[extra.id];
+                        return (
+                          <button
+                            type="button"
+                            key={extra.id}
+                            onClick={() => toggleExtra(extra.id)}
+                            className={`group relative flex flex-col items-stretch rounded-2xl border-2 overflow-hidden transition-all duration-200 ${
+                              active
+                                ? "border-amber-500 bg-amber-500/10 shadow-lg shadow-amber-500/20"
+                                : "border-stone-700 bg-stone-800/60 hover:border-amber-500/50"
+                            }`}
+                          >
+                            <div className="aspect-square w-full bg-stone-900 flex items-center justify-center overflow-hidden">
+                              {img ? (
+                                <img
+                                  src={img}
+                                  alt={extra.name}
+                                  className="w-full h-full object-cover group-hover:scale-105 transition-transform"
+                                />
+                              ) : (
+                                <div className="text-5xl">{extra.icon}</div>
+                              )}
+                            </div>
+                            <div className="p-2.5">
+                              <div className="text-white text-xs font-semibold text-center">
+                                {extra.name}
+                              </div>
+                              <div className="text-amber-400 text-xs text-center mt-0.5">
+                                ${extra.price}
+                              </div>
+                            </div>
+                            {active && (
+                              <div className="absolute top-2 right-2 w-6 h-6 rounded-full bg-amber-500 text-stone-950 flex items-center justify-center shadow-lg">
+                                <CheckCircle2 className="w-4 h-4" />
+                              </div>
+                            )}
+                          </button>
+                        );
+                      })}
+                    </div>
                   </div>
+
+                  <div>
+                    <label className="flex items-center gap-2 text-sm font-medium text-stone-300 mb-2">
+                      <MessageSquare className="w-4 h-4 text-amber-400" />
+                      Mensaje adicional
+                    </label>
+                    <textarea
+                      rows={3}
+                      value={message}
+                      onChange={(e) => setMessage(e.target.value)}
+                      placeholder="¿Alguna canción especial? ¿Instrucciones de dirección? ¡Cuéntanos!"
+                      className="w-full bg-stone-800/80 border border-stone-700 rounded-xl px-4 py-3 text-white placeholder-stone-500 focus:outline-none focus:border-amber-500 focus:ring-1 focus:ring-amber-500/50 transition-all"
+                    />
+                  </div>
+                </>
+              )}
+
+              {step === 3 && (
+                <>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div>
+                      <label className="flex items-center gap-2 text-sm font-medium text-stone-300 mb-2">
+                        <User className="w-4 h-4 text-amber-400" />
+                        Nombre completo *
+                      </label>
+                      <input
+                        type="text"
+                        required
+                        value={name}
+                        onChange={(e) => setName(e.target.value)}
+                        placeholder="Tu nombre completo"
+                        className="w-full bg-stone-800/80 border border-stone-700 rounded-xl px-4 py-3 text-white placeholder-stone-500 focus:outline-none focus:border-amber-500 focus:ring-1 focus:ring-amber-500/50 transition-all"
+                      />
+                    </div>
+                    <div>
+                      <label className="flex items-center gap-2 text-sm font-medium text-stone-300 mb-2">
+                        <Phone className="w-4 h-4 text-amber-400" />
+                        Teléfono / WhatsApp *
+                      </label>
+                      <input
+                        type="tel"
+                        required
+                        value={phone}
+                        onChange={(e) => setPhone(e.target.value)}
+                        placeholder="Ej: 300 123 4567"
+                        className="w-full bg-stone-800/80 border border-stone-700 rounded-xl px-4 py-3 text-white placeholder-stone-500 focus:outline-none focus:border-amber-500 focus:ring-1 focus:ring-amber-500/50 transition-all"
+                      />
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div>
+                      <label className="flex items-center gap-2 text-sm font-medium text-stone-300 mb-2">
+                        <MapPin className="w-4 h-4 text-amber-400" />
+                        Ciudad *
+                      </label>
+                      <select
+                        required
+                        value={city}
+                        onChange={(e) => setCity(e.target.value)}
+                        className="w-full bg-stone-800/80 border border-stone-700 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-amber-500 focus:ring-1 focus:ring-amber-500/50 transition-all"
+                      >
+                        <option value="">Selecciona la ciudad</option>
+                        {CITIES.map((c) => (
+                          <option key={c} value={c}>
+                            {c}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+                    <div>
+                      <label className="flex items-center gap-2 text-sm font-medium text-stone-300 mb-2">
+                        <MapPin className="w-4 h-4 text-amber-400" />
+                        Dirección de la serenata *
+                      </label>
+                      <input
+                        type="text"
+                        required
+                        value={address}
+                        onChange={(e) => setAddress(e.target.value)}
+                        placeholder="Dirección completa donde será la serenata"
+                        className="w-full bg-stone-800/80 border border-stone-700 rounded-xl px-4 py-3 text-white placeholder-stone-500 focus:outline-none focus:border-amber-500 focus:ring-1 focus:ring-amber-500/50 transition-all"
+                      />
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div>
+                      <label className="flex items-center gap-2 text-sm font-medium text-stone-300 mb-2">
+                        <Calendar className="w-4 h-4 text-amber-400" />
+                        Fecha de la serenata *
+                      </label>
+                      <input
+                        type="date"
+                        required
+                        min={today}
+                        value={date}
+                        onChange={(e) => setDate(e.target.value)}
+                        className="w-full bg-stone-800/80 border border-stone-700 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-amber-500 focus:ring-1 focus:ring-amber-500/50 transition-all"
+                      />
+                    </div>
+                    <div>
+                      <label className="flex items-center gap-2 text-sm font-medium text-stone-300 mb-2">
+                        <Clock className="w-4 h-4 text-amber-400" />
+                        Hora de la serenata *
+                      </label>
+                      <select
+                        required
+                        value={time}
+                        onChange={(e) => setTime(e.target.value)}
+                        className="w-full bg-stone-800/80 border border-stone-700 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-amber-500 focus:ring-1 focus:ring-amber-500/50 transition-all"
+                      >
+                        <option value="">Selecciona la hora</option>
+                        {SLOTS.map((s) => (
+                          <option key={s.label} value={s.label}>
+                            {s.label}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+                  </div>
+                </>
+              )}
+
+              {step === 4 && (
+                <div className="space-y-5">
+                  <div className="text-sm font-semibold text-amber-300 flex items-center gap-2">
+                    <Gift className="w-4 h-4" />
+                    Resumen de tu reserva
+                  </div>
+
+                  <div className="rounded-2xl border border-stone-800 bg-stone-900/80 overflow-hidden">
+                    <div className="px-4 py-3 bg-stone-800/60 border-b border-stone-800 flex items-center justify-between">
+                      <div className="text-white font-bold">
+                        {selected?.name || "Paquete"}
+                      </div>
+                      <div className="text-amber-400 font-extrabold">
+                        ${formatCop(packagePrice)}
+                      </div>
+                    </div>
+
+                    <dl className="divide-y divide-stone-800 text-sm">
+                      <SummaryRow label="Nombre" value={name} />
+                      <SummaryRow label="Teléfono" value={phone} />
+                      <SummaryRow label="Ciudad" value={city} />
+                      <SummaryRow label="Dirección" value={address} />
+                      <SummaryRow label="Fecha" value={date} />
+                      <SummaryRow label="Hora" value={time} />
+                      <div className="px-4 py-3">
+                        <div className="text-stone-400 font-semibold mb-2">
+                          Adicionales
+                        </div>
+                        {extras.length === 0 ? (
+                          <div className="text-stone-500 text-sm">Ninguno</div>
+                        ) : (
+                          <ul className="space-y-1.5">
+                            {extras.map((id) => {
+                              const ex = EXTRAS.find((x) => x.id === id);
+                              if (!ex) return null;
+                              return (
+                                <li
+                                  key={id}
+                                  className="flex items-center justify-between gap-3 text-sm"
+                                >
+                                  <span className="text-white">
+                                    {ex.icon} {ex.name}
+                                  </span>
+                                  <span className="text-amber-400">
+                                    ${ex.price}
+                                  </span>
+                                </li>
+                              );
+                            })}
+                          </ul>
+                        )}
+                      </div>
+                      {message && (
+                        <SummaryRow label="Mensaje" value={message} />
+                      )}
+                    </dl>
+
+                    <div className="px-4 py-3 bg-gradient-to-r from-amber-500/10 to-yellow-500/5 border-t border-amber-500/30 flex items-center justify-between">
+                      <div className="text-white font-semibold text-sm">
+                        Total estimado
+                      </div>
+                      <div className="text-amber-300 font-extrabold text-lg">
+                        ${formatCop(grandTotal)} COP
+                      </div>
+                    </div>
+                  </div>
+
+                  <label className="flex items-start gap-3 p-4 rounded-2xl border border-stone-800 bg-stone-900/60 cursor-pointer hover:border-amber-500/40 transition-colors">
+                    <input
+                      type="checkbox"
+                      checked={termsAccepted}
+                      onChange={(e) => setTermsAccepted(e.target.checked)}
+                      className="mt-0.5 w-5 h-5 accent-amber-500 flex-shrink-0"
+                    />
+                    <span className="text-sm text-stone-300 leading-relaxed">
+                      Al confirmar aceptas los{" "}
+                      <span className="text-amber-300 font-semibold">
+                        términos y condiciones de uso
+                      </span>{" "}
+                      de Musicaenvivo.co. Esta reserva se coordina vía WhatsApp
+                      y queda sujeta a disponibilidad confirmada por nuestro
+                      equipo.
+                    </span>
+                  </label>
                 </div>
-              </div>
-            )}
-           </div>
+              )}
+            </div>
 
             <div className="flex items-center justify-between gap-3 pt-2">
               <button
@@ -472,10 +579,11 @@ export function ReservationForm({
               ) : (
                 <button
                   type="submit"
-                  className="inline-flex items-center gap-2 bg-gradient-to-r from-amber-500 to-yellow-500 hover:from-amber-400 hover:to-yellow-400 text-stone-950 px-5 py-3 rounded-xl font-extrabold text-sm sm:text-base shadow-lg shadow-amber-500/30 transition-all"
+                  disabled={!termsAccepted}
+                  className="inline-flex items-center gap-2 bg-gradient-to-r from-amber-500 to-yellow-500 hover:from-amber-400 hover:to-yellow-400 disabled:opacity-50 disabled:cursor-not-allowed text-stone-950 px-5 py-3 rounded-xl font-extrabold text-sm sm:text-base shadow-lg shadow-amber-500/30 transition-all"
                 >
                   <Send className="w-4 h-4" />
-                  Enviar por WhatsApp
+                  Confirmar y enviar
                 </button>
               )}
             </div>
@@ -493,7 +601,7 @@ export function ReservationForm({
 
 function SummaryRow({ label, value }: { label: string; value: string }) {
   return (
-    <div className="flex items-start justify-between gap-3 border-b border-stone-800 py-2">
+    <div className="flex items-start justify-between gap-3 px-4 py-2.5">
       <dt className="text-stone-400 font-semibold">{label}</dt>
       <dd className="text-white text-right break-words max-w-[70%]">
         {value || "—"}

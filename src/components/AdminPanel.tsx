@@ -10,6 +10,7 @@ import {
 import {
   DEFAULT_GENRES,
   DEFAULT_PACKAGES,
+  EXTRAS,
   type GenreData,
   type GenreId,
   type PackageData,
@@ -31,6 +32,8 @@ import {
   CalendarDays,
   ChevronLeft,
   ChevronRight,
+  Sparkles,
+  X,
 } from "lucide-react";
 import {
   SLOTS,
@@ -65,7 +68,13 @@ type GalleryFile = {
   createdAt: string | null;
 };
 
-type Tab = "packages" | "gallery" | "banner" | "genres" | "calendar";
+type Tab =
+  | "packages"
+  | "gallery"
+  | "banner"
+  | "genres"
+  | "calendar"
+  | "extras";
 
 const GENRE_IDS_SET = new Set<GenreId>(["mariachi", "nortena", "banda"]);
 
@@ -167,6 +176,12 @@ export function AdminPanel({ onExit }: { onExit: () => void }) {
   const [calGenre, setCalGenre] = useState<GenreId>("nortena");
   const [calPrefilling, setCalPrefilling] = useState(false);
 
+  const [extraImages, setExtraImages] = useState<Record<string, string>>({});
+  const [extraUploading, setExtraUploading] = useState<string | null>(null);
+  const [extraError, setExtraError] = useState<string | null>(null);
+  const [extraSavedId, setExtraSavedId] = useState<string | null>(null);
+  const extraFileInputs = useRef<Record<string, HTMLInputElement | null>>({});
+
   const isAdmin = session?.user?.email === ADMIN_EMAIL;
 
   useEffect(() => {
@@ -191,6 +206,7 @@ export function AdminPanel({ onExit }: { onExit: () => void }) {
     void loadPackages();
     void loadBanner();
     void loadGenres();
+    void loadExtras();
   }, [isAdmin]);
 
   useEffect(() => {
@@ -359,6 +375,68 @@ export function AdminPanel({ onExit }: { onExit: () => void }) {
     if (r1.error || r2.error) setGenresError(r1.error || r2.error || "Error");
     else setGenresSavedId(g.id);
     setGenresSaving(null);
+  };
+
+  const loadExtras = async () => {
+    setExtraError(null);
+    const entries = await Promise.all(
+      EXTRAS.map(async (x) => {
+        const v = await getSiteSetting(`extra_image_${x.id}`);
+        return [x.id, v?.trim() || ""] as const;
+      })
+    );
+    const map: Record<string, string> = {};
+    for (const [id, url] of entries) if (url) map[id] = url;
+    setExtraImages(map);
+  };
+
+  const handleExtraUpload = async (id: string, file: File | null) => {
+    if (!file) return;
+    setExtraUploading(id);
+    setExtraError(null);
+    const ext = file.name.split(".").pop()?.toLowerCase() || "jpg";
+    const key = `extras/${id}-${Date.now()}.${ext}`;
+    const { error: upErr } = await supabase.storage
+      .from(GALLERY_BUCKET)
+      .upload(key, file, {
+        cacheControl: "3600",
+        upsert: true,
+        contentType: file.type || undefined,
+      });
+    if (upErr) {
+      setExtraError(upErr.message);
+      setExtraUploading(null);
+      return;
+    }
+    const { data } = supabase.storage.from(GALLERY_BUCKET).getPublicUrl(key);
+    const url = data.publicUrl;
+    const { error: setErr } = await setSiteSetting(`extra_image_${id}`, url);
+    if (setErr) {
+      setExtraError(setErr);
+    } else {
+      setExtraImages((prev) => ({ ...prev, [id]: url }));
+      setExtraSavedId(id);
+      setTimeout(() => setExtraSavedId(null), 1500);
+    }
+    setExtraUploading(null);
+    const input = extraFileInputs.current[id];
+    if (input) input.value = "";
+  };
+
+  const handleExtraRemove = async (id: string) => {
+    setExtraError(null);
+    const { error: setErr } = await setSiteSetting(`extra_image_${id}`, "");
+    if (setErr) {
+      setExtraError(setErr);
+      return;
+    }
+    setExtraImages((prev) => {
+      const next = { ...prev };
+      delete next[id];
+      return next;
+    });
+    setExtraSavedId(id);
+    setTimeout(() => setExtraSavedId(null), 1500);
   };
 
   const handleGenreCoverUpload = async (id: GenreId, file: File | null) => {
@@ -727,6 +805,16 @@ export function AdminPanel({ onExit }: { onExit: () => void }) {
                   }`}
                 >
                   <CalendarDays className="w-4 h-4" /> Calendario
+                </button>
+                <button
+                  onClick={() => setTab("extras")}
+                  className={`flex items-center gap-2 px-4 py-1.5 rounded-lg text-sm font-semibold transition ${
+                    tab === "extras"
+                      ? "bg-amber-500/20 text-amber-200"
+                      : "text-stone-400 hover:text-stone-200"
+                  }`}
+                >
+                  <Sparkles className="w-4 h-4" /> Adicionales
                 </button>
               </div>
             </div>
@@ -1526,6 +1614,104 @@ export function AdminPanel({ onExit }: { onExit: () => void }) {
                     ))}
                   </div>
                 )}
+              </div>
+            )}
+
+            {tab === "extras" && (
+              <div className="space-y-5">
+                <div className="bg-stone-900/60 border border-stone-800 rounded-2xl p-5 sm:p-6">
+                  <div className="font-display font-bold text-lg text-white mb-1">
+                    Fotos de adicionales
+                  </div>
+                  <p className="text-stone-400 text-sm">
+                    Sube una foto para cada adicional. Si no subes ninguna, se
+                    muestra el emoji por defecto en el wizard.
+                  </p>
+                  {extraError && (
+                    <div className="mt-3 text-sm text-red-300 bg-red-500/10 border border-red-500/30 rounded-lg px-3 py-2 flex items-start gap-2">
+                      <AlertTriangle className="w-4 h-4 mt-0.5 flex-shrink-0" />
+                      <div>{extraError}</div>
+                    </div>
+                  )}
+                </div>
+
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                  {EXTRAS.map((x) => {
+                    const img = extraImages[x.id];
+                    const isUploading = extraUploading === x.id;
+                    const saved = extraSavedId === x.id;
+                    return (
+                      <div
+                        key={x.id}
+                        className="bg-stone-900/60 border border-stone-800 rounded-2xl overflow-hidden"
+                      >
+                        <div className="relative aspect-square bg-stone-950 flex items-center justify-center">
+                          {img ? (
+                            <>
+                              <img
+                                src={img}
+                                alt={x.name}
+                                className="w-full h-full object-cover"
+                              />
+                              <button
+                                onClick={() => handleExtraRemove(x.id)}
+                                className="absolute top-2 right-2 w-9 h-9 rounded-full bg-red-500/80 hover:bg-red-500 text-white flex items-center justify-center transition"
+                                aria-label="Quitar foto"
+                              >
+                                <X className="w-4 h-4" />
+                              </button>
+                            </>
+                          ) : (
+                            <div className="text-6xl">{x.icon}</div>
+                          )}
+                        </div>
+                        <div className="p-4">
+                          <div className="flex items-center justify-between gap-2 mb-2">
+                            <div className="text-white font-bold text-sm">
+                              {x.name}
+                            </div>
+                            <div className="text-amber-400 text-xs">
+                              ${x.price}
+                            </div>
+                          </div>
+                          <input
+                            ref={(el) => {
+                              extraFileInputs.current[x.id] = el;
+                            }}
+                            type="file"
+                            accept="image/*"
+                            onChange={(e) =>
+                              handleExtraUpload(
+                                x.id,
+                                e.target.files?.[0] || null
+                              )
+                            }
+                            className="hidden"
+                          />
+                          <button
+                            onClick={() =>
+                              extraFileInputs.current[x.id]?.click()
+                            }
+                            disabled={isUploading}
+                            className="w-full flex items-center justify-center gap-2 bg-amber-500/10 hover:bg-amber-500/20 border border-amber-500/40 text-amber-300 px-3 py-2 rounded-xl text-sm font-semibold disabled:opacity-50"
+                          >
+                            <Upload className="w-4 h-4" />
+                            {isUploading
+                              ? "Subiendo..."
+                              : img
+                              ? "Reemplazar foto"
+                              : "Subir foto"}
+                          </button>
+                          {saved && (
+                            <div className="mt-2 text-xs text-emerald-300 text-center">
+                              Guardado
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
               </div>
             )}
           </div>
