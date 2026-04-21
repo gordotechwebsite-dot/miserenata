@@ -1,7 +1,6 @@
 import { useEffect, useState } from "react";
 import {
   Calendar,
-  Clock,
   MapPin,
   Phone,
   User,
@@ -22,7 +21,6 @@ import {
   type PackageData,
 } from "../lib/constants";
 import { getSiteSetting, supabase, WHATSAPP_LINK } from "../lib/supabase";
-import { SLOTS } from "./Availability";
 
 type Props = {
   packages: PackageData[];
@@ -58,8 +56,6 @@ export function ReservationForm({
   const [termsAccepted, setTermsAccepted] = useState(false);
   const [submitted, setSubmitted] = useState(false);
   const [extrasList, setExtrasList] = useState<ExtraItem[]>(DEFAULT_EXTRAS);
-
-  const today = new Date().toISOString().split("T")[0];
 
   useEffect(() => {
     if (initialDate) setDate(initialDate);
@@ -455,41 +451,48 @@ export function ReservationForm({
                     </div>
                   </div>
 
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                    <div>
-                      <label className="flex items-center gap-2 text-sm font-medium text-stone-300 mb-2">
-                        <Calendar className="w-4 h-4 text-amber-400" />
-                        Fecha de la serenata *
-                      </label>
-                      <input
-                        type="date"
-                        required
-                        min={today}
-                        value={date}
-                        onChange={(e) => setDate(e.target.value)}
-                        className="w-full bg-stone-800/80 border border-stone-700 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-amber-500 focus:ring-1 focus:ring-amber-500/50 transition-all"
-                      />
-                    </div>
-                    <div>
-                      <label className="flex items-center gap-2 text-sm font-medium text-stone-300 mb-2">
-                        <Clock className="w-4 h-4 text-amber-400" />
-                        Hora de la serenata *
-                      </label>
-                      <select
-                        required
-                        value={time}
-                        onChange={(e) => setTime(e.target.value)}
-                        className="w-full bg-stone-800/80 border border-stone-700 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-amber-500 focus:ring-1 focus:ring-amber-500/50 transition-all"
+                  {date && time ? (
+                    <div className="rounded-2xl border border-amber-500/40 bg-amber-500/5 px-4 py-3 flex items-center gap-3">
+                      <div className="w-10 h-10 rounded-full bg-amber-500/20 text-amber-300 flex items-center justify-center flex-shrink-0">
+                        <Calendar className="w-5 h-5" />
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <div className="text-xs text-amber-300/80 font-semibold">
+                          Fecha y hora seleccionadas
+                        </div>
+                        <div className="text-white font-bold text-sm truncate">
+                          {date} · {time}
+                        </div>
+                      </div>
+                      <a
+                        href="#disponibilidad"
+                        className="text-amber-300 hover:text-amber-200 text-xs font-semibold whitespace-nowrap underline"
                       >
-                        <option value="">Selecciona la hora</option>
-                        {SLOTS.map((s) => (
-                          <option key={s.label} value={s.label}>
-                            {s.label}
-                          </option>
-                        ))}
-                      </select>
+                        Cambiar
+                      </a>
                     </div>
-                  </div>
+                  ) : (
+                    <div className="rounded-2xl border border-amber-500/40 bg-amber-500/5 px-4 py-3 flex items-center gap-3">
+                      <div className="w-10 h-10 rounded-full bg-amber-500/20 text-amber-300 flex items-center justify-center flex-shrink-0">
+                        <Calendar className="w-5 h-5" />
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <div className="text-white font-bold text-sm">
+                          Elige fecha y hora
+                        </div>
+                        <div className="text-xs text-stone-400">
+                          Selecciona un horario disponible en el calendario de
+                          arriba para continuar.
+                        </div>
+                      </div>
+                      <a
+                        href="#disponibilidad"
+                        className="bg-amber-500 hover:bg-amber-400 text-stone-950 text-xs font-bold px-3 py-1.5 rounded-lg whitespace-nowrap"
+                      >
+                        Ir al calendario
+                      </a>
+                    </div>
+                  )}
                 </>
               )}
 
