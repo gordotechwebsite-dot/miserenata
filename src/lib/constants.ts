@@ -15,6 +15,10 @@ export type PackageData = {
   fallbackUrl: string;
   imagePath?: string | null;
   imageUrl?: string | null;
+  videoPath?: string | null;
+  videoUrl?: string | null;
+  videoPosterPath?: string | null;
+  videoPosterUrl?: string | null;
   genre?: GenreId | null;
 };
 

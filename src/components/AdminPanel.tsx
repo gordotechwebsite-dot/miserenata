@@ -145,6 +145,10 @@ type PackageRow = {
   sort_order: number;
   image_path: string | null;
   image_url: string | null;
+  video_path: string | null;
+  video_url: string | null;
+  video_poster_path: string | null;
+  video_poster_url: string | null;
   fallback_url: string | null;
   genre: string | null;
 };
@@ -168,6 +172,10 @@ function rowToPackage(row: PackageRow): PackageData {
     sortOrder: row.sort_order,
     imagePath: row.image_path,
     imageUrl: row.image_url,
+    videoPath: row.video_path,
+    videoUrl: row.video_url,
+    videoPosterPath: row.video_poster_path,
+    videoPosterUrl: row.video_poster_url,
     fallbackUrl:
       row.fallback_url || local?.fallbackUrl || "https://placehold.co/400x300/1a1a2e/d4af37?text=Musicaenvivo",
     localImage: local?.localImage || "/images/mariachi-hero.jpg",
@@ -287,6 +295,14 @@ export function AdminPanel({ onExit }: { onExit: () => void }) {
 
   const [packageUploading, setPackageUploading] = useState<string | null>(null);
   const packageFileInputs = useRef<Record<string, HTMLInputElement | null>>({});
+  const [packageVideoUploading, setPackageVideoUploading] = useState<
+    string | null
+  >(null);
+  const packageVideoInputs = useRef<Record<string, HTMLInputElement | null>>({});
+  const [packagePosterUploading, setPackagePosterUploading] = useState<
+    string | null
+  >(null);
+  const packagePosterInputs = useRef<Record<string, HTMLInputElement | null>>({});
 
   const [reservations, setReservations] = useState<ReservationRecord[]>([]);
   const [reservationsLoading, setReservationsLoading] = useState(false);
@@ -899,6 +915,124 @@ export function AdminPanel({ onExit }: { onExit: () => void }) {
     setPackageUploading(null);
   };
 
+  const handlePackageVideoUpload = async (id: string, file: File | null) => {
+    if (!file) return;
+    setPackageVideoUploading(id);
+    setError(null);
+    const ext = file.name.split(".").pop()?.toLowerCase() || "mp4";
+    const key = `packages/videos/${id}-${Date.now()}.${ext}`;
+    const { error: upErr } = await supabase.storage
+      .from(GALLERY_BUCKET)
+      .upload(key, file, {
+        cacheControl: "3600",
+        upsert: true,
+        contentType: file.type || undefined,
+      });
+    if (upErr) {
+      setError(upErr.message);
+      setPackageVideoUploading(null);
+      return;
+    }
+    const { data } = supabase.storage.from(GALLERY_BUCKET).getPublicUrl(key);
+    const url = data.publicUrl;
+    const { data: updated, error: dbErr } = await supabase
+      .from("packages")
+      .update({ video_url: url, video_path: null })
+      .eq("id", id)
+      .select("id");
+    if (dbErr) {
+      setError(dbErr.message);
+    } else if (!updated || updated.length === 0) {
+      setError(
+        "No se pudo guardar el video: la base de datos rechazó la actualización. Ejecuta el SQL para agregar las columnas video_url/video_path."
+      );
+    } else {
+      updateField(id, { videoUrl: url, videoPath: null });
+    }
+    setPackageVideoUploading(null);
+    const input = packageVideoInputs.current[id];
+    if (input) input.value = "";
+  };
+
+  const handlePackageRemoveVideo = async (id: string) => {
+    setPackageVideoUploading(id);
+    setError(null);
+    const { data: updated, error: dbErr } = await supabase
+      .from("packages")
+      .update({ video_url: null, video_path: null })
+      .eq("id", id)
+      .select("id");
+    if (dbErr) {
+      setError(dbErr.message);
+    } else if (!updated || updated.length === 0) {
+      setError(
+        "No se pudo quitar el video: la base de datos rechazó la actualización."
+      );
+    } else {
+      updateField(id, { videoUrl: null, videoPath: null });
+    }
+    setPackageVideoUploading(null);
+  };
+
+  const handlePackagePosterUpload = async (id: string, file: File | null) => {
+    if (!file) return;
+    setPackagePosterUploading(id);
+    setError(null);
+    const ext = file.name.split(".").pop()?.toLowerCase() || "jpg";
+    const key = `packages/posters/${id}-${Date.now()}.${ext}`;
+    const { error: upErr } = await supabase.storage
+      .from(GALLERY_BUCKET)
+      .upload(key, file, {
+        cacheControl: "3600",
+        upsert: true,
+        contentType: file.type || undefined,
+      });
+    if (upErr) {
+      setError(upErr.message);
+      setPackagePosterUploading(null);
+      return;
+    }
+    const { data } = supabase.storage.from(GALLERY_BUCKET).getPublicUrl(key);
+    const url = data.publicUrl;
+    const { data: updated, error: dbErr } = await supabase
+      .from("packages")
+      .update({ video_poster_url: url, video_poster_path: null })
+      .eq("id", id)
+      .select("id");
+    if (dbErr) {
+      setError(dbErr.message);
+    } else if (!updated || updated.length === 0) {
+      setError(
+        "No se pudo guardar el cover: la base de datos rechazó la actualización. Ejecuta el SQL para agregar las columnas video_poster_url/video_poster_path."
+      );
+    } else {
+      updateField(id, { videoPosterUrl: url, videoPosterPath: null });
+    }
+    setPackagePosterUploading(null);
+    const input = packagePosterInputs.current[id];
+    if (input) input.value = "";
+  };
+
+  const handlePackageRemovePoster = async (id: string) => {
+    setPackagePosterUploading(id);
+    setError(null);
+    const { data: updated, error: dbErr } = await supabase
+      .from("packages")
+      .update({ video_poster_url: null, video_poster_path: null })
+      .eq("id", id)
+      .select("id");
+    if (dbErr) {
+      setError(dbErr.message);
+    } else if (!updated || updated.length === 0) {
+      setError(
+        "No se pudo quitar el cover: la base de datos rechazó la actualización."
+      );
+    } else {
+      updateField(id, { videoPosterUrl: null, videoPosterPath: null });
+    }
+    setPackagePosterUploading(null);
+  };
+
   const handleGenreCoverUpload = async (id: GenreId, file: File | null) => {
     if (!file) return;
     setGenreCoverUploading(id);
@@ -1076,6 +1210,10 @@ export function AdminPanel({ onExit }: { onExit: () => void }) {
         genre: pkg.genre ?? null,
         image_url: pkg.imageUrl ?? null,
         image_path: pkg.imagePath ?? null,
+        video_url: pkg.videoUrl ?? null,
+        video_path: pkg.videoPath ?? null,
+        video_poster_url: pkg.videoPosterUrl ?? null,
+        video_poster_path: pkg.videoPosterPath ?? null,
       })
       .eq("id", pkg.id)
       .select("id");
@@ -1524,6 +1662,135 @@ export function AdminPanel({ onExit }: { onExit: () => void }) {
                         <div className="text-xs text-stone-500">
                           Se guarda al instante. Formatos: JPG, PNG, WEBP.
                         </div>
+                      </div>
+                    </div>
+
+                    <div className="mb-4 flex flex-col gap-2 bg-stone-950/40 border border-stone-800 rounded-xl p-4">
+                      <div className="flex items-center justify-between gap-2 flex-wrap">
+                        <div>
+                          <div className="text-sm font-semibold text-white">
+                            Video del paquete (opcional)
+                          </div>
+                          <div className="text-xs text-stone-500">
+                            Horizontal, MP4 o WEBM. Se reproduce al tocar la tarjeta.
+                          </div>
+                        </div>
+                        <div className="flex flex-wrap gap-2">
+                          <input
+                            ref={(el) => {
+                              packageVideoInputs.current[pkg.id!] = el;
+                            }}
+                            id={`pkg-video-${pkg.id}`}
+                            type="file"
+                            accept="video/mp4,video/webm,video/quicktime"
+                            className="hidden"
+                            onChange={(e) =>
+                              handlePackageVideoUpload(
+                                pkg.id!,
+                                e.target.files?.[0] || null
+                              )
+                            }
+                          />
+                          <label
+                            htmlFor={`pkg-video-${pkg.id}`}
+                            className={`cursor-pointer inline-flex items-center gap-2 bg-stone-800 hover:bg-stone-700 text-white border border-stone-700 hover:border-amber-500/50 px-3 py-2 rounded-xl text-sm ${
+                              packageVideoUploading === pkg.id
+                                ? "opacity-50 pointer-events-none"
+                                : ""
+                            }`}
+                          >
+                            <Upload className="w-4 h-4" />
+                            {packageVideoUploading === pkg.id
+                              ? "Subiendo..."
+                              : pkg.videoUrl
+                              ? "Cambiar video"
+                              : "Subir video"}
+                          </label>
+                          {pkg.videoUrl && (
+                            <button
+                              type="button"
+                              disabled={packageVideoUploading === pkg.id}
+                              onClick={() => handlePackageRemoveVideo(pkg.id!)}
+                              className="inline-flex items-center gap-2 text-red-400 hover:text-red-300 px-3 py-2 rounded-xl text-sm disabled:opacity-50"
+                            >
+                              <Trash2 className="w-4 h-4" />
+                              Quitar video
+                            </button>
+                          )}
+                        </div>
+                      </div>
+                      {pkg.videoUrl && (
+                        <video
+                          src={pkg.videoUrl}
+                          className="w-full max-w-sm rounded-lg border border-stone-800"
+                          controls
+                          preload="metadata"
+                          playsInline
+                        />
+                      )}
+                      <div className="mt-3 pt-3 border-t border-stone-800 flex flex-col gap-2">
+                        <div className="flex items-center justify-between gap-2 flex-wrap">
+                          <div>
+                            <div className="text-sm font-semibold text-white">
+                              Cover del video (opcional)
+                            </div>
+                            <div className="text-xs text-stone-500">
+                              Foto que se muestra antes de reproducir el video. Si no subes cover, se usa la foto del paquete.
+                            </div>
+                          </div>
+                          <div className="flex flex-wrap gap-2">
+                            <input
+                              ref={(el) => {
+                                packagePosterInputs.current[pkg.id!] = el;
+                              }}
+                              id={`pkg-poster-${pkg.id}`}
+                              type="file"
+                              accept="image/*"
+                              className="hidden"
+                              onChange={(e) =>
+                                handlePackagePosterUpload(
+                                  pkg.id!,
+                                  e.target.files?.[0] || null
+                                )
+                              }
+                            />
+                            <label
+                              htmlFor={`pkg-poster-${pkg.id}`}
+                              className={`cursor-pointer inline-flex items-center gap-2 bg-stone-800 hover:bg-stone-700 text-white border border-stone-700 hover:border-amber-500/50 px-3 py-2 rounded-xl text-sm ${
+                                packagePosterUploading === pkg.id
+                                  ? "opacity-50 pointer-events-none"
+                                  : ""
+                              }`}
+                            >
+                              <Upload className="w-4 h-4" />
+                              {packagePosterUploading === pkg.id
+                                ? "Subiendo..."
+                                : pkg.videoPosterUrl
+                                ? "Cambiar cover"
+                                : "Subir cover"}
+                            </label>
+                            {pkg.videoPosterUrl && (
+                              <button
+                                type="button"
+                                disabled={packagePosterUploading === pkg.id}
+                                onClick={() =>
+                                  handlePackageRemovePoster(pkg.id!)
+                                }
+                                className="inline-flex items-center gap-2 text-red-400 hover:text-red-300 px-3 py-2 rounded-xl text-sm disabled:opacity-50"
+                              >
+                                <Trash2 className="w-4 h-4" />
+                                Quitar cover
+                              </button>
+                            )}
+                          </div>
+                        </div>
+                        {pkg.videoPosterUrl && (
+                          <img
+                            src={pkg.videoPosterUrl}
+                            alt={`Cover de ${pkg.name}`}
+                            className="w-full max-w-sm rounded-lg border border-stone-800 object-cover"
+                          />
+                        )}
                       </div>
                     </div>
 
