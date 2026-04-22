@@ -50,7 +50,16 @@ export function Packages({ packages, loading, onSelect, selectedName }: Props) {
               return (
                 <div
                   key={pkg.id || pkg.name}
-                  className={`relative bg-stone-900/80 backdrop-blur border rounded-3xl overflow-hidden transition-all duration-300 hover:-translate-y-1 ${
+                  role="button"
+                  tabIndex={0}
+                  onClick={() => onSelect(pkg)}
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter" || e.key === " ") {
+                      e.preventDefault();
+                      onSelect(pkg);
+                    }
+                  }}
+                  className={`relative bg-stone-900/80 backdrop-blur border rounded-3xl overflow-hidden transition-all duration-300 hover:-translate-y-1 cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-amber-500 ${
                     pkg.popular
                       ? "border-amber-500/60 shadow-2xl shadow-amber-500/20"
                       : "border-stone-800 hover:border-amber-500/40"
@@ -115,7 +124,11 @@ export function Packages({ packages, loading, onSelect, selectedName }: Props) {
                     </div>
 
                     <button
-                      onClick={() => onSelect(pkg)}
+                      type="button"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        onSelect(pkg);
+                      }}
                       className={`w-full py-3 rounded-xl font-bold transition-all ${
                         pkg.popular
                           ? "bg-gradient-to-r from-amber-500 to-yellow-500 hover:from-amber-400 hover:to-yellow-400 text-stone-950 shadow-lg shadow-amber-500/30"
