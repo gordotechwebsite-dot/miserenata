@@ -1,11 +1,9 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import {
   ArrowLeft,
-  CalendarDays,
   ChevronLeft,
   ChevronRight,
   CheckCircle2,
-  Clock,
   MessageCircle,
   Send,
 } from "lucide-react";
@@ -52,6 +50,15 @@ export const SLOTS: { label: string; time: string }[] = [
 ];
 
 const DAYS_ES = ["lun", "mar", "mié", "jue", "vie", "sáb", "dom"];
+const DAYS_ES_FULL = [
+  "Lunes",
+  "Martes",
+  "Miércoles",
+  "Jueves",
+  "Viernes",
+  "Sábado",
+  "Domingo",
+];
 const MONTHS_ES = [
   "enero",
   "febrero",
@@ -85,7 +92,7 @@ export function buildMonthDays(year: number, month: number): (Date | null)[] {
 }
 
 export function formatDateEs(d: Date) {
-  return `${DAYS_ES[(d.getDay() + 6) % 7]} ${d.getDate()} de ${
+  return `${DAYS_ES_FULL[(d.getDay() + 6) % 7]} ${d.getDate()} de ${
     MONTHS_ES[d.getMonth()]
   }`;
 }
@@ -313,16 +320,13 @@ export function Availability({
           </button>
         )}
 
-        <div className="flex items-center gap-3 mb-3">
-          <CalendarDays className="w-6 h-6 text-amber-400" />
-          <h2
-            className={`font-display font-black bg-gradient-to-br from-amber-200 via-yellow-100 to-amber-400 bg-clip-text text-transparent tracking-tight ${
-              embedded ? "text-3xl sm:text-4xl" : "text-3xl sm:text-5xl"
-            }`}
-          >
-            {embedded ? "Reserva tu fecha" : "Disponibilidad"}
-          </h2>
-        </div>
+        <h2
+          className={`font-display font-black bg-gradient-to-br from-amber-200 via-yellow-100 to-amber-400 bg-clip-text text-transparent tracking-tight mb-3 ${
+            embedded ? "text-3xl sm:text-4xl" : "text-3xl sm:text-5xl"
+          }`}
+        >
+          {embedded ? "Reserva tu fecha" : "Disponibilidad"}
+        </h2>
         <p className="text-stone-400 text-base sm:text-lg mb-8 max-w-2xl">
           {genre
             ? `Elige la fecha y la hora que te funcione para tu ${genre.name}. Los cupos tachados ya están tomados.`
@@ -401,11 +405,8 @@ export function Availability({
             ref={slotsRef}
             className="bg-stone-900/60 border border-stone-800 rounded-3xl p-5 sm:p-6 scroll-mt-24"
           >
-            <div className="flex items-center gap-2 mb-2">
-              <Clock className="w-5 h-5 text-amber-400" />
-              <div className="font-display font-bold text-white text-lg">
-                {selected ? formatDateEs(selected) : "Selecciona una fecha"}
-              </div>
+            <div className="font-display font-bold text-white text-lg mb-2">
+              {selected ? formatDateEs(selected) : "Selecciona una fecha"}
             </div>
             <p className="text-stone-400 text-sm mb-4">
               {selected
