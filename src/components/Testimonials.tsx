@@ -1,9 +1,60 @@
+import { useEffect, useState } from "react";
 import { Star, Quote } from "lucide-react";
-import { TESTIMONIALS } from "../lib/constants";
+import {
+  DEFAULT_TESTIMONIALS,
+  DEFAULT_TESTIMONIALS_TITLE,
+  type TestimonialItem,
+} from "../lib/constants";
+import { getSiteSetting } from "../lib/supabase";
 import { Reveal } from "./Reveal";
 
 export function Testimonials() {
-  const loop = [...TESTIMONIALS, ...TESTIMONIALS];
+  const [items, setItems] = useState<TestimonialItem[]>(DEFAULT_TESTIMONIALS);
+  const [title, setTitle] = useState(DEFAULT_TESTIMONIALS_TITLE);
+
+  useEffect(() => {
+    let mounted = true;
+    Promise.all([
+      getSiteSetting("testimonials_list"),
+      getSiteSetting("testimonials_title"),
+    ]).then(([raw, t]) => {
+      if (!mounted) return;
+      if (t && t.trim()) setTitle(t.trim());
+      if (raw) {
+        try {
+          const parsed = JSON.parse(raw);
+          if (Array.isArray(parsed) && parsed.length > 0) {
+            const valid = parsed
+              .filter(
+                (r) =>
+                  r &&
+                  typeof r === "object" &&
+                  typeof r.name === "string" &&
+                  typeof r.text === "string"
+              )
+              .map(
+                (r, i) =>
+                  ({
+                    id: String(r.id || `t-${i}`),
+                    name: String(r.name || ""),
+                    city: String(r.city || ""),
+                    text: String(r.text || ""),
+                    rating: Math.max(1, Math.min(5, Number(r.rating) || 5)),
+                  }) as TestimonialItem
+              );
+            if (valid.length > 0) setItems(valid);
+          }
+        } catch {
+          // keep defaults
+        }
+      }
+    });
+    return () => {
+      mounted = false;
+    };
+  }, []);
+
+  const loop = [...items, ...items];
 
   return (
     <section id="testimonios" className="py-16 sm:py-24 bg-stone-950">
@@ -16,7 +67,7 @@ export function Testimonials() {
             </span>
           </div>
           <h2 className="font-display font-black text-3xl sm:text-5xl mb-3 bg-gradient-to-br from-amber-200 via-yellow-100 to-amber-400 bg-clip-text text-transparent tracking-tight">
-            Historias que nos emocionan
+            {title}
           </h2>
         </Reveal>
       </div>
@@ -39,7 +90,7 @@ export function Testimonials() {
         <div className="inline-flex animate-testimonials-marquee gap-5 sm:gap-6 px-4 sm:px-6 lg:px-8 will-change-transform">
           {loop.map((t, idx) => (
             <article
-              key={idx}
+              key={`${t.id}-${idx}`}
               className="relative bg-stone-900/70 border border-stone-800 rounded-3xl p-6 sm:p-7 w-[86vw] sm:w-[440px] flex-shrink-0 flex flex-col"
             >
               <Quote className="absolute top-4 right-4 w-10 h-10 text-amber-500/10" />
