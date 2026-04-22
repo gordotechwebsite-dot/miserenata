@@ -11,7 +11,6 @@ import {
   ChevronLeft,
   ChevronRight,
   Package as PackageIcon,
-  Sparkles,
   Wallet,
 } from "lucide-react";
 import {
@@ -313,15 +312,9 @@ export function ReservationForm({
     >
       <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="text-center mb-8 sm:mb-10">
-          <div className="inline-flex items-center gap-2 bg-amber-500/10 border border-amber-500/30 rounded-full px-4 py-2 mb-4">
-            <Calendar className="w-4 h-4 text-amber-400" />
-            <span className="text-amber-300 text-sm font-medium">
-              Reserva Fácil y Rápido
-            </span>
-          </div>
           <h2 className="text-3xl sm:text-4xl md:text-5xl font-bold mb-3">
             <span className="bg-gradient-to-r from-amber-400 to-yellow-200 bg-clip-text text-transparent">
-              Reserva tu Serenata
+              Reserva tu Show
             </span>
           </h2>
           <p className="text-stone-400 max-w-2xl mx-auto">
@@ -330,43 +323,57 @@ export function ReservationForm({
           </p>
         </div>
 
-        <ol className="flex items-center justify-between gap-1 sm:gap-2 mb-6 sm:mb-8 max-w-2xl mx-auto">
+        <ol
+          className="grid mb-6 sm:mb-8 max-w-2xl mx-auto"
+          style={{
+            gridTemplateColumns: `repeat(${stepsList.length}, minmax(0, 1fr))`,
+          }}
+        >
           {stepsList.map((s, i) => {
             const active = step === s.id;
             const done = step > s.id;
+            const prevDone = step > s.id;
             return (
-              <li key={s.id} className="flex items-center flex-1 min-w-0">
-                <div className="flex flex-col items-center gap-1.5 flex-shrink-0">
+              <li
+                key={s.id}
+                className="relative flex flex-col items-center justify-start"
+              >
+                {i > 0 && (
                   <div
-                    className={`w-8 h-8 sm:w-9 sm:h-9 rounded-full flex items-center justify-center text-xs sm:text-sm font-bold border-2 transition-all ${
-                      active
-                        ? "bg-gradient-to-br from-amber-500 to-yellow-500 text-stone-950 border-amber-400 shadow-lg shadow-amber-500/30"
-                        : done
-                        ? "bg-amber-500/20 text-amber-300 border-amber-500/60"
-                        : "bg-stone-900 text-stone-500 border-stone-700"
+                    className={`absolute top-4 sm:top-[18px] left-0 right-1/2 h-0.5 ${
+                      prevDone ? "bg-amber-500/60" : "bg-stone-800"
                     }`}
-                  >
-                    {done ? <CheckCircle2 className="w-4 h-4" /> : s.id}
-                  </div>
-                  <div
-                    className={`text-[10px] sm:text-xs font-semibold text-center ${
-                      active
-                        ? "text-amber-300"
-                        : done
-                        ? "text-stone-300"
-                        : "text-stone-500"
-                    }`}
-                  >
-                    {s.title}
-                  </div>
-                </div>
+                  />
+                )}
                 {i < stepsList.length - 1 && (
                   <div
-                    className={`h-0.5 flex-1 mx-1 sm:mx-2 -translate-y-2 ${
+                    className={`absolute top-4 sm:top-[18px] left-1/2 right-0 h-0.5 ${
                       done ? "bg-amber-500/60" : "bg-stone-800"
                     }`}
                   />
                 )}
+                <div
+                  className={`relative z-10 w-8 h-8 sm:w-9 sm:h-9 rounded-full flex items-center justify-center text-xs sm:text-sm font-bold border-2 transition-all ${
+                    active
+                      ? "bg-gradient-to-br from-amber-500 to-yellow-500 text-stone-950 border-amber-400 shadow-lg shadow-amber-500/30"
+                      : done
+                      ? "bg-amber-500/20 text-amber-300 border-amber-500/60"
+                      : "bg-stone-900 text-stone-500 border-stone-700"
+                  }`}
+                >
+                  {done ? <CheckCircle2 className="w-4 h-4" /> : s.id}
+                </div>
+                <div
+                  className={`mt-1.5 text-[10px] sm:text-xs font-semibold text-center ${
+                    active
+                      ? "text-amber-300"
+                      : done
+                      ? "text-stone-300"
+                      : "text-stone-500"
+                  }`}
+                >
+                  {s.title}
+                </div>
               </li>
             );
           })}
@@ -427,8 +434,7 @@ export function ReservationForm({
               {step === 2 && (
                 <>
                   <div>
-                    <label className="flex items-center gap-2 text-sm font-medium text-amber-300 mb-3">
-                      <Sparkles className="w-4 h-4" />
+                    <label className="block text-sm font-medium text-amber-300 mb-3">
                       ¿Tal vez quisieras incluir esto?
                     </label>
                     <p className="text-stone-400 text-xs mb-4">
