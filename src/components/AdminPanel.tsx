@@ -243,6 +243,13 @@ export function AdminPanel({ onExit }: { onExit: () => void }) {
   const [calPriceSaving, setCalPriceSaving] = useState<GenreId | null>(null);
   const [calPriceSavedId, setCalPriceSavedId] = useState<GenreId | null>(null);
   const [calPriceError, setCalPriceError] = useState<string | null>(null);
+  const [calSlotPrices, setCalSlotPrices] = useState<Record<string, string>>({});
+  const [calSlotPriceSavingKey, setCalSlotPriceSavingKey] = useState<
+    string | null
+  >(null);
+  const [calSlotPriceSavedKey, setCalSlotPriceSavedKey] = useState<
+    string | null
+  >(null);
 
   const [extras, setExtras] = useState<ExtraItem[]>(DEFAULT_EXTRAS);
   const [extraUploading, setExtraUploading] = useState<string | null>(null);
@@ -353,10 +360,60 @@ export function AdminPanel({ onExit }: { onExit: () => void }) {
   const loadCalendar = async () => {
     setCalLoading(true);
     setCalError(null);
-    const value = await getSiteSetting(unavailableKey(calGenre));
+    const [value, pricesRaw] = await Promise.all([
+      getSiteSetting(unavailableKey(calGenre)),
+      getSiteSetting(`slot_prices_${calGenre}`),
+    ]);
     setCalUnavailable(parseUnavailable(value));
+    const map: Record<string, string> = {};
+    try {
+      const obj = pricesRaw ? JSON.parse(pricesRaw) : {};
+      if (obj && typeof obj === "object") {
+        for (const [k, v] of Object.entries(obj)) {
+          const n = Number(v);
+          if (n > 0) map[k] = String(n);
+        }
+      }
+    } catch {
+      // ignore
+    }
+    setCalSlotPrices(map);
+    setCalSlotPriceSavedKey(null);
     setCalSavedAt(null);
     setCalLoading(false);
+  };
+
+  const persistSlotPrices = async (next: Record<string, string>) => {
+    const numeric: Record<string, number> = {};
+    Object.entries(next).forEach(([k, raw]) => {
+      const n = Number(String(raw).replace(/[^\d]/g, "")) || 0;
+      if (n > 0) numeric[k] = n;
+    });
+    const { error: err } = await setSiteSetting(
+      `slot_prices_${calGenre}`,
+      JSON.stringify(numeric)
+    );
+    if (err) setCalError(err);
+  };
+
+  const updateSlotPrice = (date: Date, time: string, raw: string) => {
+    const key = slotKey(date, time);
+    setCalSlotPrices((prev) => ({ ...prev, [key]: raw }));
+    setCalSlotPriceSavedKey(null);
+  };
+
+  const commitSlotPrice = async (date: Date, time: string) => {
+    const key = slotKey(date, time);
+    const raw = calSlotPrices[key] ?? "";
+    const n = Number(String(raw).replace(/[^\d]/g, "")) || 0;
+    const next = { ...calSlotPrices };
+    if (n > 0) next[key] = String(n);
+    else delete next[key];
+    setCalSlotPrices(next);
+    setCalSlotPriceSavingKey(key);
+    await persistSlotPrices(next);
+    setCalSlotPriceSavingKey(null);
+    setCalSlotPriceSavedKey(key);
   };
 
   const persistCalendar = async (set: Set<string>) => {
@@ -2243,26 +2300,115 @@ export function AdminPanel({ onExit }: { onExit: () => void }) {
                       </p>
                       <div className="grid gap-2">
                         {SLOTS.map((s) => {
-                          const blocked = calUnavailable.has(
-                            slotKey(calSelected, s.time)
-                          );
+                          const key = slotKey(calSelected, s.time);
+                          const blocked = calUnavailable.has(key);
+                          const priceInput = calSlotPrices[key] ?? "";
+                          const showPriceField =
+                            calGenre === "nortena" || calGenre === "banda";
+                          const parsedPrice =
+                            Number(String(priceInput).replace(/[^\d]/g, "")) ||
+                            0;
+                          const fallbackPrice =
+                            Number(
+                              (genreHourly[calGenre]?.rate || "").replace(
+                                /[^\d]/g,
+                                ""
+                              )
+                            ) ||
+                            (calGenre === "nortena"
+                              ? 600000
+                              : calGenre === "banda"
+                              ? 800000
+                              : 0);
+                          const effectivePrice =
+                            parsedPrice > 0 ? parsedPrice : fallbackPrice;
                           return (
-                            <button
+                            <div
                               key={s.time}
-                              onClick={() =>
-                                toggleCalSlot(calSelected, s.time)
-                              }
-                              className={`flex items-center justify-between px-3 py-2.5 rounded-xl border transition text-sm font-semibold ${
+                              className={`rounded-xl border transition ${
                                 blocked
-                                  ? "bg-red-500/15 border-red-500/50 text-red-200"
-                                  : "bg-stone-800/60 border-stone-700 text-stone-100 hover:border-amber-500/40"
+                                  ? "bg-red-500/10 border-red-500/50"
+                                  : "bg-stone-800/60 border-stone-700"
                               }`}
                             >
-                              <span>{s.label}</span>
-                              <span className="text-xs">
-                                {blocked ? "Ocupado" : "Disponible"}
-                              </span>
-                            </button>
+                              <button
+                                onClick={() =>
+                                  toggleCalSlot(calSelected, s.time)
+                                }
+                                className={`w-full flex items-center justify-between px-3 py-2.5 text-sm font-semibold hover:border-amber-500/40 ${
+                                  blocked
+                                    ? "text-red-200"
+                                    : "text-stone-100"
+                                }`}
+                              >
+                                <span>{s.label}</span>
+                                <span className="text-xs">
+                                  {blocked ? "Ocupado" : "Disponible"}
+                                </span>
+                              </button>
+                              {showPriceField && !blocked && (
+                                <div className="px-3 pb-2.5 pt-0.5">
+                                  <div className="flex items-center gap-2">
+                                    <span className="text-stone-500 text-xs">
+                                      $
+                                    </span>
+                                    <input
+                                      type="text"
+                                      inputMode="numeric"
+                                      value={priceInput}
+                                      onChange={(e) =>
+                                        updateSlotPrice(
+                                          calSelected,
+                                          s.time,
+                                          e.target.value
+                                        )
+                                      }
+                                      onBlur={() =>
+                                        commitSlotPrice(calSelected, s.time)
+                                      }
+                                      onKeyDown={(e) => {
+                                        if (e.key === "Enter") {
+                                          e.preventDefault();
+                                          (e.target as HTMLInputElement).blur();
+                                        }
+                                      }}
+                                      placeholder={String(fallbackPrice)}
+                                      className="flex-1 min-w-0 bg-stone-900 border border-stone-700 rounded-lg px-2 py-1.5 text-white text-xs"
+                                    />
+                                    <span className="text-stone-500 text-xs whitespace-nowrap">
+                                      /hora
+                                    </span>
+                                  </div>
+                                  <div className="text-[11px] text-stone-400 mt-1">
+                                    {calSlotPriceSavingKey === key ? (
+                                      <span>Guardando…</span>
+                                    ) : calSlotPriceSavedKey === key ? (
+                                      <span className="text-emerald-300">
+                                        Guardado · Muestra{" "}
+                                        <span className="text-amber-300 font-semibold">
+                                          {formatCop(effectivePrice)}
+                                        </span>
+                                        /hora
+                                      </span>
+                                    ) : (
+                                      <span>
+                                        Muestra:{" "}
+                                        <span className="text-amber-300 font-semibold">
+                                          {formatCop(effectivePrice)}
+                                        </span>
+                                        /hora
+                                        {parsedPrice <= 0 && (
+                                          <span className="text-stone-500">
+                                            {" "}
+                                            (default del género)
+                                          </span>
+                                        )}
+                                      </span>
+                                    )}
+                                  </div>
+                                </div>
+                              )}
+                            </div>
                           );
                         })}
                       </div>
