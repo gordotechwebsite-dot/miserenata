@@ -1,5 +1,10 @@
 import { useEffect, useState } from "react";
-import { supabase } from "../lib/supabase";
+import { getSiteSetting, supabase } from "../lib/supabase";
+import {
+  DEFAULT_GALLERY_SUBTITLE,
+  DEFAULT_GALLERY_TITLE,
+} from "../lib/constants";
+import { useDragMarquee } from "../lib/useDragMarquee";
 import { Reveal } from "./Reveal";
 
 const BUCKET = "gallery";
@@ -12,9 +17,19 @@ type GalleryItem = {
 export function Gallery() {
   const [items, setItems] = useState<GalleryItem[]>([]);
   const [loading, setLoading] = useState(true);
+  const [title, setTitle] = useState(DEFAULT_GALLERY_TITLE);
+  const [subtitle, setSubtitle] = useState(DEFAULT_GALLERY_SUBTITLE);
 
   useEffect(() => {
     let mounted = true;
+    Promise.all([
+      getSiteSetting("gallery_title"),
+      getSiteSetting("gallery_subtitle"),
+    ]).then(([t, s]) => {
+      if (!mounted) return;
+      if (t && t.trim()) setTitle(t.trim());
+      if (s && s.trim()) setSubtitle(s.trim());
+    });
     (async () => {
       const { data, error } = await supabase.storage
         .from(BUCKET)
@@ -52,16 +67,17 @@ export function Gallery() {
   }, []);
 
   const loop = [...items, ...items];
+  const { trackRef, handlers } = useDragMarquee(40);
 
   return (
     <section id="galeria" className="py-16 sm:py-24 bg-stone-950">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mb-10 sm:mb-14">
         <Reveal className="text-center">
           <h2 className="font-display font-black text-3xl sm:text-5xl mb-4 bg-gradient-to-br from-amber-200 via-yellow-100 to-amber-400 bg-clip-text text-transparent tracking-tight">
-            Momentos que hemos creado
+            {title}
           </h2>
           <p className="text-stone-400 text-base sm:text-lg max-w-2xl mx-auto">
-            Una mirada a serenatas, eventos y experiencias que dejaron huella.
+            {subtitle}
           </p>
         </Reveal>
       </div>
@@ -75,7 +91,11 @@ export function Gallery() {
           Aún no hay fotos. Pronto compartiremos momentos increíbles.
         </div>
       ) : (
-        <div className="relative overflow-hidden">
+        <div
+          className="relative overflow-hidden select-none"
+          style={{ touchAction: "pan-y" }}
+          {...handlers}
+        >
           <div
             className="absolute inset-y-0 left-0 w-16 sm:w-24 z-10 pointer-events-none"
             style={{
@@ -90,7 +110,10 @@ export function Gallery() {
                 "linear-gradient(to left, rgb(12 10 9) 0%, rgba(12,10,9,0) 100%)",
             }}
           />
-          <div className="inline-flex animate-marquee gap-4 sm:gap-5 px-4 sm:px-6 lg:px-8 will-change-transform">
+          <div
+            ref={trackRef}
+            className="inline-flex gap-4 sm:gap-5 px-4 sm:px-6 lg:px-8 will-change-transform cursor-grab active:cursor-grabbing"
+          >
             {loop.map((item, idx) => (
               <div
                 key={`${item.name}-${idx}`}
@@ -100,7 +123,8 @@ export function Gallery() {
                   src={item.url}
                   alt={`Galería ${(idx % items.length) + 1}`}
                   loading="lazy"
-                  className="w-full h-full object-cover"
+                  draggable={false}
+                  className="w-full h-full object-cover pointer-events-none"
                 />
               </div>
             ))}

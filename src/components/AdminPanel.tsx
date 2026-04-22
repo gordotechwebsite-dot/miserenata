@@ -9,12 +9,17 @@ import {
 } from "../lib/supabase";
 import {
   DEFAULT_EXTRAS,
+  DEFAULT_GALLERY_SUBTITLE,
+  DEFAULT_GALLERY_TITLE,
   DEFAULT_GENRES,
   DEFAULT_PACKAGES,
+  DEFAULT_TESTIMONIALS,
+  DEFAULT_TESTIMONIALS_TITLE,
   type ExtraItem,
   type GenreData,
   type GenreId,
   type PackageData,
+  type TestimonialItem,
   formatCop,
 } from "../lib/constants";
 import {
@@ -38,6 +43,8 @@ import {
   ClipboardList,
   Phone as PhoneIcon,
   MapPin,
+  Star,
+  MessageSquare,
 } from "lucide-react";
 import {
   SLOTS,
@@ -79,7 +86,8 @@ type Tab =
   | "banner"
   | "genres"
   | "calendar"
-  | "extras";
+  | "extras"
+  | "testimonials";
 
 type ReservationExtra = { id: string; name: string; price: string };
 
@@ -240,6 +248,33 @@ export function AdminPanel({ onExit }: { onExit: () => void }) {
   const [extrasSavedAt, setExtrasSavedAt] = useState<number | null>(null);
   const extraFileInputs = useRef<Record<string, HTMLInputElement | null>>({});
 
+  const [testimonials, setTestimonials] =
+    useState<TestimonialItem[]>(DEFAULT_TESTIMONIALS);
+  const [testimonialsTitle, setTestimonialsTitle] = useState<string>(
+    DEFAULT_TESTIMONIALS_TITLE
+  );
+  const [testimonialsSaving, setTestimonialsSaving] = useState(false);
+  const [testimonialsSavedAt, setTestimonialsSavedAt] = useState<number | null>(
+    null
+  );
+  const [testimonialsError, setTestimonialsError] = useState<string | null>(
+    null
+  );
+
+  const [galleryTitle, setGalleryTitle] = useState<string>(
+    DEFAULT_GALLERY_TITLE
+  );
+  const [gallerySubtitle, setGallerySubtitle] = useState<string>(
+    DEFAULT_GALLERY_SUBTITLE
+  );
+  const [galleryHeaderSaving, setGalleryHeaderSaving] = useState(false);
+  const [galleryHeaderSavedAt, setGalleryHeaderSavedAt] = useState<
+    number | null
+  >(null);
+  const [galleryHeaderError, setGalleryHeaderError] = useState<string | null>(
+    null
+  );
+
   const [packageUploading, setPackageUploading] = useState<string | null>(null);
   const packageFileInputs = useRef<Record<string, HTMLInputElement | null>>({});
 
@@ -279,6 +314,8 @@ export function AdminPanel({ onExit }: { onExit: () => void }) {
     void loadGenres();
     void loadExtras();
     void loadReservations();
+    void loadTestimonials();
+    void loadGalleryHeader();
   }, [isAdmin]);
 
   useEffect(() => {
@@ -623,6 +660,110 @@ export function AdminPanel({ onExit }: { onExit: () => void }) {
 
   const handleExtraRemoveImage = (id: string) => {
     updateExtraField(id, { imageUrl: undefined });
+  };
+
+  const loadTestimonials = async () => {
+    setTestimonialsError(null);
+    const [raw, t] = await Promise.all([
+      getSiteSetting("testimonials_list"),
+      getSiteSetting("testimonials_title"),
+    ]);
+    if (t && t.trim()) setTestimonialsTitle(t.trim());
+    if (raw) {
+      try {
+        const parsed = JSON.parse(raw);
+        if (Array.isArray(parsed)) {
+          const valid: TestimonialItem[] = parsed
+            .filter(
+              (r: unknown) =>
+                typeof r === "object" &&
+                r !== null &&
+                typeof (r as { name?: unknown }).name === "string"
+            )
+            .map((r: unknown, i: number) => {
+              const obj = r as Partial<TestimonialItem>;
+              return {
+                id: String(obj.id || `t-${i}`),
+                name: String(obj.name || ""),
+                city: String(obj.city || ""),
+                text: String(obj.text || ""),
+                rating: Math.max(1, Math.min(5, Number(obj.rating) || 5)),
+              };
+            });
+          if (valid.length > 0) {
+            setTestimonials(valid);
+            return;
+          }
+        }
+      } catch {
+        // keep defaults
+      }
+    }
+    setTestimonials(DEFAULT_TESTIMONIALS);
+  };
+
+  const saveTestimonials = async () => {
+    setTestimonialsSaving(true);
+    setTestimonialsError(null);
+    const clean = testimonials.map((t) => ({
+      id: t.id,
+      name: t.name.trim(),
+      city: t.city.trim(),
+      text: t.text.trim(),
+      rating: Math.max(1, Math.min(5, Number(t.rating) || 5)),
+    }));
+    const [r1, r2] = await Promise.all([
+      setSiteSetting("testimonials_list", JSON.stringify(clean)),
+      setSiteSetting("testimonials_title", testimonialsTitle.trim()),
+    ]);
+    const err = r1.error || r2.error;
+    if (err) setTestimonialsError(err);
+    else setTestimonialsSavedAt(Date.now());
+    setTestimonialsSaving(false);
+  };
+
+  const updateTestimonialField = (
+    id: string,
+    patch: Partial<TestimonialItem>
+  ) => {
+    setTestimonials((prev) =>
+      prev.map((t) => (t.id === id ? { ...t, ...patch } : t))
+    );
+  };
+
+  const addTestimonial = () => {
+    const id = `t-${Date.now()}`;
+    setTestimonials((prev) => [
+      ...prev,
+      { id, name: "Nuevo cliente", city: "", text: "", rating: 5 },
+    ]);
+  };
+
+  const removeTestimonial = (id: string) => {
+    setTestimonials((prev) => prev.filter((t) => t.id !== id));
+  };
+
+  const loadGalleryHeader = async () => {
+    setGalleryHeaderError(null);
+    const [t, s] = await Promise.all([
+      getSiteSetting("gallery_title"),
+      getSiteSetting("gallery_subtitle"),
+    ]);
+    if (t && t.trim()) setGalleryTitle(t.trim());
+    if (s && s.trim()) setGallerySubtitle(s.trim());
+  };
+
+  const saveGalleryHeader = async () => {
+    setGalleryHeaderSaving(true);
+    setGalleryHeaderError(null);
+    const [r1, r2] = await Promise.all([
+      setSiteSetting("gallery_title", galleryTitle.trim()),
+      setSiteSetting("gallery_subtitle", gallerySubtitle.trim()),
+    ]);
+    const err = r1.error || r2.error;
+    if (err) setGalleryHeaderError(err);
+    else setGalleryHeaderSavedAt(Date.now());
+    setGalleryHeaderSaving(false);
   };
 
   const handlePackageUpload = async (id: string, file: File | null) => {
@@ -1178,6 +1319,16 @@ export function AdminPanel({ onExit }: { onExit: () => void }) {
                   }`}
                 >
                   <Sparkles className="w-4 h-4" /> Adicionales
+                </button>
+                <button
+                  onClick={() => setTab("testimonials")}
+                  className={`flex items-center gap-2 px-4 py-1.5 rounded-lg text-sm font-semibold transition ${
+                    tab === "testimonials"
+                      ? "bg-amber-500/20 text-amber-200"
+                      : "text-stone-400 hover:text-stone-200"
+                  }`}
+                >
+                  <MessageSquare className="w-4 h-4" /> Reseñas
                 </button>
               </div>
             </div>
@@ -2057,6 +2208,66 @@ export function AdminPanel({ onExit }: { onExit: () => void }) {
 
             {tab === "gallery" && (
               <div className="space-y-5">
+                {galleryDestination === "main" && (
+                  <div className="bg-stone-900/60 border border-stone-800 rounded-2xl p-5 sm:p-6">
+                    <div className="font-display font-bold text-lg text-white mb-1">
+                      Encabezado de la galería (landing)
+                    </div>
+                    <p className="text-stone-400 text-sm mb-4">
+                      El título y subtítulo que se ven arriba del carrusel en el
+                      home.
+                    </p>
+                    <div className="grid gap-3 sm:grid-cols-2">
+                      <div>
+                        <label className="block text-xs text-stone-400 mb-1">
+                          Título
+                        </label>
+                        <input
+                          type="text"
+                          value={galleryTitle}
+                          onChange={(e) => setGalleryTitle(e.target.value)}
+                          className="w-full bg-stone-800 border border-stone-700 rounded-lg px-3 py-2 text-white text-sm"
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-xs text-stone-400 mb-1">
+                          Subtítulo
+                        </label>
+                        <input
+                          type="text"
+                          value={gallerySubtitle}
+                          onChange={(e) => setGallerySubtitle(e.target.value)}
+                          className="w-full bg-stone-800 border border-stone-700 rounded-lg px-3 py-2 text-white text-sm"
+                        />
+                      </div>
+                    </div>
+                    <div className="mt-4 flex items-center gap-3">
+                      <button
+                        onClick={saveGalleryHeader}
+                        disabled={galleryHeaderSaving}
+                        className="flex items-center gap-2 bg-gradient-to-r from-amber-500 to-yellow-500 text-stone-950 px-4 py-2 rounded-xl font-bold disabled:opacity-50"
+                      >
+                        <Save className="w-4 h-4" />{" "}
+                        {galleryHeaderSaving
+                          ? "Guardando..."
+                          : "Guardar encabezado"}
+                      </button>
+                      {galleryHeaderSavedAt &&
+                        !galleryHeaderSaving &&
+                        !galleryHeaderError && (
+                          <span className="text-sm text-emerald-300">
+                            Guardado. Recarga el sitio para ver el cambio.
+                          </span>
+                        )}
+                    </div>
+                    {galleryHeaderError && (
+                      <div className="mt-3 text-sm text-red-300 bg-red-500/10 border border-red-500/30 rounded-lg px-3 py-2 flex items-start gap-2">
+                        <AlertTriangle className="w-4 h-4 mt-0.5 flex-shrink-0" />
+                        <div>{galleryHeaderError}</div>
+                      </div>
+                    )}
+                  </div>
+                )}
                 <div className="bg-stone-900/60 border border-stone-800 rounded-2xl p-5 sm:p-6">
                   <div className="mb-4">
                     <div className="font-display font-bold text-lg text-white mb-1">
@@ -2347,6 +2558,158 @@ export function AdminPanel({ onExit }: { onExit: () => void }) {
                         </div>
                       );
                     })}
+                  </div>
+                )}
+              </div>
+            )}
+
+            {tab === "testimonials" && (
+              <div className="space-y-5">
+                <div className="bg-stone-900/60 border border-stone-800 rounded-2xl p-5 sm:p-6">
+                  <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+                    <div>
+                      <div className="font-display font-bold text-lg text-white mb-1">
+                        Reseñas del landing
+                      </div>
+                      <p className="text-stone-400 text-sm">
+                        Edita las reseñas que aparecen en el carrusel del home.
+                        Puedes cambiar el título, agregar, editar o eliminar.
+                      </p>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <button
+                        onClick={addTestimonial}
+                        className="flex items-center gap-2 bg-stone-800 hover:bg-stone-700 border border-stone-700 text-white px-3 py-2 rounded-xl text-sm font-semibold"
+                      >
+                        <Plus className="w-4 h-4" />
+                        Agregar
+                      </button>
+                      <button
+                        onClick={saveTestimonials}
+                        disabled={testimonialsSaving}
+                        className="flex items-center gap-2 bg-gradient-to-r from-amber-500 to-yellow-500 text-stone-950 px-4 py-2 rounded-xl font-bold disabled:opacity-50"
+                      >
+                        <Save className="w-4 h-4" />{" "}
+                        {testimonialsSaving ? "Guardando..." : "Guardar cambios"}
+                      </button>
+                    </div>
+                  </div>
+                  <div className="mt-4">
+                    <label className="block text-xs text-stone-400 mb-1">
+                      Título de la sección
+                    </label>
+                    <input
+                      type="text"
+                      value={testimonialsTitle}
+                      onChange={(e) => setTestimonialsTitle(e.target.value)}
+                      className="w-full sm:max-w-md bg-stone-800 border border-stone-700 rounded-lg px-3 py-2 text-white text-sm"
+                    />
+                  </div>
+                  {testimonialsError && (
+                    <div className="mt-3 text-sm text-red-300 bg-red-500/10 border border-red-500/30 rounded-lg px-3 py-2 flex items-start gap-2">
+                      <AlertTriangle className="w-4 h-4 mt-0.5 flex-shrink-0" />
+                      <div>{testimonialsError}</div>
+                    </div>
+                  )}
+                  {testimonialsSavedAt &&
+                    !testimonialsSaving &&
+                    !testimonialsError && (
+                      <div className="mt-3 text-sm text-emerald-300">
+                        Guardado. Los clientes ya ven estas reseñas.
+                      </div>
+                    )}
+                </div>
+
+                {testimonials.length === 0 ? (
+                  <div className="text-center text-stone-400 bg-stone-900/60 border border-stone-800 rounded-2xl py-12">
+                    No hay reseñas. Agrega la primera con el botón "Agregar".
+                  </div>
+                ) : (
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    {testimonials.map((t) => (
+                      <div
+                        key={t.id}
+                        className="bg-stone-900/60 border border-stone-800 rounded-2xl p-4 space-y-3"
+                      >
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                          <div>
+                            <label className="block text-xs text-stone-400 mb-1">
+                              Nombre
+                            </label>
+                            <input
+                              type="text"
+                              value={t.name}
+                              onChange={(e) =>
+                                updateTestimonialField(t.id, {
+                                  name: e.target.value,
+                                })
+                              }
+                              className="w-full bg-stone-800 border border-stone-700 rounded-lg px-3 py-1.5 text-white text-sm"
+                            />
+                          </div>
+                          <div>
+                            <label className="block text-xs text-stone-400 mb-1">
+                              Ciudad
+                            </label>
+                            <input
+                              type="text"
+                              value={t.city}
+                              onChange={(e) =>
+                                updateTestimonialField(t.id, {
+                                  city: e.target.value,
+                                })
+                              }
+                              className="w-full bg-stone-800 border border-stone-700 rounded-lg px-3 py-1.5 text-white text-sm"
+                            />
+                          </div>
+                        </div>
+                        <div>
+                          <label className="block text-xs text-stone-400 mb-1">
+                            Reseña
+                          </label>
+                          <textarea
+                            value={t.text}
+                            onChange={(e) =>
+                              updateTestimonialField(t.id, {
+                                text: e.target.value,
+                              })
+                            }
+                            rows={4}
+                            className="w-full bg-stone-800 border border-stone-700 rounded-lg px-3 py-2 text-white text-sm resize-y"
+                          />
+                        </div>
+                        <div className="flex items-center justify-between gap-3">
+                          <div className="flex items-center gap-1">
+                            {[1, 2, 3, 4, 5].map((n) => (
+                              <button
+                                key={n}
+                                type="button"
+                                onClick={() =>
+                                  updateTestimonialField(t.id, { rating: n })
+                                }
+                                aria-label={`${n} estrellas`}
+                                className="p-0.5"
+                              >
+                                <Star
+                                  className={`w-5 h-5 ${
+                                    n <= t.rating
+                                      ? "text-amber-400 fill-amber-400"
+                                      : "text-stone-600"
+                                  }`}
+                                />
+                              </button>
+                            ))}
+                          </div>
+                          <button
+                            onClick={() => removeTestimonial(t.id)}
+                            className="flex items-center justify-center bg-red-500/10 hover:bg-red-500/20 border border-red-500/40 text-red-300 w-10 h-10 rounded-xl"
+                            aria-label="Eliminar reseña"
+                          >
+                            <Trash2 className="w-4 h-4" />
+                          </button>
+                        </div>
+                      </div>
+                    ))}
                   </div>
                 )}
               </div>

@@ -121,80 +121,108 @@ export const DEFAULT_PACKAGES: PackageData[] = [
   },
 ];
 
-export const TESTIMONIALS = [
+export type TestimonialItem = {
+  id: string;
+  name: string;
+  city: string;
+  text: string;
+  rating: number;
+};
+
+export const DEFAULT_TESTIMONIALS: TestimonialItem[] = [
   {
+    id: "carolina-mendez",
     name: "Carolina Méndez",
     city: "Duitama",
     text: "Fue la mejor sorpresa que le pude dar a mi esposo. Los mariachis llegaron puntual y tocaron increíble. ¡100% recomendados!",
     rating: 5,
   },
   {
+    id: "andres-rodriguez",
     name: "Andrés Rodríguez",
     city: "Paipa",
     text: "Contraté la serenata estándar para el cumpleaños de mi mamá. Lloró de la emoción. Servicio de primera calidad.",
     rating: 5,
   },
   {
+    id: "maria-fernanda-lopez",
     name: "María Fernanda López",
     city: "Sogamoso",
     text: "Excelente servicio, muy profesionales. Las canciones fueron hermosas y el grupo tiene una energía increíble.",
     rating: 5,
   },
   {
+    id: "julian-pineda",
     name: "Julián Pineda",
     city: "Tunja",
     text: "Pedí una Norteña para el aniversario de mis papás y quedamos fascinados. Los músicos súper amables y el sonido impecable.",
     rating: 5,
   },
   {
+    id: "daniela-suarez",
     name: "Daniela Suárez",
     city: "Nobsa",
     text: "Reservamos por WhatsApp y fue súper fácil. Llegaron a tiempo, se vistieron elegantes y se notó la experiencia. Gracias Musicaenvivo.",
     rating: 5,
   },
   {
+    id: "laura-torres",
     name: "Laura Camila Torres",
     city: "Tibasosa",
     text: "La banda sonó espectacular en el grado de mi hermano. Toda la familia bailó y la pasamos increíble. Volveremos a contratarlos.",
     rating: 5,
   },
   {
+    id: "jorge-castillo",
     name: "Jorge Iván Castillo",
     city: "Belén",
     text: "El detalle con mi esposa valió cada peso. Le tocaron sus canciones favoritas y quedó sin palabras. Servicio de primera.",
     rating: 5,
   },
   {
+    id: "paola-martinez",
     name: "Paola Martínez",
     city: "Santa Rosa de Viterbo",
     text: "Le organicé la serenata sorpresa a mi novio y fue perfecto. Muy buena comunicación desde el primer mensaje.",
     rating: 5,
   },
   {
+    id: "sebastian-rivera",
     name: "Sebastián Rivera",
     city: "Chiquinquirá",
     text: "Contratamos la Gran Serenata para el cumpleaños 60 de mi papá. Lloró de felicidad. Se nota el profesionalismo del grupo.",
     rating: 5,
   },
   {
+    id: "valentina-gomez",
     name: "Valentina Gómez",
     city: "Sogamoso",
     text: "Los contraté para la pedida de mano y todo salió mágico. Muy recomendados, puntuales y con mucho sentimiento al tocar.",
     rating: 5,
   },
   {
+    id: "camilo-herrera",
     name: "Camilo Herrera",
     city: "Paipa",
     text: "El sonido y la presentación de los músicos fueron espectaculares. Mi mamá no paraba de llorar de emoción.",
     rating: 5,
   },
   {
+    id: "luisa-jimenez",
     name: "Luisa Jiménez",
     city: "Duitama",
     text: "Reservamos una Mariachi para el 15 de mi hija y fue el alma de la fiesta. Todos los invitados preguntaron por ustedes.",
     rating: 5,
   },
-] as const;
+];
+
+/** @deprecated Use DEFAULT_TESTIMONIALS; testimonials are loaded dynamically from site_settings. */
+export const TESTIMONIALS = DEFAULT_TESTIMONIALS;
+
+export const DEFAULT_GALLERY_TITLE = "Momentos que hemos creado";
+export const DEFAULT_GALLERY_SUBTITLE =
+  "Una mirada a serenatas, eventos y experiencias que dejaron huella.";
+export const DEFAULT_TESTIMONIALS_TITLE = "Historias que nos emocionan";
 
 export type ExtraItem = {
   id: string;
