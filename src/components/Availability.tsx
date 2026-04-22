@@ -24,7 +24,12 @@ const DEFAULT_HOURLY_PRICE: Partial<Record<GenreId, number>> = {
 type Props = {
   genreId?: GenreId | null;
   variant?: "page" | "embedded";
-  onSlotSelect?: (date: Date, time: string, label: string) => void;
+  onSlotSelect?: (
+    date: Date,
+    time: string,
+    label: string,
+    price: number
+  ) => void;
 };
 
 export const UNAVAILABLE_SLOTS_KEY = "unavailable_slots";
@@ -125,6 +130,7 @@ export function Availability({
   const [slotTime, setSlotTime] = useState<string | null>(null);
   const [unavailable, setUnavailable] = useState<Set<string>>(new Set());
   const [hourlyPrice, setHourlyPrice] = useState<number | null>(null);
+  const [slotPrices, setSlotPrices] = useState<Record<string, number>>({});
   const [name, setName] = useState("");
   const [phone, setPhone] = useState("");
   const [notes, setNotes] = useState("");
@@ -152,8 +158,25 @@ export function Availability({
         const n = Number((raw || "").replace(/[^\d]/g, "")) || 0;
         setHourlyPrice(n > 0 ? n : DEFAULT_HOURLY_PRICE[genreId] || 0);
       });
+      getSiteSetting(`slot_prices_${genreId}`).then((raw) => {
+        if (!mounted) return;
+        const map: Record<string, number> = {};
+        try {
+          const obj = raw ? JSON.parse(raw) : {};
+          if (obj && typeof obj === "object") {
+            for (const [k, v] of Object.entries(obj)) {
+              const n = Number(v);
+              if (n > 0) map[k] = n;
+            }
+          }
+        } catch {
+          // ignore
+        }
+        setSlotPrices(map);
+      });
     } else {
       setHourlyPrice(null);
+      setSlotPrices({});
     }
     // Normalize a time string (label "12:00 PM" or 24h "12:00") to the canonical
     // SLOTS.time (24h) so booked_slots from legacy rows still match.
@@ -238,7 +261,8 @@ export function Availability({
     setSubmitted(false);
     if (embedded && onSlotSelect) {
       const label = SLOTS.find((s) => s.time === time)?.label || time;
-      onSlotSelect(d, time, label);
+      const price = slotPrices[slotKey(d, time)] ?? hourlyPrice ?? 0;
+      onSlotSelect(d, time, label, price);
       return;
     }
     setTimeout(() => {
@@ -400,8 +424,10 @@ export function Availability({
                     </div>
                   );
                 }
-                const taken = unavailable.has(slotKey(selected, s.time));
+                const key = slotKey(selected, s.time);
+                const taken = unavailable.has(key);
                 const active = slotTime === s.time && !taken;
+                const priceForSlot = slotPrices[key] ?? hourlyPrice ?? 0;
                 return (
                   <button
                     key={s.time}
@@ -435,8 +461,8 @@ export function Availability({
                         ? "Reservado"
                         : active
                         ? "Seleccionado"
-                        : hourlyPrice && hourlyPrice > 0
-                        ? `${formatCop(hourlyPrice)}/hora`
+                        : priceForSlot > 0
+                        ? `${formatCop(priceForSlot)}/hora`
                         : "Disponible"}
                     </span>
                   </button>

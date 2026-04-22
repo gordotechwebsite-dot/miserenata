@@ -20,6 +20,11 @@ type Props = {
   loading: boolean;
 };
 
+const DEFAULT_HOURLY_RATE: Partial<Record<GenreId, number>> = {
+  nortena: 600000,
+  banda: 800000,
+};
+
 export function GenrePage({ id, packages, loading }: Props) {
   const base = DEFAULT_GENRES.find((g) => g.id === id)!;
   const [genre, setGenre] = useState<GenreData>(base);
@@ -27,6 +32,7 @@ export function GenrePage({ id, packages, loading }: Props) {
   const [selected, setSelected] = useState<PackageData | null>(null);
   const [prefillDate, setPrefillDate] = useState<string>("");
   const [prefillTime, setPrefillTime] = useState<string>("");
+  const [prefillPrice, setPrefillPrice] = useState<number>(0);
 
   useEffect(() => {
     let mounted = true;
@@ -43,7 +49,9 @@ export function GenrePage({ id, packages, loading }: Props) {
         name: name?.trim() || base.name,
         image: image?.trim() || base.image,
       });
-      const rate = Number((hRate || "").replace(/[^\d]/g, "")) || 0;
+      const parsed = Number((hRate || "").replace(/[^\d]/g, "")) || 0;
+      const fallback = DEFAULT_HOURLY_RATE[id] ?? 0;
+      const rate = parsed > 0 ? parsed : fallback;
       if (rate > 0) {
         setHourly({
           rate,
@@ -62,6 +70,13 @@ export function GenrePage({ id, packages, loading }: Props) {
   const filtered = packages.filter((p) => p.genre === id);
   const hasPackages = !hourly && filtered.length > 0;
   const isHourly = !!hourly;
+  const effectiveHourly: GenreHourlyConfig | null =
+    isHourly && hourly
+      ? {
+          ...hourly,
+          rate: prefillPrice > 0 ? prefillPrice : hourly.rate,
+        }
+      : null;
 
   const goHome = () => {
     window.location.hash = "";
@@ -138,12 +153,13 @@ export function GenrePage({ id, packages, loading }: Props) {
       <Availability
         genreId={id}
         variant="embedded"
-        onSlotSelect={(d, time) => {
+        onSlotSelect={(d, time, _label, price) => {
           const y = d.getFullYear();
           const m = String(d.getMonth() + 1).padStart(2, "0");
           const day = String(d.getDate()).padStart(2, "0");
           setPrefillDate(`${y}-${m}-${day}`);
           setPrefillTime(time);
+          setPrefillPrice(price > 0 ? price : 0);
           setTimeout(() => {
             const reservar = document.getElementById("reservar");
             const servicios = document.getElementById("servicios");
@@ -178,7 +194,7 @@ export function GenrePage({ id, packages, loading }: Props) {
         </>
       )}
 
-      {isHourly && hourly && (
+      {isHourly && effectiveHourly && (
         <>
           <section
             id="servicios"
@@ -186,10 +202,10 @@ export function GenrePage({ id, packages, loading }: Props) {
           >
             <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8">
               <div className="bg-stone-900/80 border border-stone-800 rounded-3xl overflow-hidden shadow-2xl">
-                {hourly.image && (
+                {effectiveHourly.image && (
                   <div className="aspect-[16/9] bg-stone-800 overflow-hidden">
                     <img
-                      src={hourly.image}
+                      src={effectiveHourly.image}
                       alt={genre.name}
                       className="w-full h-full object-cover"
                     />
@@ -205,14 +221,14 @@ export function GenrePage({ id, packages, loading }: Props) {
                   <h2 className="font-display font-black text-3xl sm:text-4xl text-white mb-3">
                     {genre.name}
                   </h2>
-                  {hourly.description && (
+                  {effectiveHourly.description && (
                     <p className="text-stone-300 text-base sm:text-lg mb-6 whitespace-pre-line">
-                      {hourly.description}
+                      {effectiveHourly.description}
                     </p>
                   )}
                   <div className="flex items-baseline gap-2 mb-6">
                     <span className="text-amber-400 font-display font-black text-4xl sm:text-5xl">
-                      ${formatCop(hourly.rate)}
+                      ${formatCop(effectiveHourly.rate)}
                     </span>
                     <span className="text-stone-400 text-lg">/ hora</span>
                   </div>
@@ -233,7 +249,7 @@ export function GenrePage({ id, packages, loading }: Props) {
             initialDate={prefillDate}
             initialTime={prefillTime}
             genreId={id}
-            hourly={hourly}
+            hourly={effectiveHourly}
           />
         </>
       )}
