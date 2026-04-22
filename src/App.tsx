@@ -31,6 +31,10 @@ type PackageRow = {
   sort_order: number;
   image_path: string | null;
   image_url: string | null;
+  video_path: string | null;
+  video_url: string | null;
+  video_poster_path: string | null;
+  video_poster_url: string | null;
   fallback_url: string | null;
   genre: string | null;
 };
@@ -60,6 +64,10 @@ function mapRow(row: PackageRow): PackageData {
     sortOrder: row.sort_order,
     imagePath: row.image_path,
     imageUrl: row.image_url,
+    videoPath: row.video_path,
+    videoUrl: row.video_url,
+    videoPosterPath: row.video_poster_path,
+    videoPosterUrl: row.video_poster_url,
     fallbackUrl:
       row.fallback_url ||
       local?.fallbackUrl ||
