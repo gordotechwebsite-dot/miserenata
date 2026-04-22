@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { supabase } from "../lib/supabase";
 import type { GenreId } from "../lib/constants";
+import { useDragMarquee } from "../lib/useDragMarquee";
 
 const BUCKET = "gallery";
 
@@ -67,6 +68,7 @@ export function GenreGallery({ id, genreName }: Props) {
   }
 
   const loop = [...items, ...items];
+  const { containerRef, trackRef } = useDragMarquee(90);
 
   return (
     <section className="py-12 sm:py-16 bg-stone-950">
@@ -76,7 +78,11 @@ export function GenreGallery({ id, genreName }: Props) {
         </h2>
       </div>
 
-      <div className="relative overflow-hidden">
+      <div
+        ref={containerRef}
+        className="relative overflow-hidden select-none"
+        style={{ touchAction: "pan-y" }}
+      >
         <div
           className="absolute inset-y-0 left-0 w-16 sm:w-24 z-10 pointer-events-none"
           style={{
@@ -91,7 +97,10 @@ export function GenreGallery({ id, genreName }: Props) {
               "linear-gradient(to left, rgb(12 10 9) 0%, rgba(12,10,9,0) 100%)",
           }}
         />
-        <div className="inline-flex animate-marquee gap-4 sm:gap-5 px-4 sm:px-6 lg:px-8 will-change-transform">
+        <div
+          ref={trackRef}
+          className="inline-flex gap-4 sm:gap-5 px-4 sm:px-6 lg:px-8 will-change-transform cursor-grab active:cursor-grabbing"
+        >
           {loop.map((item, idx) => (
             <div
               key={`${item.name}-${idx}`}
@@ -101,7 +110,8 @@ export function GenreGallery({ id, genreName }: Props) {
                 src={item.url}
                 alt={`${genreName} ${idx + 1}`}
                 loading="lazy"
-                className="w-full h-full object-cover"
+                draggable={false}
+                className="w-full h-full object-cover pointer-events-none"
               />
             </div>
           ))}

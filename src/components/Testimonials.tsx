@@ -56,7 +56,7 @@ export function Testimonials() {
   }, []);
 
   const loop = [...items, ...items];
-  const { trackRef, handlers } = useDragMarquee(35);
+  const { containerRef, trackRef } = useDragMarquee(70);
 
   return (
     <section id="testimonios" className="py-16 sm:py-24 bg-stone-950">
@@ -75,9 +75,9 @@ export function Testimonials() {
       </div>
 
       <div
+        ref={containerRef}
         className="relative overflow-hidden select-none"
         style={{ touchAction: "pan-y" }}
-        {...handlers}
       >
         <div
           className="absolute inset-y-0 left-0 w-20 sm:w-28 z-10 pointer-events-none"
