@@ -70,11 +70,18 @@ export function Packages({ packages, loading, onSelect, selectedName }: Props) {
                       className="w-full h-full object-cover transition-transform duration-500 hover:scale-110"
                     />
                     <div className="absolute inset-0 bg-gradient-to-t from-stone-950 via-stone-950/30 to-transparent" />
+                    {pkg.genre === "mariachi" && (
+                      <h3 className="absolute bottom-3 left-4 sm:left-5 right-4 font-display font-black text-2xl sm:text-3xl text-white tracking-tight drop-shadow-[0_2px_10px_rgba(0,0,0,0.85)]">
+                        {pkg.name}
+                      </h3>
+                    )}
                   </div>
                   <div className="p-6 sm:p-8">
-                    <h3 className="font-display text-2xl sm:text-3xl font-bold text-white mb-2">
-                      {pkg.name}
-                    </h3>
+                    {pkg.genre !== "mariachi" && (
+                      <h3 className="font-display text-2xl sm:text-3xl font-bold text-white mb-2">
+                        {pkg.name}
+                      </h3>
+                    )}
                     <p className="text-stone-400 text-sm mb-6 leading-relaxed">
                       {pkg.description}
                     </p>
