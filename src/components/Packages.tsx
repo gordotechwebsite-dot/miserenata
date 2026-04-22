@@ -36,32 +36,30 @@ export function Packages({ packages, loading, onSelect, selectedName }: Props) {
   const [playingId, setPlayingId] = useState<string | null>(null);
   const videoRefs = useRef<Record<string, HTMLVideoElement | null>>({});
 
-  const handleCardActivate = (pkg: PackageData) => {
-    onSelect(pkg);
+  const playPackageVideo = (pkg: PackageData) => {
     const video = resolveVideo(pkg);
+    if (!video) return;
     const key = pkg.id || pkg.name;
-    if (video) {
-      setPlayingId(key);
-      Object.entries(videoRefs.current).forEach(([k, el]) => {
-        if (el && k !== key) {
-          el.pause();
-          el.currentTime = 0;
-        }
-      });
-      requestAnimationFrame(() => {
-        const el = videoRefs.current[key];
-        if (!el) return;
+    setPlayingId(key);
+    Object.entries(videoRefs.current).forEach(([k, el]) => {
+      if (el && k !== key) {
+        el.pause();
         el.currentTime = 0;
-        el.muted = false;
-        const p = el.play();
-        if (p && typeof p.catch === "function") {
-          p.catch(() => {
-            el.muted = true;
-            el.play().catch(() => {});
-          });
-        }
-      });
-    }
+      }
+    });
+    requestAnimationFrame(() => {
+      const el = videoRefs.current[key];
+      if (!el) return;
+      el.currentTime = 0;
+      el.muted = false;
+      const p = el.play();
+      if (p && typeof p.catch === "function") {
+        p.catch(() => {
+          el.muted = true;
+          el.play().catch(() => {});
+        });
+      }
+    });
   };
 
   return (
@@ -95,16 +93,7 @@ export function Packages({ packages, loading, onSelect, selectedName }: Props) {
               return (
                 <div
                   key={key}
-                  role="button"
-                  tabIndex={0}
-                  onClick={() => handleCardActivate(pkg)}
-                  onKeyDown={(e) => {
-                    if (e.key === "Enter" || e.key === " ") {
-                      e.preventDefault();
-                      handleCardActivate(pkg);
-                    }
-                  }}
-                  className={`relative bg-stone-900/80 backdrop-blur border rounded-3xl overflow-hidden transition-all duration-300 hover:-translate-y-1 cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-amber-500 ${
+                  className={`relative bg-stone-900/80 backdrop-blur border rounded-3xl overflow-hidden transition-all duration-300 hover:-translate-y-1 focus:outline-none focus-visible:ring-2 focus-visible:ring-amber-500 ${
                     pkg.popular
                       ? "border-amber-500/60 shadow-2xl shadow-amber-500/20"
                       : "border-stone-800 hover:border-amber-500/40"
@@ -116,7 +105,23 @@ export function Packages({ packages, loading, onSelect, selectedName }: Props) {
                       MÁS POPULAR
                     </div>
                   )}
-                  <div className="relative h-48 overflow-hidden bg-stone-900">
+                  <div
+                    className={`relative h-48 overflow-hidden bg-stone-900 ${
+                      videoSrc ? "cursor-pointer" : ""
+                    }`}
+                    onClick={() => {
+                      if (videoSrc) playPackageVideo(pkg);
+                    }}
+                    role={videoSrc ? "button" : undefined}
+                    tabIndex={videoSrc ? 0 : undefined}
+                    onKeyDown={(e) => {
+                      if (!videoSrc) return;
+                      if (e.key === "Enter" || e.key === " ") {
+                        e.preventDefault();
+                        playPackageVideo(pkg);
+                      }
+                    }}
+                  >
                     <ImageWithFallback
                       src={resolveThumbnail(pkg)}
                       fallback={pkg.fallbackUrl}
