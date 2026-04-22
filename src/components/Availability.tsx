@@ -448,23 +448,26 @@ export function Availability({
                     >
                       {s.label}
                     </span>
-                    <span
-                      className={`text-xs font-extrabold uppercase tracking-wider px-2 py-1 rounded-full ${
-                        taken
-                          ? "bg-emerald-500 text-stone-950"
-                          : active
-                          ? "text-amber-200"
-                          : "text-amber-300"
-                      }`}
-                    >
-                      {taken
-                        ? "Reservado"
-                        : active
-                        ? "Seleccionado"
-                        : priceForSlot > 0
-                        ? `${formatCop(priceForSlot)}/hora`
-                        : "Disponible"}
-                    </span>
+                    {taken ? (
+                      <span className="text-[11px] font-extrabold uppercase tracking-wider px-2 py-1 rounded-full bg-emerald-500 text-stone-950">
+                        Reservado
+                      </span>
+                    ) : active ? (
+                      <span className="text-[11px] font-extrabold uppercase tracking-wider px-2 py-1 rounded-full text-amber-200">
+                        Seleccionado
+                      </span>
+                    ) : priceForSlot > 0 ? (
+                      <span className="flex items-baseline gap-1 text-amber-300">
+                        <span className="font-sans font-bold text-sm sm:text-base tabular-nums">
+                          ${formatCop(priceForSlot)}
+                        </span>
+                        <span className="text-[11px] text-amber-300/80">/hora</span>
+                      </span>
+                    ) : (
+                      <span className="text-[11px] font-extrabold uppercase tracking-wider px-2 py-1 rounded-full text-amber-300">
+                        Disponible
+                      </span>
+                    )}
                   </button>
                 );
               })}

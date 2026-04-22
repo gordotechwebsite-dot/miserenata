@@ -1,8 +1,7 @@
 import { useEffect, useState } from "react";
-import { ArrowLeft, CalendarCheck, Clock } from "lucide-react";
+import { ArrowLeft, CalendarCheck } from "lucide-react";
 import {
   DEFAULT_GENRES,
-  formatCop,
   type GenreData,
   type GenreHourlyConfig,
   type GenreId,
@@ -136,14 +135,6 @@ export function GenrePage({ id, packages, loading }: Props) {
                 Ver paquetes
               </button>
             )}
-            {isHourly && (
-              <button
-                onClick={scrollToPaquetes}
-                className="border border-stone-700 hover:border-amber-500/60 bg-stone-900/60 backdrop-blur-sm text-stone-100 hover:text-amber-300 px-5 py-3 rounded-2xl font-bold text-base sm:text-lg tracking-wide transition-all"
-              >
-                Ver tarifa
-              </button>
-            )}
           </div>
         </div>
       </section>
@@ -195,63 +186,15 @@ export function GenrePage({ id, packages, loading }: Props) {
       )}
 
       {isHourly && effectiveHourly && (
-        <>
-          <section
-            id="servicios"
-            className="py-16 sm:py-24 bg-gradient-to-b from-stone-950 via-stone-900 to-stone-950"
-          >
-            <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8">
-              <div className="bg-stone-900/80 border border-stone-800 rounded-3xl overflow-hidden shadow-2xl">
-                {effectiveHourly.image && (
-                  <div className="aspect-[16/9] bg-stone-800 overflow-hidden">
-                    <img
-                      src={effectiveHourly.image}
-                      alt={genre.name}
-                      className="w-full h-full object-cover"
-                    />
-                  </div>
-                )}
-                <div className="p-6 sm:p-10">
-                  <div className="inline-flex items-center gap-2 bg-amber-500/10 border border-amber-500/30 rounded-full px-3 py-1 mb-4">
-                    <Clock className="w-4 h-4 text-amber-400" />
-                    <span className="text-amber-300 text-xs font-medium">
-                      Precio por hora
-                    </span>
-                  </div>
-                  <h2 className="font-display font-black text-3xl sm:text-4xl text-white mb-3">
-                    {genre.name}
-                  </h2>
-                  {effectiveHourly.description && (
-                    <p className="text-stone-300 text-base sm:text-lg mb-6 whitespace-pre-line">
-                      {effectiveHourly.description}
-                    </p>
-                  )}
-                  <div className="flex items-baseline gap-2 mb-6">
-                    <span className="text-amber-400 font-display font-black text-4xl sm:text-5xl">
-                      ${formatCop(effectiveHourly.rate)}
-                    </span>
-                    <span className="text-stone-400 text-lg">/ hora</span>
-                  </div>
-                  <button
-                    onClick={scrollToReservar}
-                    className="w-full sm:w-auto bg-gradient-to-r from-amber-500 to-yellow-500 hover:from-amber-400 hover:to-yellow-400 text-stone-950 px-6 py-3 rounded-2xl font-bold text-lg shadow-lg shadow-amber-500/30 transition-all"
-                  >
-                    Reservar
-                  </button>
-                </div>
-              </div>
-            </div>
-          </section>
-          <ReservationForm
-            packages={[]}
-            selected={selected}
-            onSelect={setSelected}
-            initialDate={prefillDate}
-            initialTime={prefillTime}
-            genreId={id}
-            hourly={effectiveHourly}
-          />
-        </>
+        <ReservationForm
+          packages={[]}
+          selected={selected}
+          onSelect={setSelected}
+          initialDate={prefillDate}
+          initialTime={prefillTime}
+          genreId={id}
+          hourly={effectiveHourly}
+        />
       )}
     </>
   );

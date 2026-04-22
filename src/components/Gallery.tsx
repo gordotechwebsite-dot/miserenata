@@ -67,7 +67,7 @@ export function Gallery() {
   }, []);
 
   const loop = [...items, ...items];
-  const { trackRef, handlers } = useDragMarquee(40);
+  const { containerRef, trackRef } = useDragMarquee(90);
 
   return (
     <section id="galeria" className="py-16 sm:py-24 bg-stone-950">
@@ -92,9 +92,9 @@ export function Gallery() {
         </div>
       ) : (
         <div
+          ref={containerRef}
           className="relative overflow-hidden select-none"
           style={{ touchAction: "pan-y" }}
-          {...handlers}
         >
           <div
             className="absolute inset-y-0 left-0 w-16 sm:w-24 z-10 pointer-events-none"
