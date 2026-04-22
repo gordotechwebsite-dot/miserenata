@@ -53,6 +53,8 @@ export function GenreGallery({ id, genreName }: Props) {
     };
   }, [id]);
 
+  const { containerRef, trackRef } = useDragMarquee(90);
+
   if (loading) {
     return (
       <section className="py-12 sm:py-16 bg-stone-950">
@@ -68,7 +70,6 @@ export function GenreGallery({ id, genreName }: Props) {
   }
 
   const loop = [...items, ...items];
-  const { containerRef, trackRef } = useDragMarquee(90);
 
   return (
     <section className="py-12 sm:py-16 bg-stone-950">
