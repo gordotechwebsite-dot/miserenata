@@ -232,6 +232,9 @@ export function AdminPanel({ onExit }: { onExit: () => void }) {
   const [calSavedAt, setCalSavedAt] = useState<number | null>(null);
   const [calGenre, setCalGenre] = useState<GenreId>("nortena");
   const [calPrefilling, setCalPrefilling] = useState(false);
+  const [calPriceSaving, setCalPriceSaving] = useState<GenreId | null>(null);
+  const [calPriceSavedId, setCalPriceSavedId] = useState<GenreId | null>(null);
+  const [calPriceError, setCalPriceError] = useState<string | null>(null);
 
   const [extras, setExtras] = useState<ExtraItem[]>(DEFAULT_EXTRAS);
   const [extraUploading, setExtraUploading] = useState<string | null>(null);
@@ -415,6 +418,20 @@ export function AdminPanel({ onExit }: { onExit: () => void }) {
     if (err) setCalError(err);
     else setCalSavedAt(Date.now());
     setCalPrefilling(false);
+  };
+
+  const saveCalendarPrice = async (id: GenreId) => {
+    setCalPriceSaving(id);
+    setCalPriceError(null);
+    const raw = genreHourly[id]?.rate || "";
+    const sanitized = String(Number(raw.replace(/[^\d]/g, "")) || 0);
+    const { error: err } = await setSiteSetting(
+      `genre_${id}_hourly_rate`,
+      sanitized
+    );
+    if (err) setCalPriceError(err);
+    else setCalPriceSavedId(id);
+    setCalPriceSaving(null);
   };
 
   const loadBanner = async () => {
@@ -1872,6 +1889,74 @@ export function AdminPanel({ onExit }: { onExit: () => void }) {
                       </span>
                     </div>
                   </div>
+
+                  {(calGenre === "nortena" || calGenre === "banda") && (
+                    <div className="mb-4 rounded-2xl border border-amber-500/30 bg-stone-950/40 p-4">
+                      <div className="flex flex-col sm:flex-row sm:items-end gap-3">
+                        <div className="flex-1">
+                          <div className="text-sm font-bold text-amber-200 mb-1">
+                            Precio por hora ({calGenre === "nortena" ? "Norteña" : "Banda"})
+                          </div>
+                          <div className="text-xs text-stone-400 mb-2">
+                            Se muestra como etiqueta en cada horario disponible
+                            de este género (en vez de "Disponible").
+                          </div>
+                          <input
+                            type="text"
+                            inputMode="numeric"
+                            value={genreHourly[calGenre]?.rate ?? ""}
+                            onChange={(e) =>
+                              updateGenreHourly(calGenre, {
+                                rate: e.target.value,
+                              })
+                            }
+                            placeholder={
+                              calGenre === "nortena" ? "600000" : "800000"
+                            }
+                            className="w-full sm:max-w-xs bg-stone-800 border border-stone-700 rounded-lg px-3 py-2 text-white text-sm"
+                          />
+                          {genreHourly[calGenre]?.rate && (
+                            <div className="text-xs text-stone-400 mt-1">
+                              Vista pública:{" "}
+                              <span className="text-amber-300 font-semibold">
+                                {formatCop(
+                                  Number(
+                                    (genreHourly[calGenre]?.rate || "").replace(
+                                      /[^\d]/g,
+                                      ""
+                                    )
+                                  ) || 0
+                                )}
+                                /hora
+                              </span>
+                            </div>
+                          )}
+                        </div>
+                        <button
+                          onClick={() => saveCalendarPrice(calGenre)}
+                          disabled={calPriceSaving === calGenre}
+                          className="flex items-center gap-2 bg-gradient-to-r from-amber-500 to-yellow-500 text-stone-950 px-4 py-2 rounded-xl font-bold disabled:opacity-50"
+                        >
+                          <Save className="w-4 h-4" />{" "}
+                          {calPriceSaving === calGenre
+                            ? "Guardando..."
+                            : "Guardar precio"}
+                        </button>
+                      </div>
+                      {calPriceSavedId === calGenre &&
+                        calPriceSaving !== calGenre &&
+                        !calPriceError && (
+                          <div className="mt-2 text-xs text-emerald-300">
+                            Guardado. Recarga el sitio para ver el cambio.
+                          </div>
+                        )}
+                      {calPriceError && (
+                        <div className="mt-2 text-xs text-red-300">
+                          {calPriceError}
+                        </div>
+                      )}
+                    </div>
+                  )}
 
                   <div className="mb-4 rounded-2xl border border-amber-500/20 bg-amber-500/5 p-4">
                     <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">

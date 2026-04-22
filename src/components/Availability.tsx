@@ -14,7 +14,12 @@ import {
   fetchBookedSlots,
   getSiteSetting,
 } from "../lib/supabase";
-import { DEFAULT_GENRES, type GenreId } from "../lib/constants";
+import { DEFAULT_GENRES, formatCop, type GenreId } from "../lib/constants";
+
+const DEFAULT_HOURLY_PRICE: Partial<Record<GenreId, number>> = {
+  nortena: 600000,
+  banda: 800000,
+};
 
 type Props = {
   genreId?: GenreId | null;
@@ -119,6 +124,7 @@ export function Availability({
   const [selected, setSelected] = useState<Date | null>(today);
   const [slotTime, setSlotTime] = useState<string | null>(null);
   const [unavailable, setUnavailable] = useState<Set<string>>(new Set());
+  const [hourlyPrice, setHourlyPrice] = useState<number | null>(null);
   const [name, setName] = useState("");
   const [phone, setPhone] = useState("");
   const [notes, setNotes] = useState("");
@@ -140,6 +146,15 @@ export function Availability({
 
   useEffect(() => {
     let mounted = true;
+    if (genreId && DEFAULT_HOURLY_PRICE[genreId] !== undefined) {
+      getSiteSetting(`genre_${genreId}_hourly_rate`).then((raw) => {
+        if (!mounted) return;
+        const n = Number((raw || "").replace(/[^\d]/g, "")) || 0;
+        setHourlyPrice(n > 0 ? n : DEFAULT_HOURLY_PRICE[genreId] || 0);
+      });
+    } else {
+      setHourlyPrice(null);
+    }
     // Normalize a time string (label "12:00 PM" or 24h "12:00") to the canonical
     // SLOTS.time (24h) so booked_slots from legacy rows still match.
     const toCanonicalTime = (t: string): string => {
@@ -420,6 +435,8 @@ export function Availability({
                         ? "Reservado"
                         : active
                         ? "Seleccionado"
+                        : hourlyPrice && hourlyPrice > 0
+                        ? `${formatCop(hourlyPrice)}/hora`
                         : "Disponible"}
                     </span>
                   </button>
