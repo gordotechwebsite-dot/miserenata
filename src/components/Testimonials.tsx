@@ -6,6 +6,7 @@ import {
   type TestimonialItem,
 } from "../lib/constants";
 import { getSiteSetting } from "../lib/supabase";
+import { useDragMarquee } from "../lib/useDragMarquee";
 import { Reveal } from "./Reveal";
 
 export function Testimonials() {
@@ -55,6 +56,7 @@ export function Testimonials() {
   }, []);
 
   const loop = [...items, ...items];
+  const { trackRef, handlers } = useDragMarquee(35);
 
   return (
     <section id="testimonios" className="py-16 sm:py-24 bg-stone-950">
@@ -72,7 +74,11 @@ export function Testimonials() {
         </Reveal>
       </div>
 
-      <div className="relative overflow-hidden">
+      <div
+        className="relative overflow-hidden select-none"
+        style={{ touchAction: "pan-y" }}
+        {...handlers}
+      >
         <div
           className="absolute inset-y-0 left-0 w-20 sm:w-28 z-10 pointer-events-none"
           style={{
@@ -87,7 +93,10 @@ export function Testimonials() {
               "linear-gradient(to left, rgb(12 10 9) 0%, rgba(12,10,9,0) 100%)",
           }}
         />
-        <div className="inline-flex animate-testimonials-marquee gap-5 sm:gap-6 px-4 sm:px-6 lg:px-8 will-change-transform">
+        <div
+          ref={trackRef}
+          className="inline-flex gap-5 sm:gap-6 px-4 sm:px-6 lg:px-8 will-change-transform cursor-grab active:cursor-grabbing"
+        >
           {loop.map((t, idx) => (
             <article
               key={`${t.id}-${idx}`}

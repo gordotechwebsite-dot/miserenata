@@ -4,6 +4,7 @@ import {
   DEFAULT_GALLERY_SUBTITLE,
   DEFAULT_GALLERY_TITLE,
 } from "../lib/constants";
+import { useDragMarquee } from "../lib/useDragMarquee";
 import { Reveal } from "./Reveal";
 
 const BUCKET = "gallery";
@@ -66,6 +67,7 @@ export function Gallery() {
   }, []);
 
   const loop = [...items, ...items];
+  const { trackRef, handlers } = useDragMarquee(40);
 
   return (
     <section id="galeria" className="py-16 sm:py-24 bg-stone-950">
@@ -89,7 +91,11 @@ export function Gallery() {
           Aún no hay fotos. Pronto compartiremos momentos increíbles.
         </div>
       ) : (
-        <div className="relative overflow-hidden">
+        <div
+          className="relative overflow-hidden select-none"
+          style={{ touchAction: "pan-y" }}
+          {...handlers}
+        >
           <div
             className="absolute inset-y-0 left-0 w-16 sm:w-24 z-10 pointer-events-none"
             style={{
@@ -104,7 +110,10 @@ export function Gallery() {
                 "linear-gradient(to left, rgb(12 10 9) 0%, rgba(12,10,9,0) 100%)",
             }}
           />
-          <div className="inline-flex animate-marquee gap-4 sm:gap-5 px-4 sm:px-6 lg:px-8 will-change-transform">
+          <div
+            ref={trackRef}
+            className="inline-flex gap-4 sm:gap-5 px-4 sm:px-6 lg:px-8 will-change-transform cursor-grab active:cursor-grabbing"
+          >
             {loop.map((item, idx) => (
               <div
                 key={`${item.name}-${idx}`}
@@ -114,7 +123,8 @@ export function Gallery() {
                   src={item.url}
                   alt={`Galería ${(idx % items.length) + 1}`}
                   loading="lazy"
-                  className="w-full h-full object-cover"
+                  draggable={false}
+                  className="w-full h-full object-cover pointer-events-none"
                 />
               </div>
             ))}
