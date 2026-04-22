@@ -59,8 +59,7 @@ export function GenrePage({ id, packages, loading }: Props) {
     };
   }, [id, base]);
 
-  const genreFiltered = packages.filter((p) => p.genre === id);
-  const filtered = genreFiltered.length > 0 ? genreFiltered : packages;
+  const filtered = packages.filter((p) => p.genre === id);
   const hasPackages = !hourly && filtered.length > 0;
   const isHourly = !!hourly;
 
