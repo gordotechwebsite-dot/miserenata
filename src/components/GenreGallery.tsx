@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { supabase } from "../lib/supabase";
 import type { GenreId } from "../lib/constants";
 import { useDragMarquee } from "../lib/useDragMarquee";
+import { readCache, writeCache } from "../lib/cache";
 
 const BUCKET = "gallery";
 
@@ -16,20 +17,28 @@ type Props = {
 };
 
 export function GenreGallery({ id, genreName }: Props) {
-  const [items, setItems] = useState<Item[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [items, setItems] = useState<Item[]>(
+    () => readCache<Item[]>(`gallery_genre_${id}`) ?? []
+  );
+  const [loading, setLoading] = useState(items.length === 0);
 
   useEffect(() => {
     let mounted = true;
     (async () => {
-      setLoading(true);
+      const cached = readCache<Item[]>(`gallery_genre_${id}`);
+      if (cached) {
+        setItems(cached);
+        setLoading(false);
+      } else {
+        setLoading(true);
+      }
       const { data, error } = await supabase.storage.from(BUCKET).list(id, {
         limit: 200,
         sortBy: { column: "created_at", order: "desc" },
       });
       if (!mounted) return;
       if (error || !data) {
-        setItems([]);
+        if (!cached) setItems([]);
         setLoading(false);
         return;
       }
@@ -46,6 +55,7 @@ export function GenreGallery({ id, genreName }: Props) {
             .data.publicUrl,
         }));
       setItems(files);
+      writeCache(`gallery_genre_${id}`, files);
       setLoading(false);
     })();
     return () => {

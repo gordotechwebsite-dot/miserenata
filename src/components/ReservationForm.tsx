@@ -32,6 +32,7 @@ import {
   type PaymentMethod,
 } from "../lib/supabase";
 import { trackEvent } from "../lib/analytics";
+import { readCache, writeCache } from "../lib/cache";
 
 type Props = {
   packages: PackageData[];
@@ -98,7 +99,9 @@ export function ReservationForm({
   const [submitted, setSubmitted] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState<string | null>(null);
-  const [extrasList, setExtrasList] = useState<ExtraItem[]>(DEFAULT_EXTRAS);
+  const [extrasList, setExtrasList] = useState<ExtraItem[]>(
+    () => readCache<ExtraItem[]>("extras_list") ?? DEFAULT_EXTRAS
+  );
 
   useEffect(() => {
     if (initialDate) setDate(initialDate);
@@ -148,15 +151,15 @@ export function ReservationForm({
         try {
           const parsed = JSON.parse(raw) as ExtraItem[];
           if (mounted && Array.isArray(parsed) && parsed.length > 0) {
-            setExtrasList(
-              parsed.map((x) => ({
-                id: String(x.id || ""),
-                name: String(x.name || ""),
-                price: String(x.price || ""),
-                icon: String(x.icon || "✨"),
-                imageUrl: x.imageUrl ? String(x.imageUrl) : undefined,
-              }))
-            );
+            const next = parsed.map((x) => ({
+              id: String(x.id || ""),
+              name: String(x.name || ""),
+              price: String(x.price || ""),
+              icon: String(x.icon || "✨"),
+              imageUrl: x.imageUrl ? String(x.imageUrl) : undefined,
+            }));
+            setExtrasList(next);
+            writeCache("extras_list", next);
             return;
           }
         } catch {

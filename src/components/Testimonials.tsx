@@ -7,11 +7,16 @@ import {
 } from "../lib/constants";
 import { getSiteSetting } from "../lib/supabase";
 import { useDragMarquee } from "../lib/useDragMarquee";
+import { readCache, writeCache } from "../lib/cache";
 import { Reveal } from "./Reveal";
 
 export function Testimonials() {
-  const [items, setItems] = useState<TestimonialItem[]>(DEFAULT_TESTIMONIALS);
-  const [title, setTitle] = useState(DEFAULT_TESTIMONIALS_TITLE);
+  const [items, setItems] = useState<TestimonialItem[]>(
+    () => readCache<TestimonialItem[]>("testimonials") ?? DEFAULT_TESTIMONIALS
+  );
+  const [title, setTitle] = useState(
+    () => readCache<string>("testimonials_title") ?? DEFAULT_TESTIMONIALS_TITLE
+  );
 
   useEffect(() => {
     let mounted = true;
@@ -20,7 +25,11 @@ export function Testimonials() {
       getSiteSetting("testimonials_title"),
     ]).then(([raw, t]) => {
       if (!mounted) return;
-      if (t && t.trim()) setTitle(t.trim());
+      if (t && t.trim()) {
+        const trimmed = t.trim();
+        setTitle(trimmed);
+        writeCache("testimonials_title", trimmed);
+      }
       if (raw) {
         try {
           const parsed = JSON.parse(raw);
@@ -43,7 +52,10 @@ export function Testimonials() {
                     rating: Math.max(1, Math.min(5, Number(r.rating) || 5)),
                   }) as TestimonialItem
               );
-            if (valid.length > 0) setItems(valid);
+            if (valid.length > 0) {
+              setItems(valid);
+              writeCache("testimonials", valid);
+            }
           }
         } catch {
           // keep defaults
