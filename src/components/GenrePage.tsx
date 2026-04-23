@@ -8,6 +8,7 @@ import {
   type PackageData,
 } from "../lib/constants";
 import { getSiteSetting } from "../lib/supabase";
+import { readCache, writeCache } from "../lib/cache";
 import { Packages } from "./Packages";
 import { ReservationForm } from "./ReservationForm";
 import { Availability } from "./Availability";
@@ -26,8 +27,12 @@ const DEFAULT_HOURLY_RATE: Partial<Record<GenreId, number>> = {
 
 export function GenrePage({ id, packages, loading }: Props) {
   const base = DEFAULT_GENRES.find((g) => g.id === id)!;
-  const [genre, setGenre] = useState<GenreData>(base);
-  const [hourly, setHourly] = useState<GenreHourlyConfig | null>(null);
+  const [genre, setGenre] = useState<GenreData>(
+    () => readCache<GenreData>(`genre_${id}`) ?? base
+  );
+  const [hourly, setHourly] = useState<GenreHourlyConfig | null>(
+    () => readCache<GenreHourlyConfig | null>(`hourly_${id}`) ?? null
+  );
   const [selected, setSelected] = useState<PackageData | null>(null);
   const [prefillDate, setPrefillDate] = useState<string>("");
   const [prefillTime, setPrefillTime] = useState<string>("");
@@ -43,23 +48,26 @@ export function GenrePage({ id, packages, loading }: Props) {
       getSiteSetting(`genre_${id}_hourly_description`),
     ]).then(([name, image, hRate, hImage, hDesc]) => {
       if (!mounted) return;
-      setGenre({
+      const nextGenre: GenreData = {
         ...base,
         name: name?.trim() || base.name,
         image: image?.trim() || base.image,
-      });
+      };
+      setGenre(nextGenre);
+      writeCache(`genre_${id}`, nextGenre);
       const parsed = Number((hRate || "").replace(/[^\d]/g, "")) || 0;
       const fallback = DEFAULT_HOURLY_RATE[id] ?? 0;
       const rate = parsed > 0 ? parsed : fallback;
-      if (rate > 0) {
-        setHourly({
-          rate,
-          image: hImage?.trim() || undefined,
-          description: hDesc?.trim() || undefined,
-        });
-      } else {
-        setHourly(null);
-      }
+      const nextHourly: GenreHourlyConfig | null =
+        rate > 0
+          ? {
+              rate,
+              image: hImage?.trim() || undefined,
+              description: hDesc?.trim() || undefined,
+            }
+          : null;
+      setHourly(nextHourly);
+      writeCache(`hourly_${id}`, nextHourly);
     });
     return () => {
       mounted = false;

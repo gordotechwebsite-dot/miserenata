@@ -8,6 +8,7 @@ import {
 } from "./lib/constants";
 import { parseRoute, type Route } from "./lib/routes";
 import { trackPageView } from "./lib/analytics";
+import { readCache, writeCache } from "./lib/cache";
 import { Navbar } from "./components/Navbar";
 import { Hero } from "./components/Hero";
 import { Genres } from "./components/Genres";
@@ -85,7 +86,9 @@ function App() {
   const [route, setRoute] = useState<Route>(() =>
     parseRoute(typeof window !== "undefined" ? window.location.hash : "")
   );
-  const [packages, setPackages] = useState<PackageData[]>(DEFAULT_PACKAGES);
+  const [packages, setPackages] = useState<PackageData[]>(
+    () => readCache<PackageData[]>("packages") ?? DEFAULT_PACKAGES
+  );
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -117,12 +120,12 @@ function App() {
           .order("sort_order", { ascending: true });
         if (!mounted) return;
         if (!error && Array.isArray(data) && data.length > 0) {
-          setPackages((data as PackageRow[]).map(mapRow));
-        } else {
-          setPackages(DEFAULT_PACKAGES);
+          const mapped = (data as PackageRow[]).map(mapRow);
+          setPackages(mapped);
+          writeCache("packages", mapped);
         }
       } catch {
-        if (mounted) setPackages(DEFAULT_PACKAGES);
+        /* keep cached or default packages */
       }
       if (mounted) setLoading(false);
     })();
