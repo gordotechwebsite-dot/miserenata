@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { lazy, Suspense, useEffect, useState } from "react";
 import "./App.css";
 import { supabase } from "./lib/supabase";
 import {
@@ -7,6 +7,7 @@ import {
   type PackageData,
 } from "./lib/constants";
 import { parseRoute, type Route } from "./lib/routes";
+import { trackPageView } from "./lib/analytics";
 import { Navbar } from "./components/Navbar";
 import { Hero } from "./components/Hero";
 import { Genres } from "./components/Genres";
@@ -15,8 +16,11 @@ import { Testimonials } from "./components/Testimonials";
 import { Faq } from "./components/Faq";
 import { WhatsAppFab } from "./components/WhatsAppFab";
 import { BottomBanner } from "./components/BottomBanner";
-import { AdminPanel } from "./components/AdminPanel";
 import { GenrePage } from "./components/GenrePage";
+
+const AdminPanel = lazy(() =>
+  import("./components/AdminPanel").then((m) => ({ default: m.AdminPanel }))
+);
 
 type PackageRow = {
   id: string;
@@ -91,6 +95,18 @@ function App() {
   }, []);
 
   useEffect(() => {
+    const path =
+      route.kind === "genre"
+        ? `/${route.id}`
+        : route.kind === "faq"
+        ? "/faq"
+        : route.kind === "admin"
+        ? "/admin"
+        : "/";
+    trackPageView(path);
+  }, [route]);
+
+  useEffect(() => {
     let mounted = true;
     (async () => {
       setLoading(true);
@@ -117,12 +133,20 @@ function App() {
 
   if (route.kind === "admin") {
     return (
-      <AdminPanel
-        onExit={() => {
-          window.location.hash = "";
-          setRoute({ kind: "home" });
-        }}
-      />
+      <Suspense
+        fallback={
+          <div className="min-h-screen bg-stone-950 text-stone-300 flex items-center justify-center">
+            Cargando admin...
+          </div>
+        }
+      >
+        <AdminPanel
+          onExit={() => {
+            window.location.hash = "";
+            setRoute({ kind: "home" });
+          }}
+        />
+      </Suspense>
     );
   }
 
