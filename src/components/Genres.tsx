@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { DEFAULT_GENRES, type GenreData, type GenreId } from "../lib/constants";
 import { getSiteSetting } from "../lib/supabase";
 import { genreHash } from "../lib/routes";
+import { readCache, writeCache } from "../lib/cache";
 import { Reveal } from "./Reveal";
 
 type GenreOverride = Partial<Pick<GenreData, "name" | "image">>;
@@ -23,20 +24,28 @@ async function loadOverrides(): Promise<Record<GenreId, GenreOverride>> {
   return Object.fromEntries(entries) as Record<GenreId, GenreOverride>;
 }
 
+function applyOverrides(
+  ov: Record<GenreId, GenreOverride>
+): GenreData[] {
+  return DEFAULT_GENRES.map((g) => ({
+    ...g,
+    name: ov[g.id]?.name || g.name,
+    image: ov[g.id]?.image || g.image,
+  }));
+}
+
 export function Genres() {
-  const [genres, setGenres] = useState<GenreData[]>(DEFAULT_GENRES);
+  const [genres, setGenres] = useState<GenreData[]>(
+    () => readCache<GenreData[]>("genres") ?? DEFAULT_GENRES
+  );
 
   useEffect(() => {
     let mounted = true;
     loadOverrides().then((ov) => {
       if (!mounted) return;
-      setGenres(
-        DEFAULT_GENRES.map((g) => ({
-          ...g,
-          name: ov[g.id]?.name || g.name,
-          image: ov[g.id]?.image || g.image,
-        }))
-      );
+      const next = applyOverrides(ov);
+      setGenres(next);
+      writeCache("genres", next);
     });
     return () => {
       mounted = false;
