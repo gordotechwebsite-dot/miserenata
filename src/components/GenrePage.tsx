@@ -100,6 +100,9 @@ export function GenrePage({ id, packages, loading }: Props) {
           src={genre.image}
           alt={genre.name}
           className="absolute inset-0 w-full h-full object-cover"
+          loading="eager"
+          decoding="async"
+          fetchPriority="high"
           onError={(e) => {
             (e.target as HTMLImageElement).src =
               "https://placehold.co/1600x900/1a1a2e/d4af37?text=" +

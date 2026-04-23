@@ -31,6 +31,7 @@ import {
   WHATSAPP_LINK,
   type PaymentMethod,
 } from "../lib/supabase";
+import { trackEvent } from "../lib/analytics";
 
 type Props = {
   packages: PackageData[];
@@ -105,6 +106,14 @@ export function ReservationForm({
   useEffect(() => {
     if (initialTime) setTime(initialTime);
   }, [initialTime]);
+
+  useEffect(() => {
+    trackEvent("reservation_step_view", {
+      step,
+      genre: genreId ?? "generic",
+      hourly: isHourly,
+    });
+  }, [step, genreId, isHourly]);
 
   useEffect(() => {
     if (!isHourly || !hourly) return;
@@ -296,6 +305,16 @@ export function ReservationForm({
       `🕐 *Hora:* ${timeLabel}%0A` +
       `🏠 *Dirección:* ${address}%0A` +
       `💬 *Mensaje:* ${message || "Sin mensaje adicional"}`;
+
+    trackEvent("reservation_submit", {
+      success: !error,
+      genre: genreId ?? "generic",
+      hourly: isHourly,
+      package_name: selected.name,
+      payment_method: paymentMethod,
+      extras_count: selectedExtras.length,
+      total_cop: grandTotal,
+    });
 
     window.open(`${WHATSAPP_LINK}?text=${messageText}`, "_blank");
     setSubmitted(true);
