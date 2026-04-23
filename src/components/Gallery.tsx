@@ -5,6 +5,7 @@ import {
   DEFAULT_GALLERY_TITLE,
 } from "../lib/constants";
 import { useDragMarquee } from "../lib/useDragMarquee";
+import { readCache, writeCache } from "../lib/cache";
 import { Reveal } from "./Reveal";
 
 const BUCKET = "gallery";
@@ -15,10 +16,15 @@ type GalleryItem = {
 };
 
 export function Gallery() {
-  const [items, setItems] = useState<GalleryItem[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [title, setTitle] = useState(DEFAULT_GALLERY_TITLE);
-  const [subtitle, setSubtitle] = useState(DEFAULT_GALLERY_SUBTITLE);
+  const cached = readCache<GalleryItem[]>("gallery_items");
+  const [items, setItems] = useState<GalleryItem[]>(cached ?? []);
+  const [loading, setLoading] = useState(!cached || cached.length === 0);
+  const [title, setTitle] = useState(
+    () => readCache<string>("gallery_title") ?? DEFAULT_GALLERY_TITLE
+  );
+  const [subtitle, setSubtitle] = useState(
+    () => readCache<string>("gallery_subtitle") ?? DEFAULT_GALLERY_SUBTITLE
+  );
 
   useEffect(() => {
     let mounted = true;
@@ -27,8 +33,16 @@ export function Gallery() {
       getSiteSetting("gallery_subtitle"),
     ]).then(([t, s]) => {
       if (!mounted) return;
-      if (t && t.trim()) setTitle(t.trim());
-      if (s && s.trim()) setSubtitle(s.trim());
+      if (t && t.trim()) {
+        const tr = t.trim();
+        setTitle(tr);
+        writeCache("gallery_title", tr);
+      }
+      if (s && s.trim()) {
+        const sr = s.trim();
+        setSubtitle(sr);
+        writeCache("gallery_subtitle", sr);
+      }
     });
     (async () => {
       const { data, error } = await supabase.storage
@@ -58,6 +72,7 @@ export function Gallery() {
 
       if (mounted) {
         setItems(files);
+        writeCache("gallery_items", files);
         setLoading(false);
       }
     })();
