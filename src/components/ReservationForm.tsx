@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import {
   Calendar,
   MapPin,
@@ -31,6 +31,7 @@ import {
   WHATSAPP_LINK,
   type PaymentMethod,
 } from "../lib/supabase";
+import { GOOGLE_MAPS_API_KEY, loadGoogleMaps } from "../lib/googleMaps";
 
 type Props = {
   packages: PackageData[];
@@ -98,6 +99,9 @@ export function ReservationForm({
   const [submitting, setSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState<string | null>(null);
   const [extrasList, setExtrasList] = useState<ExtraItem[]>(DEFAULT_EXTRAS);
+  const addressInputRef = useRef<HTMLInputElement | null>(null);
+  const autocompleteRef = useRef<google.maps.places.Autocomplete | null>(null);
+  const cityBoundsRef = useRef<google.maps.LatLngBounds | null>(null);
 
   useEffect(() => {
     if (initialDate) setDate(initialDate);
@@ -177,6 +181,63 @@ export function ReservationForm({
       mounted = false;
     };
   }, []);
+
+  useEffect(() => {
+    if (!GOOGLE_MAPS_API_KEY) return;
+    if (step !== 3) return;
+    if (!addressInputRef.current) return;
+    if (autocompleteRef.current) return;
+    let cancelled = false;
+    loadGoogleMaps()
+      .then(() => {
+        if (cancelled) return;
+        const input = addressInputRef.current;
+        if (!input || !window.google?.maps?.places) return;
+        const ac = new window.google.maps.places.Autocomplete(input, {
+          componentRestrictions: { country: "co" },
+          fields: ["formatted_address", "geometry", "name"],
+          types: ["geocode"],
+        });
+        ac.addListener("place_changed", () => {
+          const place = ac.getPlace();
+          const formatted = place.formatted_address || place.name || "";
+          if (formatted) setAddress(formatted);
+        });
+        autocompleteRef.current = ac;
+      })
+      .catch(() => {
+        // silent fallback: input remains a plain text input
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [step]);
+
+  useEffect(() => {
+    if (!GOOGLE_MAPS_API_KEY) return;
+    if (!autocompleteRef.current) return;
+    const ac = autocompleteRef.current;
+    const q = city && !cityOther ? `${city}, Colombia` : "";
+    if (!q) {
+      ac.setBounds(undefined as unknown as google.maps.LatLngBoundsLiteral);
+      cityBoundsRef.current = null;
+      return;
+    }
+    loadGoogleMaps()
+      .then(() => {
+        if (!window.google?.maps) return;
+        const geocoder = new window.google.maps.Geocoder();
+        geocoder.geocode({ address: q, region: "co" }, (results, status) => {
+          if (status !== "OK" || !results || !results[0]) return;
+          const viewport = results[0].geometry.viewport;
+          if (!viewport) return;
+          cityBoundsRef.current = viewport;
+          ac.setBounds(viewport);
+          ac.setOptions({ strictBounds: false });
+        });
+      })
+      .catch(() => {});
+  }, [city, cityOther]);
 
   const toggleExtra = (id: string) =>
     setExtras((prev) =>
@@ -586,11 +647,17 @@ export function ReservationForm({
                         Dirección de la serenata *
                       </label>
                       <input
+                        ref={addressInputRef}
                         type="text"
                         required
                         value={address}
                         onChange={(e) => setAddress(e.target.value)}
-                        placeholder="Dirección completa donde será la serenata"
+                        placeholder={
+                          city && !cityOther
+                            ? `Dirección en ${city}`
+                            : "Dirección completa donde será la serenata"
+                        }
+                        autoComplete="off"
                         className="w-full bg-stone-800/80 border border-stone-700 rounded-xl px-4 py-3 text-white placeholder-stone-500 focus:outline-none focus:border-amber-500 focus:ring-1 focus:ring-amber-500/50 transition-all"
                       />
                     </div>
