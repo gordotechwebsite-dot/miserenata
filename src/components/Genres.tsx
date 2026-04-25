@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { DEFAULT_GENRES, type GenreData, type GenreId } from "../lib/constants";
 import { getSiteSetting } from "../lib/supabase";
-import { genreHash } from "../lib/routes";
+import { genrePath, navigate } from "../lib/routes";
 import { readCache, writeCache } from "../lib/cache";
 import { Reveal } from "./Reveal";
 
@@ -53,7 +53,7 @@ export function Genres() {
   }, []);
 
   const goTo = (id: GenreId) => {
-    window.location.hash = genreHash(id);
+    navigate(genrePath(id));
     window.scrollTo({ top: 0, behavior: "instant" as ScrollBehavior });
   };
 
