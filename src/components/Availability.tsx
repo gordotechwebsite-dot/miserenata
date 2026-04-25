@@ -13,6 +13,7 @@ import {
   getSiteSetting,
 } from "../lib/supabase";
 import { DEFAULT_GENRES, formatCop, type GenreId } from "../lib/constants";
+import { navigate } from "../lib/routes";
 
 const DEFAULT_HOURLY_PRICE: Partial<Record<GenreId, number>> = {
   nortena: 600000,
@@ -249,7 +250,7 @@ export function Availability({
   })();
 
   const goHome = () => {
-    window.location.hash = "";
+    navigate("/");
     window.scrollTo({ top: 0, behavior: "instant" as ScrollBehavior });
   };
 

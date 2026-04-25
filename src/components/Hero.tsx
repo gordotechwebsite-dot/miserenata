@@ -1,11 +1,12 @@
 import { ChevronDown } from "lucide-react";
-import { genreHash } from "../lib/routes";
+import { genrePath, navigate } from "../lib/routes";
 
 export function Hero() {
   const scrollTo = (id: string) =>
     document.getElementById(id)?.scrollIntoView({ behavior: "smooth" });
   const goMariachi = () => {
-    window.location.hash = genreHash("mariachi");
+    navigate(genrePath("mariachi"));
+    window.scrollTo({ top: 0, behavior: "instant" as ScrollBehavior });
   };
 
   return (

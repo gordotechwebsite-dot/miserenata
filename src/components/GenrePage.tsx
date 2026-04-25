@@ -9,6 +9,7 @@ import {
 } from "../lib/constants";
 import { getSiteSetting } from "../lib/supabase";
 import { readCache, writeCache } from "../lib/cache";
+import { navigate } from "../lib/routes";
 import { Packages } from "./Packages";
 import { ReservationForm } from "./ReservationForm";
 import { Availability } from "./Availability";
@@ -86,7 +87,7 @@ export function GenrePage({ id, packages, loading }: Props) {
       : null;
 
   const goHome = () => {
-    window.location.hash = "";
+    navigate("/");
     window.scrollTo({ top: 0, behavior: "instant" as ScrollBehavior });
   };
 

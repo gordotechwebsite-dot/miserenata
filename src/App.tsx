@@ -6,7 +6,7 @@ import {
   type GenreId,
   type PackageData,
 } from "./lib/constants";
-import { parseRoute, type Route } from "./lib/routes";
+import { navigate, parseRoute, routePath, type Route } from "./lib/routes";
 import { trackPageView } from "./lib/analytics";
 import { readCache, writeCache } from "./lib/cache";
 import { Navbar } from "./components/Navbar";
@@ -84,7 +84,11 @@ function mapRow(row: PackageRow): PackageData {
 
 function App() {
   const [route, setRoute] = useState<Route>(() =>
-    parseRoute(typeof window !== "undefined" ? window.location.hash : "")
+    parseRoute(
+      typeof window !== "undefined"
+        ? window.location.pathname + window.location.hash
+        : ""
+    )
   );
   const [packages, setPackages] = useState<PackageData[]>(
     () => readCache<PackageData[]>("packages") ?? DEFAULT_PACKAGES
@@ -92,21 +96,44 @@ function App() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const onHash = () => setRoute(parseRoute(window.location.hash));
-    window.addEventListener("hashchange", onHash);
-    return () => window.removeEventListener("hashchange", onHash);
+    const onChange = () =>
+      setRoute(
+        parseRoute(window.location.pathname + window.location.hash)
+      );
+    window.addEventListener("popstate", onChange);
+    window.addEventListener("hashchange", onChange);
+    return () => {
+      window.removeEventListener("popstate", onChange);
+      window.removeEventListener("hashchange", onChange);
+    };
   }, []);
 
   useEffect(() => {
-    const path =
-      route.kind === "genre"
-        ? `/${route.id}`
-        : route.kind === "faq"
-        ? "/faq"
-        : route.kind === "admin"
-        ? "/admin"
-        : "/";
+    const path = routePath(route);
     trackPageView(path);
+    const titles: Record<Route["kind"], string> = {
+      home: "Musicaenvivo.co — Mariachis, serenatas y artistas en vivo en Boyacá",
+      genre:
+        route.kind === "genre"
+          ? `${
+              route.id === "mariachi"
+                ? "Mariachis"
+                : route.id === "nortena"
+                ? "Norteña"
+                : "Banda"
+            } en Boyacá | Musicaenvivo.co`
+          : "",
+      faq: "Preguntas frecuentes | Musicaenvivo.co",
+      admin: "Admin | Musicaenvivo.co",
+    };
+    const title = titles[route.kind];
+    if (title) document.title = title;
+    const canonical = document.querySelector(
+      'link[rel="canonical"]'
+    ) as HTMLLinkElement | null;
+    if (canonical) {
+      canonical.href = `https://musicaenvivo.co${path}`;
+    }
   }, [route]);
 
   useEffect(() => {
@@ -145,8 +172,7 @@ function App() {
       >
         <AdminPanel
           onExit={() => {
-            window.location.hash = "";
-            setRoute({ kind: "home" });
+            navigate("/");
           }}
         />
       </Suspense>
@@ -175,7 +201,7 @@ function App() {
           <div className="text-center pb-16">
             <button
               onClick={() => {
-                window.location.hash = "";
+                navigate("/");
                 window.scrollTo({ top: 0, behavior: "instant" as ScrollBehavior });
               }}
               className="inline-flex items-center gap-2 border border-stone-700 hover:border-amber-500/60 bg-stone-900/60 text-stone-100 hover:text-amber-300 px-5 py-3 rounded-2xl font-bold transition-all"

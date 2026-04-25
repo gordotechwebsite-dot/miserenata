@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { Menu, X } from "lucide-react";
+import { navigate } from "../lib/routes";
 
 const LINKS = [
   { id: "inicio", label: "Inicio" },
@@ -21,13 +22,14 @@ export function Navbar() {
 
   const scrollTo = (id: string) => {
     if (id === "faq") {
-      window.location.hash = "faq";
+      navigate("/faq");
       window.scrollTo({ top: 0, behavior: "instant" as ScrollBehavior });
       setOpen(false);
       return;
     }
-    if (window.location.hash && window.location.hash !== "#") {
-      window.location.hash = "";
+    const onHome = window.location.pathname === "/";
+    if (!onHome) {
+      navigate("/");
       setTimeout(() => {
         document.getElementById(id)?.scrollIntoView({ behavior: "smooth" });
       }, 50);
@@ -49,7 +51,7 @@ export function Navbar() {
         <button
           onClick={() => scrollTo("inicio")}
           onDoubleClick={() => {
-            window.location.hash = "admin";
+            navigate("/admin");
             window.scrollTo({ top: 0, behavior: "instant" as ScrollBehavior });
           }}
           className="group select-none"
