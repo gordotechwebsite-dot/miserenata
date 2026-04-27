@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { DEFAULT_GENRES, type GenreData, type GenreId } from "../lib/constants";
 import { getSiteSetting } from "../lib/supabase";
 import { genrePath, navigate } from "../lib/routes";
+import { placeholderSvg } from "../lib/placeholder";
 import { readCache, writeCache } from "../lib/cache";
 import { Reveal } from "./Reveal";
 
@@ -86,9 +87,11 @@ export function Genres() {
                 className="block w-full h-auto object-contain transition-transform duration-500 group-hover:scale-105"
                 loading="lazy"
                 onError={(e) => {
-                  (e.target as HTMLImageElement).src =
-                    "https://placehold.co/800x1000/1a1a2e/d4af37?text=" +
-                    encodeURIComponent(g.name);
+                  (e.target as HTMLImageElement).src = placeholderSvg(
+                    g.name,
+                    800,
+                    1000
+                  );
                 }}
               />
               <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-black/90 via-black/20 to-transparent" />

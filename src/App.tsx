@@ -9,6 +9,7 @@ import {
 import { navigate, parseRoute, routePath, type Route } from "./lib/routes";
 import { trackPageView } from "./lib/analytics";
 import { readCache, writeCache } from "./lib/cache";
+import { placeholderSvg } from "./lib/placeholder";
 import { Navbar } from "./components/Navbar";
 import { Hero } from "./components/Hero";
 import { Genres } from "./components/Genres";
@@ -76,7 +77,7 @@ function mapRow(row: PackageRow): PackageData {
     fallbackUrl:
       row.fallback_url ||
       local?.fallbackUrl ||
-      "https://placehold.co/400x300/1a1a2e/d4af37?text=Musicaenvivo",
+      placeholderSvg("Musicaenvivo", 400, 300),
     localImage: local?.localImage || "/images/mariachi-hero.jpg",
     genre,
   };

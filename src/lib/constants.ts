@@ -1,3 +1,5 @@
+import { placeholderSvg } from "./placeholder";
+
 export type GenreId = "mariachi" | "nortena" | "banda";
 
 export type PackageData = {
@@ -72,8 +74,7 @@ export const DEFAULT_PACKAGES: PackageData[] = [
     popular: false,
     sortOrder: 1,
     localImage: "/images/guitar.jpg",
-    fallbackUrl:
-      "https://placehold.co/400x300/1a1a2e/d4af37?text=Serenata+B%C3%A1sica",
+    fallbackUrl: placeholderSvg("Serenata Básica", 400, 300),
     genre: "mariachi",
   },
   {
@@ -94,8 +95,7 @@ export const DEFAULT_PACKAGES: PackageData[] = [
     popular: true,
     sortOrder: 2,
     localImage: "/images/mariachi-hero.jpg",
-    fallbackUrl:
-      "https://placehold.co/400x300/1a1a2e/d4af37?text=Serenata+Est%C3%A1ndar",
+    fallbackUrl: placeholderSvg("Serenata Estándar", 400, 300),
     genre: "mariachi",
   },
   {
@@ -119,8 +119,7 @@ export const DEFAULT_PACKAGES: PackageData[] = [
     popular: false,
     sortOrder: 3,
     localImage: "/images/trumpet.jpg",
-    fallbackUrl:
-      "https://placehold.co/400x300/1a1a2e/d4af37?text=Gran+Serenata",
+    fallbackUrl: placeholderSvg("Gran Serenata", 400, 300),
     genre: "mariachi",
   },
 ];

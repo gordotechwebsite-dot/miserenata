@@ -22,6 +22,7 @@ import {
   type TestimonialItem,
   formatCop,
 } from "../lib/constants";
+import { placeholderSvg } from "../lib/placeholder";
 import {
   Shield,
   LogOut,
@@ -177,7 +178,7 @@ function rowToPackage(row: PackageRow): PackageData {
     videoPosterPath: row.video_poster_path,
     videoPosterUrl: row.video_poster_url,
     fallbackUrl:
-      row.fallback_url || local?.fallbackUrl || "https://placehold.co/400x300/1a1a2e/d4af37?text=Musicaenvivo",
+      row.fallback_url || local?.fallbackUrl || placeholderSvg("Musicaenvivo", 400, 300),
     localImage: local?.localImage || "/images/mariachi-hero.jpg",
     genre,
   };
@@ -1336,7 +1337,7 @@ export function AdminPanel({ onExit }: { onExit: () => void }) {
       features: [] as string[],
       popular: false,
       sort_order: nextOrder,
-      fallback_url: "https://placehold.co/400x300/1a1a2e/d4af37?text=Musicaenvivo",
+      fallback_url: placeholderSvg("Musicaenvivo", 400, 300),
       genre: null as string | null,
     };
     const { error: err } = await supabase.from("packages").insert(row);
@@ -2088,9 +2089,11 @@ export function AdminPanel({ onExit }: { onExit: () => void }) {
                         alt={g.name}
                         className="absolute inset-0 w-full h-full object-cover"
                         onError={(e) => {
-                          (e.target as HTMLImageElement).src =
-                            "https://placehold.co/400x500/1a1a2e/d4af37?text=" +
-                            encodeURIComponent(g.name);
+                          (e.target as HTMLImageElement).src = placeholderSvg(
+                            g.name,
+                            400,
+                            500
+                          );
                         }}
                       />
                       <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent" />
