@@ -10,6 +10,7 @@ import {
 import { getSiteSetting } from "../lib/supabase";
 import { readCache, writeCache } from "../lib/cache";
 import { navigate } from "../lib/routes";
+import { placeholderSvg } from "../lib/placeholder";
 import { Packages } from "./Packages";
 import { ReservationForm } from "./ReservationForm";
 import { Availability } from "./Availability";
@@ -113,9 +114,11 @@ export function GenrePage({ id, packages, loading }: Props) {
           decoding="async"
           fetchPriority="high"
           onError={(e) => {
-            (e.target as HTMLImageElement).src =
-              "https://placehold.co/1600x900/1a1a2e/d4af37?text=" +
-              encodeURIComponent(genre.name);
+            (e.target as HTMLImageElement).src = placeholderSvg(
+              genre.name,
+              1600,
+              900
+            );
           }}
         />
         <div className="absolute inset-0 bg-gradient-to-t from-stone-950 via-stone-950/60 to-stone-950/30" />

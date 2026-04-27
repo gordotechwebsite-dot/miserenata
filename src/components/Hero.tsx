@@ -1,5 +1,6 @@
 import { ChevronDown } from "lucide-react";
 import { genrePath, navigate } from "../lib/routes";
+import { placeholderSvg } from "../lib/placeholder";
 
 export function Hero() {
   const scrollTo = (id: string) =>
@@ -20,8 +21,11 @@ export function Hero() {
           alt="Mariachi en vivo en Boyacá"
           className="hidden sm:block w-full h-full object-cover scale-105"
           onError={(e) => {
-            (e.target as HTMLImageElement).src =
-              "https://placehold.co/1920x1080/1a1a2e/d4af37?text=Musicaenvivo.co";
+            (e.target as HTMLImageElement).src = placeholderSvg(
+              "Musicaenvivo.co",
+              1920,
+              1080
+            );
           }}
         />
         <div className="hidden sm:block absolute inset-0 bg-gradient-to-b from-stone-950/60 via-stone-950/80 to-stone-950" />
