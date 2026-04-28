@@ -1,7 +1,13 @@
 {
   "$schema": "https://openapi.vercel.sh/vercel.json",
+  "cleanUrls": true,
+  "trailingSlash": false,
   "rewrites": [
-    { "source": "/((?!api/|_next/|images/|video/|fonts/|assets/|favicon|robots\\.txt|sitemap\\.xml|.*\\.[a-zA-Z0-9]+$).*)", "destination": "/index.html" }
+    { "source": "/mariachi", "destination": "/mariachi/index.html" },
+    { "source": "/nortena", "destination": "/nortena/index.html" },
+    { "source": "/banda", "destination": "/banda/index.html" },
+    { "source": "/faq", "destination": "/faq/index.html" },
+    { "source": "/((?!api/|_next/|images/|video/|fonts/|assets/|favicon|robots\\.txt|sitemap\\.xml|mariachi/|nortena/|banda/|faq/|.*\\.[a-zA-Z0-9]+$).*)", "destination": "/index.html" }
   ],
   "headers": [
     {
