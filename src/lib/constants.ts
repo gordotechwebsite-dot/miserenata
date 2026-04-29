@@ -39,10 +39,13 @@ export type GenreHourlyConfig = {
 export const HOURLY_MIN = 1;
 export const HOURLY_MAX = 5;
 
+// Use neutral brand placeholders instead of bundled stock photos so visitors
+// never see an "old" or unrelated default image while the real cover loads
+// from Supabase. The placeholder is a tiny inline SVG (no network call).
 export const DEFAULT_GENRES: GenreData[] = [
-  { id: "mariachi", name: "Mariachi", image: "/images/mariachi-hero.jpg" },
-  { id: "nortena", name: "Norteña", image: "/images/guitar.jpg" },
-  { id: "banda", name: "Banda", image: "/images/trumpet.jpg" },
+  { id: "mariachi", name: "Mariachi", image: placeholderSvg("Mariachi", 800, 1000) },
+  { id: "nortena", name: "Norteña", image: placeholderSvg("Norteña", 800, 1000) },
+  { id: "banda", name: "Banda", image: placeholderSvg("Banda", 800, 1000) },
 ];
 
 export const CITIES = ["Duitama", "Paipa", "Sogamoso"] as const;
