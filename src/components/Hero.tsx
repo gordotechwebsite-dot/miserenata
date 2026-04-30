@@ -28,8 +28,7 @@ export function Hero() {
           <source src="/video/hero-desktop.webm" type="video/webm" />
           <source src="/video/hero-desktop.mp4" type="video/mp4" />
         </video>
-        <div className="hidden sm:block absolute inset-0 bg-gradient-to-b from-stone-950/60 via-stone-950/80 to-stone-950" />
-        <div className="hidden sm:block absolute inset-0 bg-gradient-to-r from-stone-950/70 via-transparent to-stone-950/70" />
+        <div className="hidden sm:block absolute inset-x-0 bottom-0 h-1/3 bg-gradient-to-b from-transparent to-stone-950 pointer-events-none" />
       </div>
 
       <div className="relative z-10 w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
