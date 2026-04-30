@@ -27,6 +27,72 @@ const DEFAULT_HOURLY_RATE: Partial<Record<GenreId, number>> = {
   banda: 800000,
 };
 
+type SeoBlock = {
+  heading: string;
+  intro: string;
+  bullets: { title: string; body: string }[];
+};
+
+const SEO_CONTENT: Record<GenreId, SeoBlock> = {
+  mariachi: {
+    heading: "Mariachi profesional en Boyacá",
+    intro:
+      "Llevamos mariachis con vestuario charro completo (trajes de gala, sombreros, botas) y formación tradicional — trompetas, violines, vihuela y guitarrón — a tus serenatas, cumpleaños, aniversarios, declaraciones, despedidas y eventos corporativos en Duitama, Paipa, Sogamoso y municipios cercanos.",
+    bullets: [
+      {
+        title: "Repertorio",
+        body: "Más de 200 canciones del cancionero clásico mexicano — Las Mañanitas, El Rey, Cielito Lindo, Bésame Mucho, Volver Volver, Si nos dejan, La Bamba — y arreglos especiales por pedido.",
+      },
+      {
+        title: "Cobertura y reservas",
+        body: "Duitama, Paipa, Sogamoso, Tunja, Nobsa y municipios cercanos de Boyacá. Reservá con al menos 24 horas de anticipación; para bodas y eventos grandes, 2–4 semanas. Pago: Nequi, Daviplata, Bancolombia, efectivo o tarjeta — 50% asegura la fecha.",
+      },
+      {
+        title: "Sonido y producción",
+        body: "Cada presentación incluye instrumentos acústicos profesionales. Para eventos grandes podemos agregar sonido amplificado, luces y video.",
+      },
+    ],
+  },
+  nortena: {
+    heading: "Grupos norteños en vivo en Boyacá",
+    intro:
+      "Música norteña en vivo con la formación tradicional: acordeón, bajo sexto, bajo eléctrico y batería. Perfecto para parrandas, cumpleaños, fiestas privadas y celebraciones que necesitan ese sabor del norte en Duitama, Paipa, Sogamoso y Boyacá.",
+    bullets: [
+      {
+        title: "Repertorio",
+        body: "Corridos, cumbias norteñas, baladas románticas y los clásicos que prendan la fiesta. Si querés un repertorio específico, avisanos al reservar y lo preparamos.",
+      },
+      {
+        title: "Cobro por hora",
+        body: "Cotizamos por hora con un mínimo de presentación. El precio que ves es el precio que pagás — sin recargos sorpresa, con sonido amplificado incluido.",
+      },
+      {
+        title: "Cobertura",
+        body: "Duitama, Paipa, Sogamoso, Tunja, Nobsa y municipios cercanos de Boyacá. Para localidades más lejanas se cotiza recargo por desplazamiento.",
+      },
+    ],
+  },
+  banda: {
+    heading: "Banda en vivo en Boyacá",
+    intro:
+      "Banda con sonido completo: metales (trompetas, trombones, saxos), percusión y voz. Diseñada para eventos grandes — bodas, matrimonios, grados, fiestas corporativas y celebraciones masivas — donde necesitás energía alta y un sonido que llene cualquier espacio.",
+    bullets: [
+      {
+        title: "Repertorio",
+        body: "Música tropical, vallenatos, cumbias, baladas, clásicos populares y crossover. Coordinamos un setlist a medida con vos antes del evento.",
+      },
+      {
+        title: "Sonido y luces incluidos",
+        body: "El precio por hora incluye sonido profesional y luces. Coordinamos con el organizador (sound check, escenario, cronograma) para que el evento corra sin sorpresas.",
+      },
+      {
+        title: "Cobertura",
+        body: "Duitama, Paipa, Sogamoso, Tunja, Nobsa y municipios cercanos de Boyacá. Para bodas y eventos grandes recomendamos reservar con 2–4 semanas de anticipación.",
+      },
+    ],
+  },
+};
+
 export function GenrePage({ id, packages, loading }: Props) {
   const base = DEFAULT_GENRES.find((g) => g.id === id)!;
   const [genre, setGenre] = useState<GenreData>(
@@ -211,6 +277,41 @@ export function GenrePage({ id, packages, loading }: Props) {
           hourly={effectiveHourly}
         />
       )}
+
+      <GenreSeoSection id={id} />
     </>
+  );
+}
+
+function GenreSeoSection({ id }: { id: GenreId }) {
+  const seo = SEO_CONTENT[id];
+  if (!seo) return null;
+  return (
+    <section
+      id="info"
+      className="bg-stone-950 border-t border-stone-900 py-16 sm:py-20"
+    >
+      <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
+        <h2 className="font-display font-black text-3xl sm:text-4xl text-stone-100 mb-6">
+          {seo.heading}
+        </h2>
+        <p className="text-stone-300 text-lg leading-relaxed mb-10">
+          {seo.intro}
+        </p>
+        <div className="grid sm:grid-cols-2 gap-6">
+          {seo.bullets.map((b) => (
+            <div
+              key={b.title}
+              className="bg-stone-900/40 border border-stone-800 rounded-2xl p-5"
+            >
+              <h3 className="font-bold text-amber-300 text-base mb-2">
+                {b.title}
+              </h3>
+              <p className="text-stone-300 text-sm leading-relaxed">{b.body}</p>
+            </div>
+          ))}
+        </div>
+      </div>
+    </section>
   );
 }

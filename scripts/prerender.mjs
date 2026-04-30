@@ -14,7 +14,46 @@ const DIST = join(__dirname, "..", "dist");
 const SITE = "https://musicaenvivo.co";
 const OG_IMAGE = `${SITE}/images/mariachi-hero.jpg`;
 
-/** @type {Array<{ path: string, title: string, description: string, ogTitle?: string }>} */
+const SERVICE_AREA = [
+  { "@type": "AdministrativeArea", name: "Boyacá" },
+  { "@type": "City", name: "Duitama" },
+  { "@type": "City", name: "Paipa" },
+  { "@type": "City", name: "Sogamoso" },
+  { "@type": "City", name: "Tunja" },
+  { "@type": "City", name: "Nobsa" },
+];
+
+function genreServiceJsonLd({ id, name, description, image }) {
+  return {
+    "@context": "https://schema.org",
+    "@type": "Service",
+    "@id": `${SITE}/${id}#service`,
+    name,
+    description,
+    serviceType: "Música en vivo",
+    category: name,
+    url: `${SITE}/${id}`,
+    image,
+    provider: { "@id": `${SITE}/#business` },
+    areaServed: SERVICE_AREA,
+    audience: {
+      "@type": "Audience",
+      audienceType:
+        "Personas y empresas que organizan serenatas, fiestas, bodas y eventos corporativos",
+    },
+  };
+}
+
+/**
+ * @typedef {{
+ *   path: string,
+ *   title: string,
+ *   description: string,
+ *   ogTitle?: string,
+ *   extraJsonLd?: object[],
+ * }} Route
+ */
+/** @type {Route[]} */
 const ROUTES = [
   {
     path: "/",
@@ -30,6 +69,15 @@ const ROUTES = [
     description:
       "Mariachis profesionales para serenatas, sorpresas y eventos en Duitama, Paipa y Sogamoso. Repertorio clásico mexicano y arreglos personalizados. Reserva por WhatsApp.",
     ogTitle: "Mariachis en Boyacá · Musicaenvivo.co",
+    extraJsonLd: [
+      genreServiceJsonLd({
+        id: "mariachi",
+        name: "Mariachi",
+        description:
+          "Mariachi profesional con vestuario charro completo (trajes de gala, sombreros, botas) y formación tradicional: trompetas, violines, vihuela y guitarrón. Repertorio clásico mexicano y arreglos personalizados para serenatas, cumpleaños, aniversarios, declaraciones y eventos en Boyacá.",
+        image: `${SITE}/images/mariachi-hero.jpg`,
+      }),
+    ],
   },
   {
     path: "/nortena",
@@ -37,6 +85,15 @@ const ROUTES = [
     description:
       "Grupos de música norteña para fiestas, cumpleaños y eventos en Boyacá. Acordeón, bajo sexto y batería en vivo. Cotiza por hora o paquete.",
     ogTitle: "Música Norteña en Boyacá · Musicaenvivo.co",
+    extraJsonLd: [
+      genreServiceJsonLd({
+        id: "nortena",
+        name: "Música norteña",
+        description:
+          "Grupo norteño en vivo con formación tradicional: acordeón, bajo sexto, bajo eléctrico y batería. Repertorio de corridos, cumbias norteñas y baladas para parrandas, cumpleaños, fiestas privadas y celebraciones en Boyacá. Cobro por hora con sonido amplificado incluido.",
+        image: `${SITE}/images/guitar.jpg`,
+      }),
+    ],
   },
   {
     path: "/banda",
@@ -44,6 +101,15 @@ const ROUTES = [
     description:
       "Banda en vivo para bodas, grados, cumpleaños y eventos corporativos en Boyacá. Repertorio amplio, sonido profesional. Cotiza por hora.",
     ogTitle: "Banda en vivo · Musicaenvivo.co",
+    extraJsonLd: [
+      genreServiceJsonLd({
+        id: "banda",
+        name: "Banda en vivo",
+        description:
+          "Banda en vivo con metales (trompetas, trombones, saxos), percusión y voz para eventos grandes en Boyacá: bodas, matrimonios, grados, fiestas corporativas. Repertorio amplio (tropical, vallenatos, cumbias, baladas, crossover). Cobro por hora con sonido y luces incluidos.",
+        image: `${SITE}/images/trumpet.jpg`,
+      }),
+    ],
   },
   {
     path: "/faq",
@@ -125,6 +191,18 @@ function applyMeta(html, route) {
     /<meta\s+name="twitter:description"\s+content="[^"]*"\s*\/>/,
     `<meta name="twitter:description" content="${description}" />`
   );
+
+  // Inject extra JSON-LD blocks (per-route Service schemas, etc.) just before
+  // </head> so crawlers see them on the static HTML pass without waiting for JS.
+  if (route.extraJsonLd && route.extraJsonLd.length > 0) {
+    const blocks = route.extraJsonLd
+      .map(
+        (obj) =>
+          `<script type="application/ld+json">${JSON.stringify(obj)}</script>`
+      )
+      .join("\n    ");
+    out = out.replace("</head>", `    ${blocks}\n  </head>`);
+  }
 
   return out;
 }
