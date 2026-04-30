@@ -1,6 +1,5 @@
 import { ChevronDown } from "lucide-react";
 import { genrePath, navigate } from "../lib/routes";
-import { placeholderSvg } from "../lib/placeholder";
 
 export function Hero() {
   const scrollTo = (id: string) =>
@@ -16,18 +15,19 @@ export function Hero() {
       className="relative min-h-[92vh] flex flex-col items-center justify-start overflow-hidden pt-24 pb-16 hero-grain"
     >
       <div className="absolute inset-0 z-0">
-        <img
-          src="/images/mariachi-hero.jpg"
-          alt="Mariachi en vivo en Boyacá"
+        <video
           className="hidden sm:block w-full h-full object-cover scale-105"
-          onError={(e) => {
-            (e.target as HTMLImageElement).src = placeholderSvg(
-              "Musicaenvivo.co",
-              1920,
-              1080
-            );
-          }}
-        />
+          autoPlay
+          muted
+          loop
+          playsInline
+          preload="auto"
+          poster="/video/hero-desktop-poster.jpg"
+          aria-hidden="true"
+        >
+          <source src="/video/hero-desktop.webm" type="video/webm" />
+          <source src="/video/hero-desktop.mp4" type="video/mp4" />
+        </video>
         <div className="hidden sm:block absolute inset-0 bg-gradient-to-b from-stone-950/60 via-stone-950/80 to-stone-950" />
         <div className="hidden sm:block absolute inset-0 bg-gradient-to-r from-stone-950/70 via-transparent to-stone-950/70" />
       </div>
