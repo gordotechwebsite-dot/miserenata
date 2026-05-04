@@ -47,7 +47,7 @@ export function initAnalytics(): void {
   if (GA_MEASUREMENT_ID) {
     window.gtag("config", GA_MEASUREMENT_ID, {
       anonymize_ip: true,
-      send_page_view: true,
+      send_page_view: false,
     });
   }
   if (ADS_CONVERSION_ID) {
@@ -75,8 +75,12 @@ export function trackEvent(
 export function trackPageView(path: string, title?: string): void {
   if (!GA_MEASUREMENT_ID) return;
   if (typeof window === "undefined" || !window.gtag) return;
-  window.gtag("config", GA_MEASUREMENT_ID, {
+  window.gtag("event", "page_view", {
     page_path: path,
+    page_location:
+      typeof window.location !== "undefined"
+        ? `${window.location.origin}${path}`
+        : undefined,
     page_title: title,
   });
 }
