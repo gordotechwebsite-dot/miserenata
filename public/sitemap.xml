@@ -1,28 +1,96 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9" xmlns:xhtml="http://www.w3.org/1999/xhtml">
+<urlset
+  xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"
+  xmlns:xhtml="http://www.w3.org/1999/xhtml"
+  xmlns:image="http://www.google.com/schemas/sitemap-image/1.1"
+>
   <url>
     <loc>https://musicaenvivo.co/</loc>
     <lastmod>2026-05-04</lastmod>
     <changefreq>weekly</changefreq>
     <priority>1.0</priority>
+    <image:image>
+      <image:loc>https://musicaenvivo.co/images/mariachi-hero.jpg</image:loc>
+      <image:title>Mariachi en vivo en Boyacá - Musicaenvivo.co</image:title>
+      <image:caption>Mariachi profesional con vestuario charro para serenatas y eventos en Duitama, Paipa, Sogamoso, Tunja y Boyacá.</image:caption>
+    </image:image>
+    <image:image>
+      <image:loc>https://musicaenvivo.co/images/logo.png</image:loc>
+      <image:title>Logo Musicaenvivo.co</image:title>
+    </image:image>
   </url>
   <url>
     <loc>https://musicaenvivo.co/mariachi</loc>
     <lastmod>2026-05-04</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.9</priority>
+    <image:image>
+      <image:loc>https://musicaenvivo.co/images/mariachi-hero.jpg</image:loc>
+      <image:title>Mariachi profesional en Duitama, Paipa, Sogamoso y Boyacá</image:title>
+      <image:caption>Mariachi con vestuario charro completo, trompetas, violines, vihuela y guitarrón. Serenatas y eventos en Boyacá.</image:caption>
+    </image:image>
+    <image:image>
+      <image:loc>https://musicaenvivo.co/images/serenata.jpg</image:loc>
+      <image:title>Serenata romántica de mariachi en Boyacá</image:title>
+    </image:image>
+    <image:image>
+      <image:loc>https://musicaenvivo.co/images/trumpet.jpg</image:loc>
+      <image:title>Trompetas de mariachi en vivo</image:title>
+    </image:image>
   </url>
   <url>
     <loc>https://musicaenvivo.co/nortena</loc>
     <lastmod>2026-05-04</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.9</priority>
+    <image:image>
+      <image:loc>https://musicaenvivo.co/images/guitar.jpg</image:loc>
+      <image:title>Música norteña en vivo en Boyacá</image:title>
+      <image:caption>Grupo norteño con acordeón, bajo sexto y batería para fiestas en Duitama, Paipa, Sogamoso y Boyacá.</image:caption>
+    </image:image>
   </url>
   <url>
     <loc>https://musicaenvivo.co/banda</loc>
     <lastmod>2026-05-04</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.9</priority>
+    <image:image>
+      <image:loc>https://musicaenvivo.co/images/trumpet.jpg</image:loc>
+      <image:title>Banda en vivo para eventos en Boyacá</image:title>
+      <image:caption>Banda con metales, percusión y voz para bodas, grados y eventos corporativos en Boyacá.</image:caption>
+    </image:image>
+  </url>
+  <url>
+    <loc>https://musicaenvivo.co/serenatas</loc>
+    <lastmod>2026-05-04</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+    <image:image>
+      <image:loc>https://musicaenvivo.co/images/serenata.jpg</image:loc>
+      <image:title>Serenatas con mariachi en Duitama, Paipa, Sogamoso, Tunja y Boyacá</image:title>
+    </image:image>
+  </url>
+  <url>
+    <loc>https://musicaenvivo.co/eventos-corporativos</loc>
+    <lastmod>2026-05-04</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://musicaenvivo.co/bodas</loc>
+    <lastmod>2026-05-04</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+    <image:image>
+      <image:loc>https://musicaenvivo.co/images/mariachi-hero.jpg</image:loc>
+      <image:title>Música en vivo para bodas en Boyacá</image:title>
+    </image:image>
+  </url>
+  <url>
+    <loc>https://musicaenvivo.co/cumpleanos</loc>
+    <lastmod>2026-05-04</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
   </url>
   <url>
     <loc>https://musicaenvivo.co/faq</loc>

@@ -1,10 +1,19 @@
 import type { GenreId } from "./constants";
 
+export const LANDING_PATHS = [
+  "/serenatas",
+  "/eventos-corporativos",
+  "/bodas",
+  "/cumpleanos",
+] as const;
+export type LandingPath = (typeof LANDING_PATHS)[number];
+
 export type Route =
   | { kind: "home" }
   | { kind: "admin" }
   | { kind: "faq" }
-  | { kind: "genre"; id: GenreId };
+  | { kind: "genre"; id: GenreId }
+  | { kind: "landing"; path: LandingPath };
 
 const GENRE_IDS: GenreId[] = ["mariachi", "nortena", "banda"];
 
@@ -17,6 +26,10 @@ export function parseRoute(input: string): Route {
   if (seg === "faq") return { kind: "faq" };
   if ((GENRE_IDS as string[]).includes(seg)) {
     return { kind: "genre", id: seg as GenreId };
+  }
+  const candidate = `/${seg}` as LandingPath;
+  if ((LANDING_PATHS as readonly string[]).includes(candidate)) {
+    return { kind: "landing", path: candidate };
   }
 
   const hashOnly = (input || "").includes("#")
@@ -46,6 +59,8 @@ export function routePath(route: Route): string {
       return "/faq";
     case "genre":
       return `/${route.id}`;
+    case "landing":
+      return route.path;
   }
 }
 

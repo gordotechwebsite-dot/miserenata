@@ -112,6 +112,16 @@ function App() {
   useEffect(() => {
     const path = routePath(route);
     trackPageView(path);
+    const landingTitles: Record<string, string> = {
+      "/serenatas":
+        "Serenatas en Duitama, Paipa y Boyacá · Sorprende con Musicaenvivo.co",
+      "/eventos-corporativos":
+        "Eventos corporativos con música en vivo en Boyacá | Musicaenvivo.co",
+      "/bodas":
+        "Música en vivo para bodas en Boyacá · Mariachi y banda | Musicaenvivo.co",
+      "/cumpleanos":
+        "Música en vivo para cumpleaños en Boyacá | Musicaenvivo.co",
+    };
     const titles: Record<Route["kind"], string> = {
       home: "Musicaenvivo.co — Mariachis, serenatas y artistas en vivo en Boyacá",
       genre:
@@ -126,6 +136,8 @@ function App() {
           : "",
       faq: "Preguntas frecuentes | Musicaenvivo.co",
       admin: "Admin | Musicaenvivo.co",
+      landing:
+        route.kind === "landing" ? landingTitles[route.path] ?? "" : "",
     };
     const title = titles[route.kind];
     if (title) document.title = title;
