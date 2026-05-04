@@ -61,6 +61,24 @@ function genreStaticBody({ id, h1, intro, repertoire, coverage, reserva, faqs })
   `);
 }
 
+function landingStaticBody({ h1, intro, sections, cta }) {
+  const sectionsHtml = sections
+    .map(
+      (s) =>
+        `<h2 style="font-size:1.25rem;font-weight:700;color:#fcd34d;margin:1.5rem 0 0.5rem">${escapeHtml(
+          s.h
+        )}</h2><p style="margin:0 0 1rem;font-size:0.95rem">${escapeHtml(s.p)}</p>`
+    )
+    .join("");
+  return staticBody(`
+    <h1 style="font-size:1.75rem;font-weight:900;color:#fef3c7;margin:0 0 0.75rem;line-height:1.2">${escapeHtml(h1)}</h1>
+    <p style="font-size:1rem;margin:0 0 1.5rem;color:#d6d3d1">${escapeHtml(intro)}</p>
+    ${sectionsHtml}
+    <p style="margin:1.5rem 0 0;font-size:0.95rem;color:#d6d3d1">${escapeHtml(cta)}</p>
+    <p style="margin:0.5rem 0 0;font-size:0.95rem;color:#a8a29e">Cargando experiencia interactiva…</p>
+  `);
+}
+
 function genreServiceJsonLd({ id, name, description, image }) {
   return {
     "@context": "https://schema.org",
@@ -237,6 +255,118 @@ const ROUTES = [
           a: "Configuración estándar: metales (trompetas, trombones, saxos), percusión completa y voz. El número exacto se ajusta al tamaño del evento — desde formato compacto hasta banda grande con coros.",
         },
       ],
+    }),
+  },
+  {
+    path: "/serenatas",
+    title:
+      "Serenatas en Duitama, Paipa y Boyacá · Sorprende con Musicaenvivo.co",
+    description:
+      "Serenatas románticas con mariachi en vivo para cumpleaños, aniversarios, declaraciones y sorpresas en Duitama, Paipa, Sogamoso, Tunja y Boyacá. Vestuario charro, canciones a pedido. Reserva por WhatsApp.",
+    ogTitle: "Serenatas en Boyacá · Musicaenvivo.co",
+    staticBody: landingStaticBody({
+      h1: "Serenatas con mariachi en Duitama, Paipa, Sogamoso, Tunja y Boyacá",
+      intro:
+        "Sorprende con una serenata romántica de mariachi en vivo en Boyacá. Vestuario charro completo (trajes de gala, sombreros, botas), formación tradicional con trompetas, violines, vihuela y guitarrón, y canciones a tu pedido. Ideal para cumpleaños, aniversarios, declaraciones, perdones, despedidas o cualquier momento que merezca una sorpresa inolvidable.",
+      sections: [
+        {
+          h: "Repertorio para serenatas",
+          p: "Más de 200 canciones del cancionero clásico mexicano: Las Mañanitas, El Rey, Cielito Lindo, Bésame Mucho, Volver Volver, Si Nos Dejan, Hermoso Cariño, Caballo Viejo, Que Bonita es esta Vida, Para Adoloridos y arreglos personalizados a pedido. Bolero, ranchera, balada y mariachi moderno.",
+        },
+        {
+          h: "Cobertura para serenatas",
+          p: "Llevamos serenata a Duitama, Paipa, Sogamoso, Tunja, Nobsa, Belén, Sutamarchán, Villa de Leyva y municipios cercanos de Boyacá. Salimos a la hora pactada y llegamos puntuales con presentación impecable. Para destinos más lejanos cotizamos un recargo por desplazamiento.",
+        },
+        {
+          h: "Reserva tu serenata",
+          p: "Mínimo 24 horas de anticipación. Pago: Nequi, Daviplata, Bancolombia, efectivo o tarjeta — el 50% asegura la fecha y el saldo se paga el día. Paquetes de 3, 5 o 10 canciones, o show completo. Coordinamos hora, lugar y canciones por WhatsApp al +57 313 8969608.",
+        },
+      ],
+      cta: "Cotiza tu serenata por WhatsApp y te confirmamos disponibilidad en minutos.",
+    }),
+  },
+  {
+    path: "/eventos-corporativos",
+    title:
+      "Eventos corporativos con música en vivo en Boyacá | Musicaenvivo.co",
+    description:
+      "Música en vivo para eventos corporativos en Duitama, Paipa, Sogamoso, Tunja y Boyacá: mariachi, banda y grupos norteños. Cierres de año, lanzamientos, integraciones y celebraciones de empresa.",
+    ogTitle: "Eventos corporativos en Boyacá · Musicaenvivo.co",
+    staticBody: landingStaticBody({
+      h1: "Música en vivo para eventos corporativos en Duitama, Paipa, Sogamoso y Boyacá",
+      intro:
+        "Llevamos mariachi, grupos norteños y banda en vivo a tus eventos corporativos en Boyacá: cierres de año, fiestas de empresa, lanzamientos de producto, aniversarios, integraciones, ferias y celebraciones de logros. Sonido profesional incluido, repertorio amplio y energía que activa cualquier audiencia.",
+      sections: [
+        {
+          h: "Formatos disponibles",
+          p: "Mariachi para apertura ceremonial, grupo norteño para parranda corporativa, banda en vivo para cierres masivos. Cobramos por hora con un mínimo de presentación. Coordinamos cronograma, sound check y setlist con tu equipo de producción para que el evento corra sin sorpresas.",
+        },
+        {
+          h: "Cobertura empresarial en Boyacá",
+          p: "Atendemos empresas y gremios en Duitama, Paipa, Sogamoso, Tunja, Nobsa, Belén, Sutamarchán y resto de Boyacá. Hoteles, salones, centros de convenciones, parques empresariales y locaciones al aire libre — nos adaptamos al espacio.",
+        },
+        {
+          h: "Facturación y pagos",
+          p: "Aceptamos transferencia Bancolombia, Nequi, Daviplata, efectivo y tarjeta. Emitimos factura electrónica para empresas. El 50% confirma la reserva y el saldo se paga al cierre del evento.",
+        },
+      ],
+      cta: "Pide tu cotización corporativa al WhatsApp +57 313 8969608.",
+    }),
+  },
+  {
+    path: "/bodas",
+    title:
+      "Música en vivo para bodas en Boyacá · Mariachi y banda | Musicaenvivo.co",
+    description:
+      "Mariachi, banda en vivo y grupos norteños para tu boda o matrimonio en Duitama, Paipa, Sogamoso, Tunja y Boyacá. Setlist personalizado, sonido y luces incluidos. Reserva por WhatsApp.",
+    ogTitle: "Música para bodas en Boyacá · Musicaenvivo.co",
+    staticBody: landingStaticBody({
+      h1: "Música en vivo para bodas y matrimonios en Duitama, Paipa, Sogamoso y Boyacá",
+      intro:
+        "Tu boda en Boyacá merece música en vivo: mariachi para la entrada de la novia y la sorpresa romántica, banda para la fiesta de cierre, grupo norteño para la parranda. Coordinamos repertorio, cronograma y técnico con tu wedding planner para que cada momento esté perfectamente musicalizado.",
+      sections: [
+        {
+          h: "Momentos clave de tu boda",
+          p: "Recibimiento de invitados (acústico), entrada de la novia (mariachi), brindis (versiones románticas a pedido), pista de baile (banda en vivo o grupo norteño), cierre de fiesta (mix tropical, vallenatos, crossover). Diseñamos el setlist contigo en una llamada previa.",
+        },
+        {
+          h: "Cobertura para bodas",
+          p: "Bodas en Duitama, Paipa, Sogamoso, Tunja, Nobsa, Belén, Sutamarchán, Villa de Leyva y resto de Boyacá. Trabajamos con hoteles, fincas, haciendas, salones y locaciones al aire libre. Si tu venue está fuera del corredor, cotizamos recargo por desplazamiento al confirmar la fecha.",
+        },
+        {
+          h: "Reserva tu boda con anticipación",
+          p: "Para bodas recomendamos reservar con 2 a 4 semanas mínimo (las fechas pico — diciembre, fines de semana de puente, temporada de bodas — se llenan rápido). Pago en Nequi, Daviplata, Bancolombia, efectivo o tarjeta. 50% asegura la fecha y el saldo se paga el día del evento. Sonido y luces incluidos en el precio por hora de banda.",
+        },
+      ],
+      cta: "Pide tu cotización de boda al WhatsApp +57 313 8969608. Te respondemos en minutos.",
+    }),
+  },
+  {
+    path: "/cumpleanos",
+    title:
+      "Música en vivo para cumpleaños en Boyacá | Musicaenvivo.co",
+    description:
+      "Mariachi, grupos norteños y banda en vivo para cumpleaños en Duitama, Paipa, Sogamoso, Tunja y Boyacá. Las Mañanitas, repertorio amplio, sonido incluido. Reserva por WhatsApp.",
+    ogTitle: "Cumpleaños con música en vivo en Boyacá · Musicaenvivo.co",
+    staticBody: landingStaticBody({
+      h1: "Música en vivo para cumpleaños en Duitama, Paipa, Sogamoso, Tunja y Boyacá",
+      intro:
+        "Sorprende a quien cumple años con música en vivo: mariachi cantando Las Mañanitas a primera hora, grupo norteño para la fiesta de la noche o banda completa para la celebración masiva. Cobertura en todo Boyacá, sonido profesional incluido y repertorio que se adapta a cualquier edad.",
+      sections: [
+        {
+          h: "Formatos para cumpleaños",
+          p: "Serenata sorpresa de mariachi (3, 5 o 10 canciones — incluye Las Mañanitas, El Rey, Hermoso Cariño y a pedido), grupo norteño por hora con sonido amplificado, banda completa para fiestas grandes con tropical/vallenatos/crossover. Para niños y tarjes podemos coordinar repertorios temáticos.",
+        },
+        {
+          h: "Cumpleaños en todo Boyacá",
+          p: "Atendemos cumpleaños en Duitama, Paipa, Sogamoso, Tunja, Nobsa, Belén, Sutamarchán y resto de Boyacá. Casas, salones, fincas, restaurantes — nos adaptamos al espacio. Llegamos puntuales con presentación impecable.",
+        },
+        {
+          h: "Reserva express",
+          p: "Si es para mañana o pasado, escríbenos por WhatsApp ya — solemos tener disponibilidad de último minuto. Mínimo 24 horas para serenatas. Pago: Nequi, Daviplata, Bancolombia, efectivo o tarjeta. 50% asegura la fecha.",
+        },
+      ],
+      cta: "Cotiza tu cumpleaños por WhatsApp al +57 313 8969608.",
     }),
   },
   {

@@ -7,7 +7,11 @@
     { "source": "/nortena", "destination": "/nortena/index.html" },
     { "source": "/banda", "destination": "/banda/index.html" },
     { "source": "/faq", "destination": "/faq/index.html" },
-    { "source": "/((?!api/|_next/|images/|video/|fonts/|assets/|favicon|robots\\.txt|sitemap\\.xml|mariachi/|nortena/|banda/|faq/|.*\\.[a-zA-Z0-9]+$).*)", "destination": "/index.html" }
+    { "source": "/serenatas", "destination": "/serenatas/index.html" },
+    { "source": "/eventos-corporativos", "destination": "/eventos-corporativos/index.html" },
+    { "source": "/bodas", "destination": "/bodas/index.html" },
+    { "source": "/cumpleanos", "destination": "/cumpleanos/index.html" },
+    { "source": "/((?!api/|_next/|images/|video/|fonts/|assets/|favicon|robots\\.txt|sitemap\\.xml|mariachi/|nortena/|banda/|faq/|serenatas/|eventos-corporativos/|bodas/|cumpleanos/|.*\\.[a-zA-Z0-9]+$).*)", "destination": "/index.html" }
   ],
   "headers": [
     {
