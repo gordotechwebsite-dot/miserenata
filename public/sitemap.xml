@@ -93,6 +93,17 @@
     <priority>0.7</priority>
   </url>
   <url>
+    <loc>https://musicaenvivo.co/serenata-mama</loc>
+    <lastmod>2026-05-04</lastmod>
+    <changefreq>daily</changefreq>
+    <priority>0.95</priority>
+    <image:image>
+      <image:loc>https://musicaenvivo.co/images/serenata.jpg</image:loc>
+      <image:title>Serenata Día de las Madres - Mariachi en Boyacá</image:title>
+      <image:caption>Serenata sorpresa para mamá el 10 de mayo en Duitama, Paipa, Sogamoso, Tunja y Boyacá. 10% off reservando antes del 7 de mayo.</image:caption>
+    </image:image>
+  </url>
+  <url>
     <loc>https://musicaenvivo.co/faq</loc>
     <lastmod>2026-05-04</lastmod>
     <changefreq>monthly</changefreq>

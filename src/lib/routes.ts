@@ -5,6 +5,7 @@ export const LANDING_PATHS = [
   "/eventos-corporativos",
   "/bodas",
   "/cumpleanos",
+  "/serenata-mama",
 ] as const;
 export type LandingPath = (typeof LANDING_PATHS)[number];
 

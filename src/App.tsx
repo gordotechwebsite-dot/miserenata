@@ -121,6 +121,8 @@ function App() {
         "Música en vivo para bodas en Boyacá · Mariachi y banda | Musicaenvivo.co",
       "/cumpleanos":
         "Música en vivo para cumpleaños en Boyacá | Musicaenvivo.co",
+      "/serenata-mama":
+        "Serenata Día de las Madres en Duitama, Paipa, Tunja y Boyacá | Musicaenvivo.co",
     };
     const titles: Record<Route["kind"], string> = {
       home: "Musicaenvivo.co — Mariachis, serenatas y artistas en vivo en Boyacá",

@@ -370,6 +370,38 @@ const ROUTES = [
     }),
   },
   {
+    path: "/serenata-mama",
+    title:
+      "Serenata Día de las Madres en Duitama, Paipa, Tunja y Boyacá | Musicaenvivo.co",
+    description:
+      "Sorprende a mamá este 10 de mayo con una serenata de mariachi en vivo en Duitama, Paipa, Sogamoso, Tunja, Nobsa y Boyacá. Madrecita Querida, Amor Eterno, Hermoso Cariño. 10% off reservando antes del 7 de mayo.",
+    ogTitle: "Serenata para Mamá · Musicaenvivo.co",
+    staticBody: landingStaticBody({
+      h1: "Serenata para mamá este Día de las Madres en Duitama, Paipa, Sogamoso, Tunja y Boyacá",
+      intro:
+        "El 10 de mayo sorprende a mamá con una serenata de mariachi en vivo. Cantamos las que ella ama: Madrecita Querida, Amor Eterno, Hermoso Cariño, Las Mañanitas, Que Bonita es esta Vida y todo el cancionero clásico mexicano. Vestuario charro completo (trajes de gala, sombreros, botas), formación tradicional con trompetas, violines, vihuela y guitarrón. Reserva antes del 7 de mayo y obtén 10% de descuento.",
+      sections: [
+        {
+          h: "Repertorio para mamá",
+          p: "Las canciones que ella espera escuchar: Madrecita Querida, Amor Eterno, Hermoso Cariño, Que Bonita es esta Vida, Las Mañanitas, Cielito Lindo, Bésame Mucho, Para Adoloridos, Si Nos Dejan, Volver Volver y arreglos personalizados a pedido. Si tu mamá tiene una canción favorita, avísanos al reservar y la preparamos.",
+        },
+        {
+          h: "Cobertura para el Día de las Madres en Boyacá",
+          p: "Llevamos serenata para mamá a Duitama, Paipa, Sogamoso, Tunja, Nobsa, Belén, Sutamarchán, Villa de Leyva y municipios cercanos. Salimos puntuales con presentación impecable. Para destinos más lejanos cotizamos un recargo por desplazamiento. Atendemos a la hora que tú elijas — desde Las Mañanitas a las 5 a.m. hasta serenata nocturna.",
+        },
+        {
+          h: "Promoción 10% off · Cupos limitados",
+          p: "Reserva antes del 7 de mayo y obtén 10% de descuento en cualquier paquete de serenata para mamá. El 10 de mayo se llena rápido — reserva con anticipación para asegurar tu hora. Pago en Nequi, Daviplata, Bancolombia, efectivo o tarjeta. El 50% asegura tu fecha y el saldo se paga el día. Bonus: si reservas antes del 7 de mayo te llevamos un detalle de cortesía para mamá.",
+        },
+        {
+          h: "Cómo reservar",
+          p: "Escríbenos por WhatsApp al +57 313 8969608 con: ciudad donde estará mamá, fecha, hora aproximada, número de canciones (3, 5 o 10) y si quieres incluir el detalle de cortesía. Te confirmamos disponibilidad y precio en minutos. Coordinamos contigo en absoluta reserva — mamá nunca se entera hasta que escuche el primer acorde.",
+        },
+      ],
+      cta: "Reserva tu serenata para mamá por WhatsApp al +57 313 8969608 antes del 7 de mayo y aprovecha el 10% de descuento.",
+    }),
+  },
+  {
     path: "/faq",
     title: "Preguntas frecuentes | Musicaenvivo.co",
     description:

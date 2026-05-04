@@ -11,7 +11,8 @@
     { "source": "/eventos-corporativos", "destination": "/eventos-corporativos/index.html" },
     { "source": "/bodas", "destination": "/bodas/index.html" },
     { "source": "/cumpleanos", "destination": "/cumpleanos/index.html" },
-    { "source": "/((?!api/|_next/|images/|video/|fonts/|assets/|favicon|robots\\.txt|sitemap\\.xml|mariachi/|nortena/|banda/|faq/|serenatas/|eventos-corporativos/|bodas/|cumpleanos/|.*\\.[a-zA-Z0-9]+$).*)", "destination": "/index.html" }
+    { "source": "/serenata-mama", "destination": "/serenata-mama/index.html" },
+    { "source": "/((?!api/|_next/|images/|video/|fonts/|assets/|favicon|robots\\.txt|sitemap\\.xml|mariachi/|nortena/|banda/|faq/|serenatas/|eventos-corporativos/|bodas/|cumpleanos/|serenata-mama/|.*\\.[a-zA-Z0-9]+$).*)", "destination": "/index.html" }
   ],
   "headers": [
     {

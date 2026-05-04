@@ -20,6 +20,7 @@ const URL_LIST = [
   `https://${HOST}/eventos-corporativos`,
   `https://${HOST}/bodas`,
   `https://${HOST}/cumpleanos`,
+  `https://${HOST}/serenata-mama`,
   `https://${HOST}/faq`,
 ];
 
