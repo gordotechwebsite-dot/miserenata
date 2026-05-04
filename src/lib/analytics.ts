@@ -6,7 +6,7 @@ declare global {
 }
 
 export const GA_MEASUREMENT_ID: string =
-  (import.meta.env.VITE_GA_MEASUREMENT_ID as string) || "";
+  (import.meta.env.VITE_GA_MEASUREMENT_ID as string) || "G-D0KRH01GW5";
 
 export const ADS_CONVERSION_ID: string =
   (import.meta.env.VITE_ADS_CONVERSION_ID as string) || "AW-18139766225";
@@ -25,42 +25,9 @@ const ADS_DEFAULT_VALUES: Record<AdsConversionType, number> = {
 
 export type AdsConversionType = "whatsapp" | "form" | "phone";
 
-let loaded = false;
-
 export function initAnalytics(): void {
-  if (loaded) return;
-  if (!GA_MEASUREMENT_ID && !ADS_CONVERSION_ID) return;
-  if (typeof window === "undefined") return;
-  loaded = true;
-
-  window.dataLayer = window.dataLayer || [];
-  window.gtag = function gtag(...args: unknown[]) {
-    window.dataLayer!.push(args);
-  };
-  window.gtag("consent", "default", {
-    ad_storage: "granted",
-    analytics_storage: "granted",
-    ad_user_data: "granted",
-    ad_personalization: "granted",
-  });
-  window.gtag("js", new Date());
-  if (GA_MEASUREMENT_ID) {
-    window.gtag("config", GA_MEASUREMENT_ID, {
-      anonymize_ip: true,
-      send_page_view: false,
-    });
-  }
-  if (ADS_CONVERSION_ID) {
-    window.gtag("config", ADS_CONVERSION_ID);
-  }
-
-  const tagId = GA_MEASUREMENT_ID || ADS_CONVERSION_ID;
-  const script = document.createElement("script");
-  script.async = true;
-  script.src = `https://www.googletagmanager.com/gtag/js?id=${encodeURIComponent(
-    tagId
-  )}`;
-  document.head.appendChild(script);
+  // gtag.js + consent default + GA4/Ads config are loaded inline in index.html
+  // (Google's recommended pattern). Nothing to do here.
 }
 
 export function trackEvent(
