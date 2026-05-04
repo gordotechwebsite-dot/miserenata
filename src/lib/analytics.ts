@@ -37,6 +37,12 @@ export function initAnalytics(): void {
   window.gtag = function gtag(...args: unknown[]) {
     window.dataLayer!.push(args);
   };
+  window.gtag("consent", "default", {
+    ad_storage: "granted",
+    analytics_storage: "granted",
+    ad_user_data: "granted",
+    ad_personalization: "granted",
+  });
   window.gtag("js", new Date());
   if (GA_MEASUREMENT_ID) {
     window.gtag("config", GA_MEASUREMENT_ID, {
