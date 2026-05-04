@@ -9,6 +9,7 @@ import {
   Baby,
 } from "lucide-react";
 import { WHATSAPP_LINK } from "../lib/supabase";
+import { trackWhatsAppClick } from "../lib/analytics";
 
 const OCCASIONS = [
   { icon: Heart, label: "Aniversarios" },
@@ -22,13 +23,15 @@ const OCCASIONS = [
 ];
 
 export function Occasions() {
-  const openWa = () =>
+  const openWa = () => {
+    trackWhatsAppClick();
     window.open(
       `${WHATSAPP_LINK}?text=${encodeURIComponent(
         "Hola Musicaenvivo.co, quiero cotizar para una ocasión especial."
       )}`,
       "_blank"
     );
+  };
 
   return (
     <section

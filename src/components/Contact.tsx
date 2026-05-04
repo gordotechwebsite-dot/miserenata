@@ -1,5 +1,6 @@
 import { MessageCircle, Clock, MapPin, Phone } from "lucide-react";
 import { WHATSAPP_LINK, PHONE_NUMBER, PHONE_DISPLAY } from "../lib/supabase";
+import { trackWhatsAppClick, trackPhoneClick } from "../lib/analytics";
 
 export function Contact() {
   return (
@@ -14,6 +15,7 @@ export function Contact() {
             href={WHATSAPP_LINK}
             target="_blank"
             rel="noopener noreferrer"
+            onClick={trackWhatsAppClick}
             className="bg-stone-900/60 border border-stone-800 rounded-2xl p-5 hover:border-amber-500/50 transition"
           >
             <MessageCircle className="w-6 h-6 text-amber-400 mx-auto mb-3" />
@@ -25,6 +27,7 @@ export function Contact() {
           </a>
           <a
             href={`tel:${PHONE_NUMBER}`}
+            onClick={trackPhoneClick}
             className="bg-stone-900/60 border border-stone-800 rounded-2xl p-5 hover:border-amber-500/50 transition"
           >
             <Phone className="w-6 h-6 text-amber-400 mx-auto mb-3" />
@@ -51,6 +54,7 @@ export function Contact() {
             href={WHATSAPP_LINK}
             target="_blank"
             rel="noopener noreferrer"
+            onClick={trackWhatsAppClick}
             className="bg-gradient-to-r from-green-500 to-green-600 hover:from-green-400 hover:to-green-500 text-white px-8 py-4 rounded-2xl font-extrabold text-base sm:text-lg shadow-xl shadow-green-500/30 flex items-center justify-center gap-2 transition-all"
           >
             <MessageCircle className="w-5 h-5" />
@@ -58,6 +62,7 @@ export function Contact() {
           </a>
           <a
             href={`tel:${PHONE_NUMBER}`}
+            onClick={trackPhoneClick}
             className="bg-stone-900 border border-amber-500/50 hover:bg-amber-500/10 text-amber-200 px-8 py-4 rounded-2xl font-extrabold text-base sm:text-lg flex items-center justify-center gap-2 transition-all"
           >
             <Phone className="w-5 h-5" />

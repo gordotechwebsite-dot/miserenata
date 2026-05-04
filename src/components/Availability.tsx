@@ -14,6 +14,7 @@ import {
 } from "../lib/supabase";
 import { DEFAULT_GENRES, formatCop, type GenreId } from "../lib/constants";
 import { navigate } from "../lib/routes";
+import { trackWhatsAppClick, trackAdsConversion } from "../lib/analytics";
 
 const DEFAULT_HOURLY_PRICE: Partial<Record<GenreId, number>> = {
   nortena: 600000,
@@ -293,6 +294,8 @@ export function Availability({
     e.preventDefault();
     if (!selected || !selectedSlot) return;
     const msg = buildWaMessage(selected, selectedSlot.label);
+    trackAdsConversion("form");
+    trackWhatsAppClick();
     window.open(
       `${WHATSAPP_LINK}?text=${encodeURIComponent(msg)}`,
       "_blank",
@@ -552,6 +555,7 @@ export function Availability({
                   )}`}
                   target="_blank"
                   rel="noopener noreferrer"
+                  onClick={trackWhatsAppClick}
                   className="inline-flex items-center gap-2 border border-stone-700 hover:border-amber-500/60 bg-stone-900/60 text-stone-100 hover:text-amber-300 px-5 py-3 rounded-2xl font-bold text-base transition-all"
                 >
                   <MessageCircle className="w-4 h-4" />
