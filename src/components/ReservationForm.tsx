@@ -31,7 +31,7 @@ import {
   WHATSAPP_LINK,
   type PaymentMethod,
 } from "../lib/supabase";
-import { trackEvent } from "../lib/analytics";
+import { trackEvent, trackAdsConversion, trackWhatsAppClick } from "../lib/analytics";
 import { readCache, writeCache } from "../lib/cache";
 
 type Props = {
@@ -318,6 +318,8 @@ export function ReservationForm({
       extras_count: selectedExtras.length,
       total_cop: grandTotal,
     });
+    trackAdsConversion("form", grandTotal || undefined);
+    trackWhatsAppClick();
 
     window.open(`${WHATSAPP_LINK}?text=${messageText}`, "_blank");
     setSubmitted(true);

@@ -1,5 +1,6 @@
 import { Music4, Instagram, Mail, MapPin, Phone } from "lucide-react";
 import { WHATSAPP_LINK, PHONE_NUMBER, PHONE_DISPLAY } from "../lib/supabase";
+import { trackWhatsAppClick, trackPhoneClick } from "../lib/analytics";
 
 export function Footer() {
   const year = new Date().getFullYear();
@@ -47,6 +48,7 @@ export function Footer() {
               <li>
                 <a
                   href={`tel:${PHONE_NUMBER}`}
+                  onClick={trackPhoneClick}
                   className="flex items-center gap-2 hover:text-amber-300"
                 >
                   <Phone className="w-4 h-4 text-amber-400" />
@@ -66,6 +68,7 @@ export function Footer() {
                   href={WHATSAPP_LINK}
                   target="_blank"
                   rel="noopener noreferrer"
+                  onClick={trackWhatsAppClick}
                   className="inline-flex mt-2 items-center gap-2 px-3 py-1.5 rounded-xl border border-green-500/40 text-green-300 hover:bg-green-500/10 transition"
                 >
                   WhatsApp directo

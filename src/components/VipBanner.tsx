@@ -1,5 +1,6 @@
 import { Crown, Camera, Volume2, Lightbulb, Users, Check } from "lucide-react";
 import { WHATSAPP_LINK } from "../lib/supabase";
+import { trackWhatsAppClick } from "../lib/analytics";
 
 const VIP_FEATURES = [
   { icon: Volume2, label: "Sonido e iluminación de concierto" },
@@ -16,13 +17,15 @@ const VIP_INCLUDES = [
 ];
 
 export function VipBanner() {
-  const openWa = () =>
+  const openWa = () => {
+    trackWhatsAppClick();
     window.open(
       `${WHATSAPP_LINK}?text=${encodeURIComponent(
         "Hola Musicaenvivo.co, quiero cotizar una Experiencia VIP a la medida."
       )}`,
       "_blank"
     );
+  };
 
   return (
     <section className="relative py-20 sm:py-24 overflow-hidden">
