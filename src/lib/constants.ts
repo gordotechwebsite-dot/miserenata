@@ -231,7 +231,7 @@ export const TESTIMONIALS = DEFAULT_TESTIMONIALS;
 
 export const DEFAULT_GALLERY_TITLE = "Nuestros artistas";
 export const DEFAULT_GALLERY_SUBTITLE =
-  "Conoce a los músicos que harán de tu momento algo inolvidable.";
+  "Músicos profesionales que tocan con pasión para hacer de tu momento algo inolvidable.";
 export const DEFAULT_TESTIMONIALS_TITLE = "Historias que nos emocionan";
 
 export type ExtraItem = {
