@@ -8,7 +8,7 @@
 import { readFile, writeFile, mkdir } from "node:fs/promises";
 import { join, dirname } from "node:path";
 import { fileURLToPath } from "node:url";
-import { BOGOTA_SITE, toBogota } from "../src/lib/region.js";
+import { BOGOTA_FAQ, BOGOTA_SITE, BOGOTA_ZONES, toBogota } from "../src/lib/region.js";
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const DIST = join(__dirname, "..", "dist");
@@ -513,7 +513,9 @@ async function main() {
 // address/geo is dropped since there is no physical location in Bogotá.
 async function prerenderBogota(baseHtml) {
   const outDir = join(DIST, "bogota");
-  const bogotaArea = JSON.stringify([{ "@type": "City", name: "Bogotá" }]);
+  const bogotaArea = JSON.stringify(
+    BOGOTA_ZONES.map((name) => ({ "@type": "City", name }))
+  );
   for (const route of ROUTES) {
     let html = applyMeta(baseHtml, route, BOGOTA_SITE);
     html = html
@@ -523,7 +525,14 @@ async function prerenderBogota(baseHtml) {
       .replaceAll(`${SITE}/mariachi"`, `${BOGOTA_SITE}/mariachi"`)
       .replaceAll(`${SITE}/nortena"`, `${BOGOTA_SITE}/nortena"`)
       .replaceAll(`${SITE}/banda"`, `${BOGOTA_SITE}/banda"`);
-    html = toBogota(html);
+    html = toBogota(html).replace(
+      /("@type": "FAQPage",\s*"mainEntity": \[)/,
+      `$1${JSON.stringify({
+        "@type": "Question",
+        name: BOGOTA_FAQ.q,
+        acceptedAnswer: { "@type": "Answer", text: BOGOTA_FAQ.a },
+      })},`
+    );
     const outPath =
       route.path === "/"
         ? join(outDir, "index.html")

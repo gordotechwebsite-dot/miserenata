@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { Plus, Minus } from "lucide-react";
-import { loc } from "../lib/region";
+import { BOGOTA_FAQ, IS_BOGOTA, loc } from "../lib/region";
 
 const FAQS_BASE = [
   {
@@ -38,6 +38,7 @@ const FAQS_BASE = [
 ];
 
 const FAQS = FAQS_BASE.map((f) => ({ q: f.q, a: loc(f.a) }));
+if (IS_BOGOTA) FAQS.splice(2, 0, BOGOTA_FAQ);
 
 export function Faq() {
   const [open, setOpen] = useState<number | null>(0);
