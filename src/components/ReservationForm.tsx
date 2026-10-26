@@ -341,15 +341,11 @@ export function ReservationForm({
     >
       <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="text-center mb-8 sm:mb-10">
-          <h2 className="text-3xl sm:text-4xl md:text-5xl font-bold mb-3">
+          <h2 className="text-3xl sm:text-4xl md:text-5xl font-bold">
             <span className="bg-gradient-to-r from-amber-400 to-yellow-200 bg-clip-text text-transparent">
               Reserva tu Show
             </span>
           </h2>
-          <p className="text-stone-400 max-w-2xl mx-auto">
-            Completa los pasos y te contactaremos por WhatsApp para confirmar
-            todos los detalles.
-          </p>
         </div>
 
         <ol
