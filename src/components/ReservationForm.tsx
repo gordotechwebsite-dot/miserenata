@@ -87,7 +87,14 @@ export function ReservationForm({
   const [hours] = useState<number>(HOURLY_MIN);
   const [name, setName] = useState("");
   const [phone, setPhone] = useState("");
-  const [city, setCity] = useState("");
+  const [city, setCity] = useState(() => {
+    try {
+      const m = window.sessionStorage.getItem("municipio") || "";
+      return CITIES.includes(m) ? m : "";
+    } catch {
+      return "";
+    }
+  });
   const [cityOther, setCityOther] = useState(false);
   const [date, setDate] = useState("");
   const [time, setTime] = useState("");
