@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { Menu, X } from "lucide-react";
 import { navigate } from "../lib/routes";
+import { IS_BOGOTA } from "../lib/region";
 
 const LINKS = [
   { id: "inicio", label: "Inicio" },
@@ -60,6 +61,11 @@ export function Navbar() {
           <span className="font-display text-lg sm:text-xl font-bold bg-gradient-to-r from-amber-300 to-yellow-200 bg-clip-text text-transparent tracking-tight">
             Musicaenvivo<span className="text-amber-400">.</span>co
           </span>
+          {IS_BOGOTA && (
+            <span className="block mt-0.5 text-left font-sans font-light uppercase text-amber-200 text-[11px] sm:text-xs tracking-[0.4em]">
+              Bogotá
+            </span>
+          )}
         </button>
 
         <div className="hidden md:flex items-center gap-1">
