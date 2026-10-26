@@ -5,7 +5,7 @@ const BOGOTA_HOST = "bogota.musicaenvivo.co";
 export const config = {
   matcher: [
     "/",
-    "/(mariachi|nortena|banda|serenatas|eventos-corporativos|bodas|cumpleanos|faq|chia|cajica|la-calera)",
+    "/(mariachi|nortena|banda|serenatas|eventos-corporativos|bodas|cumpleanos|faq|chia|cajica|la-calera|localidades|usaquen|chapinero|santa-fe|san-cristobal|usme|tunjuelito|bosa|kennedy|fontibon|engativa|suba|barrios-unidos|teusaquillo|los-martires|antonio-narino|puente-aranda|la-candelaria|rafael-uribe-uribe|ciudad-bolivar)",
     "/(sitemap.xml|robots.txt)",
   ],
 };

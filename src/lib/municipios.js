@@ -1,6 +1,8 @@
 // Landing pages per municipality for the Bogotá edition (bogota.musicaenvivo.co).
 // Shared by the React app and scripts/prerender.mjs.
 
+import { LOCALIDADES } from "./localidades.js";
+
 const RECARGO =
   "Para llegar hasta allá se suma un recargo por desplazamiento que depende de la distancia; te lo confirmamos al cotizar.";
 
@@ -115,8 +117,22 @@ export const MUNICIPIOS = [
   },
 ];
 
-export const MUNICIPIO_SLUGS = MUNICIPIOS.map((m) => m.slug);
+export { LOCALIDADES };
+
+export const HUB = {
+  slug: "localidades",
+  title: "Mariachis por localidad en Bogotá · Serenatas a domicilio | Musicaenvivo.co",
+  description:
+    "Mariachis, grupo norteño y banda en vivo en las 19 localidades de Bogotá: Suba, Kennedy, Engativá, Usaquén, Chapinero, Bosa y más. Serenatas a domicilio y eventos.",
+  h1: "Mariachis en todas las localidades de Bogotá",
+  intro:
+    "Llevamos serenatas y música en vivo a domicilio en toda la ciudad, del norte al sur. Escoge tu localidad para ver cómo trabajamos allí.",
+};
+
+export const ZONAS = [...MUNICIPIOS, ...LOCALIDADES];
+
+export const MUNICIPIO_SLUGS = [...ZONAS.map((m) => m.slug), "localidades"];
 
 export function getMunicipio(slug) {
-  return MUNICIPIOS.find((m) => m.slug === slug);
+  return ZONAS.find((m) => m.slug === slug);
 }

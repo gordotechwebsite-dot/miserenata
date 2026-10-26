@@ -1,7 +1,7 @@
 import { ArrowLeft } from "lucide-react";
 import { useEffect } from "react";
 import type { GenreId } from "../lib/constants";
-import { getMunicipio, MUNICIPIOS } from "../lib/municipios";
+import { getMunicipio, HUB, LOCALIDADES, MUNICIPIOS } from "../lib/municipios";
 import { genrePath, navigate } from "../lib/routes";
 import { WHATSAPP_LINK } from "../lib/supabase";
 import { trackWhatsAppClick } from "../lib/analytics";
@@ -18,6 +18,46 @@ function go(path: string) {
 }
 
 export function MunicipioPage({ slug }: { slug: string }) {
+  if (slug === HUB.slug) return <LocalidadesHub />;
+  return <ZonaPage slug={slug} />;
+}
+
+function LocalidadesHub() {
+  return (
+    <main className="bg-stone-950 text-stone-200 pt-28 pb-20">
+      <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
+        <h1 className="font-display font-black text-4xl sm:text-6xl text-stone-50 tracking-tight leading-[1.05] mb-8">
+          {HUB.h1}
+        </h1>
+        <p className="text-stone-300 text-lg leading-relaxed mb-10">{HUB.intro}</p>
+        <ul className="grid sm:grid-cols-2 border-t border-stone-800">
+          {LOCALIDADES.map((z) => (
+            <li key={z.slug} className="border-b border-stone-800">
+              <a
+                href={`/${z.slug}`}
+                onClick={(e) => {
+                  e.preventDefault();
+                  go(`/${z.slug}`);
+                }}
+                className="block py-4 pr-4 group"
+              >
+                <span className="font-display font-bold text-stone-100 group-hover:text-amber-300">
+                  Mariachis en {z.name}
+                </span>
+                <span className="block text-sm text-stone-500">
+                  {z.barrios?.slice(0, 3).join(" · ")}
+                </span>
+              </a>
+            </li>
+          ))}
+        </ul>
+        <ZonasLinks />
+      </div>
+    </main>
+  );
+}
+
+function ZonaPage({ slug }: { slug: string }) {
   const m = getMunicipio(slug);
 
   useEffect(() => {
@@ -47,7 +87,7 @@ export function MunicipioPage({ slug }: { slug: string }) {
         </button>
 
         <p className="uppercase tracking-[0.4em] text-amber-200 text-xs font-light mb-4">
-          {m.name}
+          {m.kind === "localidad" ? `${m.name} · Bogotá` : m.name}
         </p>
         <h1 className="font-display font-black text-4xl sm:text-6xl text-stone-50 tracking-tight leading-[1.05] mb-8">
           {m.h1}
@@ -117,7 +157,9 @@ function ZonasLinks({ exclude }: { exclude?: string }) {
       <span className="uppercase tracking-[0.3em] text-stone-500 text-xs self-center">
         Zonas
       </span>
-      {MUNICIPIOS.filter((z) => z.slug !== exclude).map((z) => (
+      {[...MUNICIPIOS, { slug: HUB.slug, name: "las localidades de Bogotá" }]
+        .filter((z) => z.slug !== exclude)
+        .map((z) => (
         <a
           key={z.slug}
           href={`/${z.slug}`}
@@ -129,7 +171,7 @@ function ZonasLinks({ exclude }: { exclude?: string }) {
         >
           Música en vivo en {z.name}
         </a>
-      ))}
+        ))}
     </nav>
   );
 }
