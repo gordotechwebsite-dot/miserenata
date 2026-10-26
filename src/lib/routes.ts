@@ -16,7 +16,8 @@ export type Route =
   | { kind: "faq" }
   | { kind: "genre"; id: GenreId }
   | { kind: "landing"; path: LandingPath }
-  | { kind: "municipio"; slug: string };
+  | { kind: "municipio"; slug: string }
+  | { kind: "precios" };
 
 const GENRE_IDS: GenreId[] = ["mariachi", "nortena", "banda"];
 
@@ -30,6 +31,7 @@ export function parseRoute(input: string): Route {
   if ((GENRE_IDS as string[]).includes(seg)) {
     return { kind: "genre", id: seg as GenreId };
   }
+  if (IS_BOGOTA && seg === "precios") return { kind: "precios" };
   if (IS_BOGOTA && MUNICIPIO_SLUGS.includes(seg)) {
     return { kind: "municipio", slug: seg };
   }
@@ -69,6 +71,8 @@ export function routePath(route: Route): string {
       return route.path;
     case "municipio":
       return `/${route.slug}`;
+    case "precios":
+      return "/precios";
   }
 }
 

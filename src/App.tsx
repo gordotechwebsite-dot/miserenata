@@ -22,6 +22,8 @@ import { BottomBanner } from "./components/BottomBanner";
 import { GenrePage } from "./components/GenrePage";
 import { MunicipioPage, ZonasStrip } from "./components/MunicipioPage";
 import { getMunicipio, HUB } from "./lib/municipios";
+import { PreciosPage } from "./components/PreciosPage";
+import { PRECIOS } from "./lib/precios";
 
 const AdminPanel = lazy(() =>
   import("./components/AdminPanel").then((m) => ({ default: m.AdminPanel }))
@@ -141,6 +143,7 @@ function App() {
       admin: "Admin | Musicaenvivo.co",
       landing:
         route.kind === "landing" ? landingTitles[route.path] ?? "" : "",
+      precios: PRECIOS.title,
       municipio:
         route.kind === "municipio"
           ? route.slug === HUB.slug
@@ -215,7 +218,9 @@ function App() {
         aria-hidden="true"
       />
       <Navbar />
-      {route.kind === "municipio" ? (
+      {route.kind === "precios" ? (
+        <PreciosPage packages={packages} />
+      ) : route.kind === "municipio" ? (
         <MunicipioPage slug={route.slug} />
       ) : route.kind === "genre" ? (
         <GenrePage id={route.id} packages={packages} loading={loading} />

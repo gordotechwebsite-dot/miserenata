@@ -10,6 +10,13 @@ import { join, dirname } from "node:path";
 import { fileURLToPath } from "node:url";
 import { BOGOTA_FAQ, BOGOTA_SITE, BOGOTA_ZONES, toBogota } from "../src/lib/region.js";
 import { HUB, LOCALIDADES, ZONAS } from "../src/lib/municipios.js";
+import {
+  cop,
+  DEFAULT_HOURLY_RATE,
+  PRECIOS,
+  preciosDescription,
+  preciosFaqs,
+} from "../src/lib/precios.js";
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const DIST = join(__dirname, "..", "dist");
@@ -536,6 +543,21 @@ function bogotaHtml(html) {
   return html;
 }
 
+async function fetchMariachiPackages() {
+  const url = process.env.VITE_SUPABASE_URL;
+  const key = process.env.VITE_SUPABASE_PUBLISHABLE_KEY;
+  if (!url || !key) return [];
+  try {
+    const res = await fetch(
+      `${url}/rest/v1/packages?select=name,price_cop,duration_minutes,songs_count,musicians_count&genre=eq.mariachi&order=price_cop`,
+      { headers: { apikey: key, Authorization: `Bearer ${key}` } }
+    );
+    return res.ok ? await res.json() : [];
+  } catch {
+    return [];
+  }
+}
+
 async function prerenderBogota(baseHtml) {
   const outDir = join(DIST, "bogota");
   for (const route of ROUTES) {
@@ -642,8 +664,72 @@ async function prerenderBogota(baseHtml) {
     await writeFile(outPath, bogotaHtml(applyMeta(baseHtml, route, BOGOTA_SITE)), "utf8");
   }
 
+  {
+    const pkgs = await fetchMariachiPackages();
+    const min = pkgs[0]?.price_cop;
+    const faqs = preciosFaqs(min, DEFAULT_HOURLY_RATE);
+    const route = {
+      path: `/${PRECIOS.slug}`,
+      title: PRECIOS.title,
+      description: preciosDescription(min),
+      extraJsonLd: [
+        {
+          "@context": "https://schema.org",
+          "@type": "Service",
+          name: PRECIOS.h1,
+          serviceType: "Música en vivo",
+          url: `${BOGOTA_SITE}/${PRECIOS.slug}`,
+          areaServed: BOGOTA_ZONES.map((name) => ({ "@type": "City", name })),
+          provider: { "@type": "LocalBusiness", name: "Musicaenvivo.co", url: BOGOTA_SITE },
+          hasOfferCatalog: {
+            "@type": "OfferCatalog",
+            name: "Serenatas con mariachi",
+            itemListElement: pkgs.map((p) => ({
+              "@type": "Offer",
+              name: p.name,
+              price: p.price_cop,
+              priceCurrency: "COP",
+            })),
+          },
+        },
+        {
+          "@context": "https://schema.org",
+          "@type": "FAQPage",
+          mainEntity: faqs.map((f) => ({
+            "@type": "Question",
+            name: f.q,
+            acceptedAnswer: { "@type": "Answer", text: f.a },
+          })),
+        },
+      ],
+      staticBody: landingStaticBody({
+        h1: PRECIOS.h1,
+        intro: PRECIOS.intro,
+        sections: [
+          ...pkgs.map((p) => ({
+            h: `${p.name}: ${cop(p.price_cop)}`,
+            p: `${p.duration_minutes} min · ${p.songs_count} canciones · ${p.musicians_count} músicos.`,
+          })),
+          { h: `Grupo norteño: ${cop(DEFAULT_HOURLY_RATE.nortena)} por hora`, p: "Sonido amplificado incluido, desde 1 hora." },
+          { h: `Banda en vivo: ${cop(DEFAULT_HOURLY_RATE.banda)} por hora`, p: "Sonido amplificado incluido, desde 1 hora." },
+          { h: "Recargo por desplazamiento", p: PRECIOS.recargo },
+          ...faqs.map((f) => ({ h: f.q, p: f.a })),
+        ],
+        cta: "Cotiza por WhatsApp tu serenata en Bogotá.",
+      }),
+    };
+    const html = bogotaHtml(applyMeta(baseHtml, route, BOGOTA_SITE)).replace(
+      /<script type="application\/ld\+json">\s*\{\s*"@context": "https:\/\/schema.org",\s*"@type": "FAQPage"[\s\S]*?<\/script>\s*/,
+      ""
+    );
+    const outPath = join(outDir, PRECIOS.slug, "index.html");
+    await mkdir(dirname(outPath), { recursive: true });
+    await writeFile(outPath, html, "utf8");
+    console.log(`prerender bogota /${PRECIOS.slug} (${pkgs.length} paquetes)`);
+  }
+
   const today = new Date().toISOString().slice(0, 10);
-  const urls = [...ROUTES, ...[...ZONAS, HUB].map((m) => ({ path: `/${m.slug}` }))].map(
+  const urls = [...ROUTES, ...[...ZONAS, HUB, PRECIOS].map((m) => ({ path: `/${m.slug}` }))].map(
     (r) =>
       `  <url><loc>${BOGOTA_SITE}${r.path}</loc><lastmod>${today}</lastmod><priority>${
         r.path === "/" ? "1.0" : "0.8"
