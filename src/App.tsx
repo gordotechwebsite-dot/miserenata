@@ -54,7 +54,7 @@ const DEFAULT_BY_NAME: Record<string, PackageData> = Object.fromEntries(
   DEFAULT_PACKAGES.map((p) => [p.name, p])
 );
 
-const GENRE_IDS = new Set<GenreId>(["mariachi", "nortena", "banda"]);
+const GENRE_IDS = new Set<GenreId>(["mariachi", "papayera", "nortena", "banda"]);
 
 function mapRow(row: PackageRow): PackageData {
   const local = DEFAULT_BY_NAME[row.name];
@@ -134,6 +134,8 @@ function App() {
           ? `${
               route.id === "mariachi"
                 ? "Mariachis"
+                : route.id === "papayera"
+                ? "Papayera"
                 : route.id === "nortena"
                 ? "Norteña"
                 : "Banda"

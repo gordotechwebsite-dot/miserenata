@@ -6,7 +6,7 @@ import { genrePath, navigate } from "../lib/routes";
 import { WHATSAPP_LINK } from "../lib/supabase";
 import { trackWhatsAppClick } from "../lib/analytics";
 
-const GENRES: { id: GenreId; label: string }[] = [
+const GENRES: { id: Exclude<GenreId, "papayera">; label: string }[] = [
   { id: "mariachi", label: "Mariachi" },
   { id: "nortena", label: "Norteña" },
   { id: "banda", label: "Banda en vivo" },

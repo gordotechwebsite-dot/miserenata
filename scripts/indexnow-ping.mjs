@@ -15,6 +15,7 @@ const URL_LIST = [
   `https://${HOST}/`,
   `https://${HOST}/mariachi`,
   `https://${HOST}/nortena`,
+  `https://${HOST}/papayera`,
   `https://${HOST}/banda`,
   `https://${HOST}/serenatas`,
   `https://${HOST}/eventos-corporativos`,

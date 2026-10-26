@@ -9,7 +9,7 @@ import { Reveal } from "./Reveal";
 type GenreOverride = Partial<Pick<GenreData, "name" | "image">>;
 
 async function loadOverrides(): Promise<Record<GenreId, GenreOverride>> {
-  const ids: GenreId[] = ["mariachi", "nortena", "banda"];
+  const ids: GenreId[] = ["mariachi", "papayera", "nortena", "banda"];
   const entries = await Promise.all(
     ids.map(async (id) => {
       const [name, image] = await Promise.all([
@@ -73,7 +73,7 @@ export function Genres() {
           </p>
         </Reveal>
 
-        <div className="grid gap-5 sm:gap-6 sm:grid-cols-2 lg:grid-cols-3">
+        <div className="grid gap-5 sm:gap-6 sm:grid-cols-2">
           {genres.map((g, idx) => (
             <Reveal key={g.id} delay={idx * 120} className="h-full">
             <button

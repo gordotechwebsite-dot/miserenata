@@ -61,11 +61,12 @@ import {
 
 const GALLERY_BUCKET = "gallery";
 
-type GalleryDestination = "main" | "mariachi" | "nortena" | "banda";
+type GalleryDestination = "main" | "mariachi" | "papayera" | "nortena" | "banda";
 
 const GALLERY_DESTINATIONS: { id: GalleryDestination; label: string }[] = [
   { id: "main", label: "Galería principal" },
   { id: "mariachi", label: "Mariachi" },
+  { id: "papayera", label: "Papayera" },
   { id: "nortena", label: "Norteña" },
   { id: "banda", label: "Banda" },
 ];
@@ -131,7 +132,7 @@ const STATUS_STYLE: Record<ReservationRecord["status"], string> = {
   cancelled: "bg-stone-700/40 text-stone-300 border-stone-600",
 };
 
-const GENRE_IDS_SET = new Set<GenreId>(["mariachi", "nortena", "banda"]);
+const GENRE_IDS_SET = new Set<GenreId>(["mariachi", "papayera", "nortena", "banda"]);
 
 type PackageRow = {
   id: string;
@@ -229,6 +230,7 @@ export function AdminPanel({ onExit }: { onExit: () => void }) {
   const emptyHourly: HourlyForm = { rate: "", image: "", description: "" };
   const [genreHourly, setGenreHourly] = useState<Record<GenreId, HourlyForm>>({
     mariachi: emptyHourly,
+    papayera: emptyHourly,
     nortena: emptyHourly,
     banda: emptyHourly,
   });
@@ -592,6 +594,8 @@ export function AdminPanel({ onExit }: { onExit: () => void }) {
     setGenreHourly({
       mariachi:
         entries.find((e) => e.base.id === "mariachi")?.hourly || emptyHourly,
+      papayera:
+        entries.find((e) => e.base.id === "papayera")?.hourly || emptyHourly,
       nortena:
         entries.find((e) => e.base.id === "nortena")?.hourly || emptyHourly,
       banda: entries.find((e) => e.base.id === "banda")?.hourly || emptyHourly,
@@ -1902,6 +1906,7 @@ export function AdminPanel({ onExit }: { onExit: () => void }) {
                         >
                           <option value="">Sin género</option>
                           <option value="mariachi">Mariachi</option>
+                          <option value="papayera">Papayera</option>
                           <option value="nortena">Norteña</option>
                           <option value="banda">Banda</option>
                         </select>
@@ -2344,7 +2349,7 @@ export function AdminPanel({ onExit }: { onExit: () => void }) {
 
                   <div className="mb-4 grid gap-3 sm:grid-cols-[auto_1fr] sm:items-center">
                     <div className="flex flex-wrap gap-2">
-                      {(["mariachi", "nortena", "banda"] as GenreId[]).map(
+                      {(["mariachi", "papayera", "nortena", "banda"] as GenreId[]).map(
                         (g) => (
                           <button
                             key={g}
@@ -2368,12 +2373,12 @@ export function AdminPanel({ onExit }: { onExit: () => void }) {
                     </div>
                   </div>
 
-                  {(calGenre === "nortena" || calGenre === "banda") && (
+                  {(calGenre === "papayera" || calGenre === "nortena" || calGenre === "banda") && (
                     <div className="mb-4 rounded-2xl border border-amber-500/30 bg-stone-950/40 p-4">
                       <div className="flex flex-col sm:flex-row sm:items-end gap-3">
                         <div className="flex-1">
                           <div className="text-sm font-bold text-amber-200 mb-1">
-                            Precio por hora ({calGenre === "nortena" ? "Norteña" : "Banda"})
+                            Precio por hora ({calGenre === "nortena" ? "Norteña" : calGenre === "papayera" ? "Papayera" : "Banda"})
                           </div>
                           <div className="text-xs text-stone-400 mb-2">
                             Se muestra como etiqueta en cada horario disponible
@@ -2574,7 +2579,7 @@ export function AdminPanel({ onExit }: { onExit: () => void }) {
                           const blocked = calUnavailable.has(key);
                           const priceInput = calSlotPrices[key] ?? "";
                           const showPriceField =
-                            calGenre === "nortena" || calGenre === "banda";
+                            calGenre === "papayera" || calGenre === "nortena" || calGenre === "banda";
                           const parsedPrice =
                             Number(String(priceInput).replace(/[^\d]/g, "")) ||
                             0;
@@ -2585,7 +2590,9 @@ export function AdminPanel({ onExit }: { onExit: () => void }) {
                                 ""
                               )
                             ) ||
-                            (calGenre === "nortena"
+                            (calGenre === "papayera"
+                              ? 380000
+                              : calGenre === "nortena"
                               ? 600000
                               : calGenre === "banda"
                               ? 800000

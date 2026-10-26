@@ -19,7 +19,7 @@ export type Route =
   | { kind: "municipio"; slug: string }
   | { kind: "precios" };
 
-const GENRE_IDS: GenreId[] = ["mariachi", "nortena", "banda"];
+const GENRE_IDS: GenreId[] = ["mariachi", "papayera", "nortena", "banda"];
 
 export function parseRoute(input: string): Route {
   const raw = (input || "").split("?")[0].split("#")[0];
