@@ -1,11 +1,14 @@
-import { loc } from "../lib/region";
+import { BOGOTA_BANNER, IS_BOGOTA, loc } from "../lib/region";
 import { useEffect, useState } from "react";
 import { DEFAULT_BANNER_TEXT, getSiteSetting } from "../lib/supabase";
 
 export function BottomBanner() {
-  const [text, setText] = useState<string>(DEFAULT_BANNER_TEXT);
+  const [text, setText] = useState<string>(
+    IS_BOGOTA ? BOGOTA_BANNER : DEFAULT_BANNER_TEXT
+  );
 
   useEffect(() => {
+    if (IS_BOGOTA) return;
     let mounted = true;
     getSiteSetting("banner_text").then((value) => {
       if (mounted && value && value.trim().length > 0) setText(loc(value));
