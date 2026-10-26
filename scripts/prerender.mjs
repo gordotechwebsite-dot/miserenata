@@ -139,6 +139,8 @@ const ROUTES = [
       <p style="font-size:1rem;margin:0 0 1.5rem;color:#d6d3d1">Serenatas, mariachis y artistas en vivo para eventos en Duitama, Paipa, Sogamoso, Tunja, Nobsa y municipios de Boyacá. Contrata por hora o por paquete: cumpleaños, aniversarios, declaraciones, bodas, grados, fiestas privadas y eventos corporativos. Reserva con anticipación por WhatsApp y asegura tu fecha con el 50%.</p>
       <h2 style="font-size:1.25rem;font-weight:700;color:#fcd34d;margin:1.5rem 0 0.5rem">Mariachi en Duitama, Paipa y Sogamoso</h2>
       <p style="margin:0 0 1rem;font-size:0.95rem"><a href="/mariachi" style="color:#fcd34d;text-decoration:underline">Mariachi profesional con vestuario charro</a> y formación tradicional (trompetas, violines, vihuela y guitarrón). Repertorio clásico mexicano: Las Mañanitas, El Rey, Cielito Lindo, Bésame Mucho, Volver Volver. Ideal para serenatas y declaraciones románticas.</p>
+      <h2 style="font-size:1.25rem;font-weight:700;color:#fcd34d;margin:1.5rem 0 0.5rem">Papayera en Boyacá</h2>
+      <p style="margin:0 0 1rem;font-size:0.95rem"><a href="/papayera" style="color:#fcd34d;text-decoration:underline">Banda papayera</a> con bombo, redoblante, trompeta, bombardino, clarinete y saxofón. Porros, fandangos y cumbias para cumpleaños, matrimonios y fiestas.</p>
       <h2 style="font-size:1.25rem;font-weight:700;color:#fcd34d;margin:1.5rem 0 0.5rem">Grupos norteños en Boyacá</h2>
       <p style="margin:0 0 1rem;font-size:0.95rem"><a href="/nortena" style="color:#fcd34d;text-decoration:underline">Música norteña en vivo</a> con acordeón, bajo sexto, bajo eléctrico y batería. Corridos, cumbias norteñas y baladas para parrandas y fiestas en Duitama, Paipa, Sogamoso, Tunja y Nobsa.</p>
       <h2 style="font-size:1.25rem;font-weight:700;color:#fcd34d;margin:1.5rem 0 0.5rem">Banda para eventos grandes</h2>
@@ -184,6 +186,48 @@ const ROUTES = [
         {
           q: "¿Atienden Tunja, Sogamoso y Paipa?",
           a: "Sí. Cubrimos todo el corredor Duitama–Paipa–Sogamoso–Tunja–Nobsa y municipios cercanos de Boyacá. Para destinos más lejanos cotizamos recargo por desplazamiento al confirmar la fecha.",
+        },
+      ],
+    }),
+  },
+  {
+    path: "/papayera",
+    title: "Papayera en Boyacá · Banda papayera para fiestas | Musicaenvivo.co",
+    description:
+      "Banda papayera para cumpleaños, matrimonios, ferias y fiestas en Duitama, Paipa, Sogamoso, Tunja y Boyacá. Porros, fandangos y cumbias. $380.000 por hora.",
+    ogTitle: "Papayera en Boyacá · Musicaenvivo.co",
+    extraJsonLd: [
+      genreServiceJsonLd({
+        id: "papayera",
+        name: "Papayera",
+        description:
+          "Banda papayera con bombo, redoblante, trompeta, bombardino, clarinete y saxofón. Porros, fandangos, cumbias y música de feria para cumpleaños, matrimonios, recibimientos y fiestas en Boyacá. Cobro por hora.",
+        image: `${SITE}/images/papayera.jpg`,
+      }),
+    ],
+    staticBody: genreStaticBody({
+      id: "papayera",
+      h1: "Papayera para fiestas en Duitama, Paipa, Sogamoso y Boyacá",
+      intro:
+        "Banda papayera con bombo, redoblante, trompeta, bombardino, clarinete y saxofón para cumpleaños, matrimonios, ferias, recibimientos y fiestas al aire libre en Duitama, Paipa, Sogamoso, Tunja, Nobsa y Boyacá. Cotización por WhatsApp.",
+      repertoire:
+        "Porros, fandangos, cumbias y música de feria y corraleja, además de los clásicos que piden en toda fiesta. Si quieres una canción especial, la preparamos al reservar.",
+      coverage:
+        "Papayera en Duitama, papayera en Paipa, papayera en Sogamoso, papayera en Tunja, papayera en Nobsa y municipios de Boyacá. Para lugares más lejanos hay un recargo por desplazamiento según la distancia.",
+      reserva:
+        "Se contrata por hora, desde 1 hora, a $380.000 la hora. Pago: Nequi, Daviplata, Bancolombia, efectivo o tarjeta. El 50% asegura la fecha.",
+      faqs: [
+        {
+          q: "¿Cuánto cuesta una papayera por hora?",
+          a: "La papayera cuesta $380.000 por hora y puedes contratarla desde 1 hora. Para lugares lejanos se suma un recargo por desplazamiento según la distancia.",
+        },
+        {
+          q: "¿Qué tocan?",
+          a: "Porros, fandangos, cumbias, música de feria y corraleja y los clásicos de toda fiesta. Si quieres una canción especial, avísanos al reservar.",
+        },
+        {
+          q: "¿Para qué eventos sirve una papayera?",
+          a: "Cumpleaños, matrimonios, grados, recibimientos, ferias y fiestas familiares o de empresa.",
         },
       ],
     }),
@@ -536,6 +580,7 @@ function bogotaHtml(html) {
     .replace(/"areaServed":\s*\[[\s\S]*?\]/g, `"areaServed": ${bogotaArea}`)
     .replaceAll(`"url": "${SITE}"`, `"url": "${BOGOTA_SITE}"`)
     .replaceAll(`${SITE}/mariachi"`, `${BOGOTA_SITE}/mariachi"`)
+    .replaceAll(`${SITE}/papayera"`, `${BOGOTA_SITE}/papayera"`)
     .replaceAll(`${SITE}/nortena"`, `${BOGOTA_SITE}/nortena"`)
     .replaceAll(`${SITE}/banda"`, `${BOGOTA_SITE}/banda"`);
   html = toBogota(html).replace(
@@ -719,6 +764,7 @@ async function prerenderBogota(baseHtml) {
             h: `${p.name}: ${cop(p.price_cop)}`,
             p: `${p.duration_minutes} min · ${p.songs_count} canciones · ${p.musicians_count} músicos.`,
           })),
+          { h: `Papayera: ${cop(DEFAULT_HOURLY_RATE.papayera)} por hora`, p: "Desde 1 hora." },
           { h: `Grupo norteño: ${cop(DEFAULT_HOURLY_RATE.nortena)} por hora`, p: "Sonido amplificado incluido, desde 1 hora." },
           { h: `Banda en vivo: ${cop(DEFAULT_HOURLY_RATE.banda)} por hora`, p: "Sonido amplificado incluido, desde 1 hora." },
           { h: "Recargo por desplazamiento", p: PRECIOS.recargo },

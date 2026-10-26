@@ -17,6 +17,7 @@ import { navigate } from "../lib/routes";
 import { trackWhatsAppClick, trackAdsConversion } from "../lib/analytics";
 
 const DEFAULT_HOURLY_PRICE: Partial<Record<GenreId, number>> = {
+  papayera: 380000,
   nortena: 600000,
   banda: 800000,
 };
@@ -40,6 +41,7 @@ export function unavailableKey(genreId: GenreId | null | undefined): string {
 
 export const GENRE_IDS_FOR_SLOTS: GenreId[] = [
   "mariachi",
+  "papayera",
   "nortena",
   "banda",
 ];

@@ -1,6 +1,6 @@
 // Copy for the Bogotá /precios page. Shared by React and scripts/prerender.mjs.
 
-export const DEFAULT_HOURLY_RATE = { nortena: 600000, banda: 800000 };
+export const DEFAULT_HOURLY_RATE = { papayera: 380000, nortena: 600000, banda: 800000 };
 
 export const PRECIOS = {
   slug: "precios",
@@ -34,7 +34,7 @@ export function preciosFaqs(minMariachi, hourly) {
     },
     {
       q: "¿Cuánto cuesta un grupo norteño o una banda por hora?",
-      a: `El grupo norteño cuesta ${cop(hourly.nortena)} por hora y la banda ${cop(hourly.banda)} por hora, con sonido amplificado incluido. Puedes contratar desde 1 hora.`,
+      a: `El grupo norteño cuesta ${cop(hourly.nortena)} por hora y la banda ${cop(hourly.banda)} por hora, con sonido amplificado incluido. La papayera cuesta ${cop(hourly.papayera)} por hora. Puedes contratar desde 1 hora.`,
     },
     {
       q: "¿Cómo se paga la reserva?",

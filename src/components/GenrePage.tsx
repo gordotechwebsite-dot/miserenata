@@ -24,6 +24,7 @@ type Props = {
 };
 
 const DEFAULT_HOURLY_RATE: Partial<Record<GenreId, number>> = {
+  papayera: 380000,
   nortena: 600000,
   banda: 800000,
 };
@@ -70,6 +71,25 @@ const SEO_CONTENT_BASE: Record<GenreId, SeoBlock> = {
       {
         title: "Cobertura",
         body: "Duitama, Paipa, Sogamoso, Tunja, Nobsa y municipios cercanos de Boyacá. Para localidades más lejanas se cotiza recargo por desplazamiento.",
+      },
+    ],
+  },
+  papayera: {
+    heading: "Papayera en Boyacá",
+    intro:
+      "Banda papayera con bombo, redoblante, trompeta, bombardino, clarinete y saxofón. Pone a bailar a todos en cumpleaños, matrimonios, ferias, recibimientos y fiestas al aire libre.",
+    bullets: [
+      {
+        title: "Repertorio",
+        body: "Porros, fandangos, cumbias y música de feria y corraleja, además de los clásicos que piden en toda fiesta. Si quieres una canción especial, avísanos al reservar.",
+      },
+      {
+        title: "Cobro por hora",
+        body: "Se contrata por hora, desde 1 hora. El precio que ves es el que pagas.",
+      },
+      {
+        title: "Cobertura",
+        body: "Duitama, Paipa, Sogamoso, Tunja, Nobsa y municipios cercanos de Boyacá. Para lugares más lejanos hay un recargo por desplazamiento según la distancia.",
       },
     ],
   },

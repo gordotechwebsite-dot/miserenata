@@ -32,12 +32,14 @@ export function PreciosPage({ packages }: { packages: PackageData[] }) {
   useEffect(() => {
     let mounted = true;
     Promise.all([
+      getSiteSetting("genre_papayera_hourly_rate"),
       getSiteSetting("genre_nortena_hourly_rate"),
       getSiteSetting("genre_banda_hourly_rate"),
       getSiteSetting("extras_list"),
-    ]).then(([n, b, x]) => {
+    ]).then(([pp, n, b, x]) => {
       if (!mounted) return;
       setHourly({
+        papayera: parseRate(pp, DEFAULT_HOURLY_RATE.papayera),
         nortena: parseRate(n, DEFAULT_HOURLY_RATE.nortena),
         banda: parseRate(b, DEFAULT_HOURLY_RATE.banda),
       });
@@ -62,6 +64,7 @@ export function PreciosPage({ packages }: { packages: PackageData[] }) {
   )}`;
 
   const hourlyRows: { id: GenreId; label: string; rate: number }[] = [
+    { id: "papayera", label: "Papayera", rate: hourly.papayera },
     { id: "nortena", label: "Grupo norteño", rate: hourly.nortena },
     { id: "banda", label: "Banda en vivo", rate: hourly.banda },
   ];

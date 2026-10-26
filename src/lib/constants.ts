@@ -1,7 +1,7 @@
 import { BOGOTA_ZONES, IS_BOGOTA } from "./region";
 import { placeholderSvg } from "./placeholder";
 
-export type GenreId = "mariachi" | "nortena" | "banda";
+export type GenreId = "mariachi" | "papayera" | "nortena" | "banda";
 
 export type PackageData = {
   id?: string;
@@ -45,6 +45,7 @@ export const HOURLY_MAX = 5;
 // from Supabase. The placeholder is a tiny inline SVG (no network call).
 export const DEFAULT_GENRES: GenreData[] = [
   { id: "mariachi", name: "Mariachi", image: placeholderSvg("Mariachi", 800, 1000) },
+  { id: "papayera", name: "Papayera", image: "/images/papayera.jpg" },
   { id: "nortena", name: "Norteña", image: placeholderSvg("Norteña", 800, 1000) },
   { id: "banda", name: "Banda", image: placeholderSvg("Banda", 800, 1000) },
 ];
