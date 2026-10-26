@@ -17,10 +17,8 @@ export default function middleware(request) {
   if (host !== BOGOTA_HOST && !preview) return;
 
   const path = url.pathname.replace(/\/+$/, "");
-  url.pathname =
-    path === "/sitemap.xml" || path === "/robots.txt"
-      ? `/bogota${path}`
-      : `/bogota${path}/index.html`;
+  // cleanUrls: /bogota/index.html is not addressable, /bogota is.
+  url.pathname = `/bogota${path}`;
   return new Response(null, {
     headers: { "x-middleware-rewrite": url.toString() },
   });
