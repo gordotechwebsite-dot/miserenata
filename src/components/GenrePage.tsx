@@ -8,6 +8,7 @@ import {
   type PackageData,
 } from "../lib/constants";
 import { getSiteSetting } from "../lib/supabase";
+import { loc } from "../lib/region";
 import { readCache, writeCache } from "../lib/cache";
 import { navigate } from "../lib/routes";
 import { placeholderSvg } from "../lib/placeholder";
@@ -33,7 +34,7 @@ type SeoBlock = {
   bullets: { title: string; body: string }[];
 };
 
-const SEO_CONTENT: Record<GenreId, SeoBlock> = {
+const SEO_CONTENT_BASE: Record<GenreId, SeoBlock> = {
   mariachi: {
     heading: "Mariachi profesional en Boyacá",
     intro:
@@ -92,6 +93,17 @@ const SEO_CONTENT: Record<GenreId, SeoBlock> = {
     ],
   },
 };
+
+const SEO_CONTENT = Object.fromEntries(
+  Object.entries(SEO_CONTENT_BASE).map(([k, b]) => [
+    k,
+    {
+      heading: loc(b.heading),
+      intro: loc(b.intro),
+      bullets: b.bullets.map((x) => ({ title: x.title, body: loc(x.body) })),
+    },
+  ])
+) as Record<GenreId, SeoBlock>;
 
 export function GenrePage({ id, packages, loading }: Props) {
   const base = DEFAULT_GENRES.find((g) => g.id === id)!;

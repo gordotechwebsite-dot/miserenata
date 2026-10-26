@@ -1,3 +1,4 @@
+import { loc } from "../lib/region";
 import { MessageCircle, Clock, MapPin, Phone } from "lucide-react";
 import { WHATSAPP_LINK, PHONE_NUMBER, PHONE_DISPLAY } from "../lib/supabase";
 import { trackWhatsAppClick, trackPhoneClick } from "../lib/analytics";
@@ -42,7 +43,7 @@ export function Contact() {
           <div className="bg-stone-900/60 border border-stone-800 rounded-2xl p-5">
             <MapPin className="w-6 h-6 text-amber-400 mx-auto mb-3" />
             <h3 className="font-display font-bold text-white mb-1">Cobertura</h3>
-            <p className="text-stone-400 text-sm">Duitama · Paipa · Sogamoso</p>
+            <p className="text-stone-400 text-sm">{loc("Duitama · Paipa · Sogamoso")}</p>
             <p className="text-stone-500 text-xs mt-1 inline-flex items-center gap-1 justify-center">
               <Clock className="w-3 h-3" /> Todos los días
             </p>

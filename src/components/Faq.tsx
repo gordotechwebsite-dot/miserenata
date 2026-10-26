@@ -1,7 +1,8 @@
 import { useState } from "react";
 import { Plus, Minus } from "lucide-react";
+import { loc } from "../lib/region";
 
-const FAQS = [
+const FAQS_BASE = [
   {
     q: "¿Con cuánto tiempo debo reservar?",
     a: "Recomendamos al menos 48 horas de anticipación. Para bodas y eventos grandes, lo ideal es 2 a 4 semanas. Si es urgente, escríbenos por WhatsApp y vemos disponibilidad.",
@@ -35,6 +36,8 @@ const FAQS = [
     a: "Sí. Diseñamos propuestas a la medida para empresas, bodas y celebraciones grandes. Contáctanos para una cotización personalizada.",
   },
 ];
+
+const FAQS = FAQS_BASE.map((f) => ({ q: f.q, a: loc(f.a) }));
 
 export function Faq() {
   const [open, setOpen] = useState<number | null>(0);

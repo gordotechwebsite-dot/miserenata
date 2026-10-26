@@ -1,3 +1,4 @@
+import { loc } from "../lib/region";
 import { useEffect, useState } from "react";
 import { DEFAULT_BANNER_TEXT, getSiteSetting } from "../lib/supabase";
 
@@ -7,7 +8,7 @@ export function BottomBanner() {
   useEffect(() => {
     let mounted = true;
     getSiteSetting("banner_text").then((value) => {
-      if (mounted && value && value.trim().length > 0) setText(value);
+      if (mounted && value && value.trim().length > 0) setText(loc(value));
     });
     return () => {
       mounted = false;

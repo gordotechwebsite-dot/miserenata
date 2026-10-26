@@ -8,6 +8,7 @@ import {
 } from "./lib/constants";
 import { navigate, parseRoute, routePath, type Route } from "./lib/routes";
 import { trackPageView } from "./lib/analytics";
+import { BOGOTA_SITE, IS_BOGOTA, loc } from "./lib/region";
 import { readCache, writeCache } from "./lib/cache";
 import { placeholderSvg } from "./lib/placeholder";
 import { Navbar } from "./components/Navbar";
@@ -139,13 +140,13 @@ function App() {
       landing:
         route.kind === "landing" ? landingTitles[route.path] ?? "" : "",
     };
-    const title = titles[route.kind];
+    const title = loc(titles[route.kind]);
     if (title) document.title = title;
     const canonical = document.querySelector(
       'link[rel="canonical"]'
     ) as HTMLLinkElement | null;
     if (canonical) {
-      canonical.href = `https://musicaenvivo.co${path}`;
+      canonical.href = `${IS_BOGOTA ? BOGOTA_SITE : "https://musicaenvivo.co"}${path}`;
     }
   }, [route]);
 

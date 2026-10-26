@@ -1,3 +1,4 @@
+import { IS_BOGOTA } from "../lib/region";
 import { useEffect, useState } from "react";
 import { Star, Quote } from "lucide-react";
 import {
@@ -128,7 +129,9 @@ export function Testimonials() {
               </p>
               <div className="mt-auto border-t border-stone-800 pt-3">
                 <div className="text-white font-bold">{t.name}</div>
-                <div className="text-amber-400 text-sm">{t.city}</div>
+                {!IS_BOGOTA && (
+                  <div className="text-amber-400 text-sm">{t.city}</div>
+                )}
               </div>
             </article>
           ))}
