@@ -833,10 +833,6 @@ export function ReservationForm({
               )}
             </div>
 
-            <p className="text-stone-500 text-xs text-center">
-              Al enviar, serás redirigido a WhatsApp para confirmar tu reserva
-              directamente con nuestro equipo.
-            </p>
           </form>
         </div>
       </div>
