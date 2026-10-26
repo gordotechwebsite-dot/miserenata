@@ -1,3 +1,4 @@
+import { loc } from "../lib/region";
 import { Music4, Instagram, Mail, MapPin, Phone } from "lucide-react";
 import { WHATSAPP_LINK, PHONE_NUMBER, PHONE_DISPLAY } from "../lib/supabase";
 import { trackWhatsAppClick, trackPhoneClick } from "../lib/analytics";
@@ -43,7 +44,7 @@ export function Footer() {
             <ul className="space-y-2 text-stone-400 text-sm">
               <li className="flex items-center gap-2">
                 <MapPin className="w-4 h-4 text-amber-400" />
-                Duitama · Paipa · Sogamoso
+                {loc("Duitama · Paipa · Sogamoso")}
               </li>
               <li>
                 <a
@@ -83,7 +84,7 @@ export function Footer() {
             © {year} Musicaenvivo.co · El arte de sorprender. Todos los derechos
             reservados.
           </p>
-          <p className="text-stone-600 text-xs">Hecho con amor en Boyacá.</p>
+          <p className="text-stone-600 text-xs">{loc("Hecho con amor en Boyacá.")}</p>
         </div>
       </div>
     </footer>

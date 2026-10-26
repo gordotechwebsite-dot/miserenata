@@ -8,6 +8,7 @@
 import { readFile, writeFile, mkdir } from "node:fs/promises";
 import { join, dirname } from "node:path";
 import { fileURLToPath } from "node:url";
+import { BOGOTA_SITE, toBogota } from "../src/lib/region.js";
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const DIST = join(__dirname, "..", "dist");
@@ -406,8 +407,8 @@ function escapeHtml(s) {
     .replace(/>/g, "&gt;");
 }
 
-function applyMeta(html, route) {
-  const url = `${SITE}${route.path === "/" ? "/" : route.path}`;
+function applyMeta(html, route, site = SITE) {
+  const url = `${site}${route.path === "/" ? "/" : route.path}`;
   const title = escapeHtml(route.title);
   const description = escapeAttr(route.description);
   const ogTitle = escapeAttr(route.ogTitle ?? route.title);
@@ -503,6 +504,52 @@ async function main() {
     await writeFile(outPath, html, "utf8");
     console.log(`prerender ${route.path} -> ${outPath}`);
   }
+
+  await prerenderBogota(baseHtml);
+}
+
+// Bogotá edition: same pages under dist/bogota/, served on bogota.musicaenvivo.co
+// by middleware.js. Copy is rewritten with toBogota(); the Duitama street
+// address/geo is dropped since there is no physical location in Bogotá.
+async function prerenderBogota(baseHtml) {
+  const outDir = join(DIST, "bogota");
+  const bogotaArea = JSON.stringify([{ "@type": "City", name: "Bogotá" }]);
+  for (const route of ROUTES) {
+    let html = applyMeta(baseHtml, route, BOGOTA_SITE);
+    html = html
+      .replace(/"address":\s*\{[\s\S]*?\},\s*"geo":\s*\{[\s\S]*?\},\s*/, "")
+      .replace(/"areaServed":\s*\[[\s\S]*?\]/g, `"areaServed": ${bogotaArea}`)
+      .replaceAll(`"url": "${SITE}"`, `"url": "${BOGOTA_SITE}"`)
+      .replaceAll(`${SITE}/mariachi"`, `${BOGOTA_SITE}/mariachi"`)
+      .replaceAll(`${SITE}/nortena"`, `${BOGOTA_SITE}/nortena"`)
+      .replaceAll(`${SITE}/banda"`, `${BOGOTA_SITE}/banda"`);
+    html = toBogota(html);
+    const outPath =
+      route.path === "/"
+        ? join(outDir, "index.html")
+        : join(outDir, route.path.replace(/^\//, ""), "index.html");
+    await mkdir(dirname(outPath), { recursive: true });
+    await writeFile(outPath, html, "utf8");
+    console.log(`prerender bogota ${route.path} -> ${outPath}`);
+  }
+
+  const today = new Date().toISOString().slice(0, 10);
+  const urls = ROUTES.map(
+    (r) =>
+      `  <url><loc>${BOGOTA_SITE}${r.path}</loc><lastmod>${today}</lastmod><priority>${
+        r.path === "/" ? "1.0" : "0.8"
+      }</priority></url>`
+  ).join("\n");
+  await writeFile(
+    join(outDir, "sitemap.xml"),
+    `<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n${urls}\n</urlset>\n`,
+    "utf8"
+  );
+  await writeFile(
+    join(outDir, "robots.txt"),
+    `User-agent: *\nAllow: /\nDisallow: /admin\n\nSitemap: ${BOGOTA_SITE}/sitemap.xml\n`,
+    "utf8"
+  );
 }
 
 main().catch((err) => {

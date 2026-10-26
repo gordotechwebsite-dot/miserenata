@@ -1,3 +1,4 @@
+import { loc } from "../lib/region";
 import { ShieldCheck, Clock, MapPin, CreditCard, Award, Heart } from "lucide-react";
 import { Reveal } from "./Reveal";
 
@@ -5,7 +6,7 @@ const BADGES = [
   { icon: Award, label: "+500 serenatas realizadas" },
   { icon: ShieldCheck, label: "Músicos profesionales verificados" },
   { icon: Clock, label: "Puntualidad garantizada" },
-  { icon: MapPin, label: "Cobertura en toda Boyacá" },
+  { icon: MapPin, label: loc("Cobertura en toda Boyacá") },
   { icon: CreditCard, label: "Pagos seguros" },
   { icon: Heart, label: "5.0 ★ en reseñas" },
 ];

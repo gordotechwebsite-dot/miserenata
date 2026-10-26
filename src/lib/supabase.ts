@@ -1,3 +1,4 @@
+import { loc } from "./region";
 import { createClient } from "@supabase/supabase-js";
 
 const supabaseUrl = import.meta.env.VITE_SUPABASE_URL as string;
@@ -27,8 +28,9 @@ export const WHATSAPP_LINK =
   (import.meta.env.VITE_WHATSAPP_LINK as string) ||
   `https://wa.me/${waDigits}`;
 
-export const DEFAULT_BANNER_TEXT =
-  "Reserva serenatas desde $300.000 en Duitama, Paipa y Sogamoso";
+export const DEFAULT_BANNER_TEXT = loc(
+  "Reserva serenatas desde $300.000 en Duitama, Paipa y Sogamoso"
+);
 
 export async function getSiteSetting(key: string): Promise<string | null> {
   const { data, error } = await supabase
