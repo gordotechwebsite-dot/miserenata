@@ -15,9 +15,21 @@ type GalleryItem = {
   url: string;
 };
 
+function shuffle<T>(list: T[]): T[] {
+  const out = [...list];
+  for (let i = out.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [out[i], out[j]] = [out[j], out[i]];
+  }
+  return out;
+}
+
+const sameSet = (a: GalleryItem[], b: GalleryItem[]) =>
+  a.length === b.length && b.every((x) => a.some((y) => y.name === x.name));
+
 export function Gallery() {
   const cached = readCache<GalleryItem[]>("gallery_items");
-  const [items, setItems] = useState<GalleryItem[]>(cached ?? []);
+  const [items, setItems] = useState<GalleryItem[]>(() => shuffle(cached ?? []));
   const [loading, setLoading] = useState(!cached || cached.length === 0);
   const [title, setTitle] = useState(
     () => readCache<string>("gallery_title") ?? DEFAULT_GALLERY_TITLE
@@ -71,7 +83,7 @@ export function Gallery() {
         }));
 
       if (mounted) {
-        setItems(files);
+        setItems((prev) => (sameSet(prev, files) ? prev : shuffle(files)));
         writeCache("gallery_items", files);
         setLoading(false);
       }
