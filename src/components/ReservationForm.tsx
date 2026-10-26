@@ -4,7 +4,6 @@ import {
   MapPin,
   Phone,
   User,
-  MessageSquare,
   Gift,
   Send,
   CheckCircle2,
@@ -518,7 +517,6 @@ export function ReservationForm({
 
                   <div>
                     <label className="flex items-center gap-2 text-sm font-medium text-stone-300 mb-2">
-                      <MessageSquare className="w-4 h-4 text-amber-400" />
                       Mensaje adicional
                     </label>
                     <textarea
