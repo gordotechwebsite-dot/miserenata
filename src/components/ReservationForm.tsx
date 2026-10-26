@@ -9,7 +9,6 @@ import {
   CheckCircle2,
   ChevronLeft,
   ChevronRight,
-  Package as PackageIcon,
   Wallet,
 } from "lucide-react";
 import {
@@ -426,8 +425,7 @@ export function ReservationForm({
               {step === 1 && !isHourly && (
                 <div>
                   <label className="flex items-center gap-2 text-sm font-medium text-amber-300 mb-3">
-                    <PackageIcon className="w-4 h-4" />
-                    Elige el paquete perfecto *
+                    Elige el paquete perfecto
                   </label>
                   <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
                     {packages.map((pkg) => {
