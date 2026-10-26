@@ -225,7 +225,7 @@ function App() {
       ) : route.kind === "genre" ? (
         <GenrePage id={route.id} packages={packages} loading={loading} />
       ) : route.kind === "faq" ? (
-        <div className="pt-24">
+        <div className="pt-24 pb-12 min-h-screen bg-stone-950">
           <Faq />
           <div className="text-center pb-16">
             <button
