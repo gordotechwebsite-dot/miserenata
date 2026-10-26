@@ -229,9 +229,9 @@ export const DEFAULT_TESTIMONIALS: TestimonialItem[] = [
 /** @deprecated Use DEFAULT_TESTIMONIALS; testimonials are loaded dynamically from site_settings. */
 export const TESTIMONIALS = DEFAULT_TESTIMONIALS;
 
-export const DEFAULT_GALLERY_TITLE = "Momentos que hemos creado";
+export const DEFAULT_GALLERY_TITLE = "Nuestros artistas";
 export const DEFAULT_GALLERY_SUBTITLE =
-  "Una mirada a serenatas, eventos y experiencias que dejaron huella.";
+  "Músicos profesionales que tocan con pasión para hacer de tu momento algo inolvidable.";
 export const DEFAULT_TESTIMONIALS_TITLE = "Historias que nos emocionan";
 
 export type ExtraItem = {
