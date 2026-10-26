@@ -154,33 +154,43 @@ function ZonaPage({ slug }: { slug: string }) {
 type ZonaLink = { slug: string; name: string; label?: string };
 
 function ZonasLinks({ exclude }: { exclude?: string }) {
+  const links: ZonaLink[] = [
+    ...MUNICIPIOS.map((m) => ({ slug: m.slug, name: m.name })),
+    { slug: HUB.slug, name: "Localidades de Bogotá" },
+    { slug: "precios", name: "Precios" },
+  ];
   return (
-    <nav className="mt-14 pt-6 border-t border-stone-800 flex flex-wrap gap-x-8 gap-y-2 text-sm">
-      <span className="uppercase tracking-[0.3em] text-stone-500 text-xs self-center">
-        Zonas
-      </span>
-      {([...MUNICIPIOS, { slug: HUB.slug, name: "las localidades de Bogotá" }, { slug: "precios", name: "", label: "Precios en Bogotá" }] as ZonaLink[])
-        .filter((z) => z.slug !== exclude)
-        .map((z) => (
-        <a
-          key={z.slug}
-          href={`/${z.slug}`}
-          onClick={(e) => {
-            e.preventDefault();
-            go(`/${z.slug}`);
-          }}
-          className="text-sky-300 hover:text-sky-200"
-        >
-          {z.label ?? `Música en vivo en ${z.name}`}
-        </a>
-        ))}
-    </nav>
+    <details className="group mt-14 border-t border-stone-800 pt-5 text-sm">
+      <summary className="flex items-center justify-between cursor-pointer list-none [&::-webkit-details-marker]:hidden uppercase tracking-[0.3em] text-stone-400 text-xs">
+        Zonas de cobertura
+        <span className="text-stone-500 text-base leading-none transition-transform group-open:rotate-45">
+          +
+        </span>
+      </summary>
+      <nav className="mt-4 flex flex-wrap gap-x-6 gap-y-2">
+        {links
+          .filter((z) => z.slug !== exclude)
+          .map((z) => (
+            <a
+              key={z.slug}
+              href={`/${z.slug}`}
+              onClick={(e) => {
+                e.preventDefault();
+                go(`/${z.slug}`);
+              }}
+              className="text-stone-300 hover:text-amber-300"
+            >
+              {z.name}
+            </a>
+          ))}
+      </nav>
+    </details>
   );
 }
 
 export function ZonasStrip() {
   return (
-    <div className="bg-stone-950">
+    <div className="bg-stone-950 flow-root">
       <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 pb-16">
         <ZonasLinks />
       </div>
