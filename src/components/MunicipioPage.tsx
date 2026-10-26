@@ -151,13 +151,15 @@ function ZonaPage({ slug }: { slug: string }) {
   );
 }
 
+type ZonaLink = { slug: string; name: string; label?: string };
+
 function ZonasLinks({ exclude }: { exclude?: string }) {
   return (
     <nav className="mt-14 pt-6 border-t border-stone-800 flex flex-wrap gap-x-8 gap-y-2 text-sm">
       <span className="uppercase tracking-[0.3em] text-stone-500 text-xs self-center">
         Zonas
       </span>
-      {[...MUNICIPIOS, { slug: HUB.slug, name: "las localidades de Bogotá" }]
+      {([...MUNICIPIOS, { slug: HUB.slug, name: "las localidades de Bogotá" }, { slug: "precios", name: "", label: "Precios en Bogotá" }] as ZonaLink[])
         .filter((z) => z.slug !== exclude)
         .map((z) => (
         <a
@@ -169,7 +171,7 @@ function ZonasLinks({ exclude }: { exclude?: string }) {
           }}
           className="text-sky-300 hover:text-sky-200"
         >
-          Música en vivo en {z.name}
+          {z.label ?? `Música en vivo en ${z.name}`}
         </a>
         ))}
     </nav>
