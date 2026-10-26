@@ -3,7 +3,6 @@ import { Clock, Music, Users, Star } from "lucide-react";
 import { type PackageData, formatCop } from "../lib/constants";
 import { ImageWithFallback } from "./ImageWithFallback";
 import { supabase } from "../lib/supabase";
-import { IS_BOGOTA } from "../lib/region";
 
 type Props = {
   packages: PackageData[];
@@ -213,11 +212,7 @@ export function Packages({ packages, loading, onSelect, selectedName }: Props) {
                         e.stopPropagation();
                         onSelect(pkg);
                       }}
-                      className={`w-full py-3 rounded-xl font-bold transition-all ${
-                        pkg.popular || IS_BOGOTA
-                          ? "bg-gradient-to-r from-amber-500 to-yellow-500 hover:from-amber-400 hover:to-yellow-400 text-stone-950 shadow-lg shadow-amber-500/30"
-                          : "bg-stone-800 hover:bg-stone-700 text-white border border-stone-700 hover:border-amber-500/50"
-                      }`}
+                      className="w-full py-3 rounded-xl font-bold transition-all bg-gradient-to-r from-amber-500 to-yellow-500 hover:from-amber-400 hover:to-yellow-400 text-stone-950 shadow-lg shadow-amber-500/30"
                     >
                       {isSelected ? "Seleccionado" : "Elegir este paquete"}
                     </button>
