@@ -1,4 +1,4 @@
-import { IS_BOGOTA } from "./region";
+import { BOGOTA_ZONES, IS_BOGOTA } from "./region";
 import { placeholderSvg } from "./placeholder";
 
 export type GenreId = "mariachi" | "nortena" | "banda";
@@ -50,7 +50,7 @@ export const DEFAULT_GENRES: GenreData[] = [
 ];
 
 export const CITIES: readonly string[] = IS_BOGOTA
-  ? ["Bogotá"]
+  ? BOGOTA_ZONES
   : ["Duitama", "Paipa", "Sogamoso"];
 
 export const TIME_SLOTS = [
