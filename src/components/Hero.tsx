@@ -1,5 +1,6 @@
 import { ChevronDown } from "lucide-react";
 import { genrePath, navigate } from "../lib/routes";
+import { IS_BOGOTA } from "../lib/region";
 
 export function Hero() {
   const scrollTo = (id: string) =>
@@ -32,11 +33,20 @@ export function Hero() {
       </div>
 
       <div className="relative z-10 w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
-        <h1 className="hero-title-cycle font-display font-black text-center text-6xl sm:text-7xl md:text-8xl lg:text-9xl leading-[0.95] mb-8 sm:mb-10 bg-gradient-to-br from-amber-200 via-yellow-100 to-amber-400 bg-clip-text text-transparent tracking-tight drop-shadow-[0_4px_24px_rgba(0,0,0,0.7)]">
+        <div className="hero-title-cycle mb-8 sm:mb-10">
+        <h1 className="font-display font-black text-center text-6xl sm:text-7xl md:text-8xl lg:text-9xl leading-[0.95] bg-gradient-to-br from-amber-200 via-yellow-100 to-amber-400 bg-clip-text text-transparent tracking-tight drop-shadow-[0_4px_24px_rgba(0,0,0,0.7)]">
           Música
           <br />
           en vivo
         </h1>
+        {IS_BOGOTA && (
+          <p className="mt-5 sm:mt-7 flex items-center justify-center gap-4 sm:gap-6 font-sans font-light uppercase text-amber-200 text-xl sm:text-2xl md:text-3xl tracking-[0.45em] drop-shadow-[0_2px_8px_rgba(0,0,0,0.8)]">
+            <span aria-hidden="true" className="h-px w-10 sm:w-16 bg-amber-300/70" />
+            <span className="-mr-[0.45em]">Bogotá</span>
+            <span aria-hidden="true" className="h-px w-10 sm:w-16 bg-amber-300/70" />
+          </p>
+        )}
+        </div>
 
         <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 justify-center items-stretch sm:items-center max-w-2xl mx-auto">
           <button
