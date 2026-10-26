@@ -6,3 +6,5 @@ export const IS_BOGOTA: boolean;
 export function loc(text: string): string;
 export const BOGOTA_ZONES: string[];
 export const BOGOTA_FAQ: { q: string; a: string };
+export const BOGOTA_BANNER: string;
+export function bogotaPrice(name: string, price: number): number;

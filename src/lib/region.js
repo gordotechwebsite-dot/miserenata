@@ -64,3 +64,17 @@ export const IS_BOGOTA = isBogotaHost();
 export function loc(text) {
   return IS_BOGOTA ? toBogota(text) : text;
 }
+
+// Bogotá-only overrides of the shared admin package prices, by package name.
+const BOGOTA_PRICES = { "serenata flash": 250000, "serenata basica": 300000 };
+
+export const BOGOTA_BANNER = "Serenatas desde $250.000";
+
+export function bogotaPrice(name, price) {
+  const key = String(name)
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .trim()
+    .toLowerCase();
+  return BOGOTA_PRICES[key] ?? price;
+}

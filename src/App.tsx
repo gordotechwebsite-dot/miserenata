@@ -8,7 +8,7 @@ import {
 } from "./lib/constants";
 import { navigate, parseRoute, routePath, type Route } from "./lib/routes";
 import { trackPageView } from "./lib/analytics";
-import { BOGOTA_SITE, IS_BOGOTA, loc } from "./lib/region";
+import { BOGOTA_SITE, bogotaPrice, IS_BOGOTA, loc } from "./lib/region";
 import { readCache, writeCache } from "./lib/cache";
 import { placeholderSvg } from "./lib/placeholder";
 import { Navbar } from "./components/Navbar";
@@ -65,7 +65,7 @@ function mapRow(row: PackageRow): PackageData {
   return {
     id: row.id,
     name: row.name,
-    priceCop: row.price_cop,
+    priceCop: IS_BOGOTA ? bogotaPrice(row.name, row.price_cop) : row.price_cop,
     durationMinutes: row.duration_minutes,
     songsCount: row.songs_count,
     musiciansCount: row.musicians_count,

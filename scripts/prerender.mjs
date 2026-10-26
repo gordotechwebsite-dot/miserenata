@@ -8,7 +8,13 @@
 import { readFile, writeFile, mkdir } from "node:fs/promises";
 import { join, dirname } from "node:path";
 import { fileURLToPath } from "node:url";
-import { BOGOTA_FAQ, BOGOTA_SITE, BOGOTA_ZONES, toBogota } from "../src/lib/region.js";
+import {
+  BOGOTA_FAQ,
+  BOGOTA_SITE,
+  BOGOTA_ZONES,
+  bogotaPrice,
+  toBogota,
+} from "../src/lib/region.js";
 import { HUB, LOCALIDADES, ZONAS } from "../src/lib/municipios.js";
 import {
   cop,
@@ -552,7 +558,10 @@ async function fetchMariachiPackages() {
       `${url}/rest/v1/packages?select=name,price_cop,duration_minutes,songs_count,musicians_count&genre=eq.mariachi&order=price_cop`,
       { headers: { apikey: key, Authorization: `Bearer ${key}` } }
     );
-    return res.ok ? await res.json() : [];
+    if (!res.ok) return [];
+    return (await res.json())
+      .map((p) => ({ ...p, price_cop: bogotaPrice(p.name, p.price_cop) }))
+      .sort((a, b) => a.price_cop - b.price_cop);
   } catch {
     return [];
   }
