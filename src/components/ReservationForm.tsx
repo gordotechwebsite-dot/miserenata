@@ -23,7 +23,7 @@ import {
   type PackageData,
   type GenreId,
 } from "../lib/constants";
-import { SLOTS } from "./Availability";
+import { slotLabel } from "./Availability";
 import {
   getSiteSetting,
   insertReservation,
@@ -273,8 +273,7 @@ export function ReservationForm({
       PAYMENT_OPTIONS.find((p) => p.id === paymentMethod)?.label ??
       paymentMethod;
 
-    const timeLabel =
-      SLOTS.find((s) => s.time === time || s.label === time)?.label ?? time;
+    const timeLabel = slotLabel(time);
 
     setSubmitting(true);
     setSubmitError(null);

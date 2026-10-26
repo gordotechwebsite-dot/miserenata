@@ -46,10 +46,21 @@ export const GENRE_IDS_FOR_SLOTS: GenreId[] = [
 
 export const SLOTS: { label: string; time: string }[] = [
   { label: "12:00 PM", time: "12:00" },
-  { label: "4:00 PM", time: "16:00" },
   { label: "8:00 PM", time: "20:00" },
   { label: "10:00 PM", time: "22:00" },
 ];
+
+export function slotLabel(time: string): string {
+  const hit = SLOTS.find((s) => s.time === time || s.label === time);
+  if (hit) return hit.label;
+  const m = /^(\d{1,2}):(\d{2})$/.exec(time);
+  if (!m) return time;
+  const h = Number(m[1]);
+  return `${h % 12 || 12}:${m[2]} ${h < 12 ? "AM" : "PM"}`;
+}
+
+const HOURS_12 = Array.from({ length: 12 }, (_, i) => String(i + 1));
+const MINUTES = ["00", "15", "30", "45"];
 
 const DAYS_ES = ["lun", "mar", "mié", "jue", "vie", "sáb", "dom"];
 const DAYS_ES_FULL = [
@@ -143,6 +154,10 @@ export function Availability({
   const [name, setName] = useState("");
   const [phone, setPhone] = useState("");
   const [notes, setNotes] = useState("");
+  const [customOpen, setCustomOpen] = useState(false);
+  const [customHour, setCustomHour] = useState("3");
+  const [customMinute, setCustomMinute] = useState("00");
+  const [customPeriod, setCustomPeriod] = useState<"AM" | "PM">("PM");
   const [submitted, setSubmitted] = useState(false);
   const formRef = useRef<HTMLDivElement | null>(null);
   const slotsRef = useRef<HTMLDivElement | null>(null);
@@ -262,14 +277,21 @@ export function Availability({
     a.getDate() === b.getDate();
 
   const selectedSlot =
-    selected && slotTime ? SLOTS.find((s) => s.time === slotTime) || null : null;
+    selected && slotTime ? { time: slotTime, label: slotLabel(slotTime) } : null;
+  const customActive =
+    !!slotTime && !SLOTS.some((s) => s.time === slotTime);
+
+  const selectCustom = (d: Date) => {
+    const h = (Number(customHour) % 12) + (customPeriod === "PM" ? 12 : 0);
+    selectSlot(d, `${String(h).padStart(2, "0")}:${customMinute}`);
+  };
 
   const selectSlot = (d: Date, time: string) => {
     setSelected(d);
     setSlotTime(time);
     setSubmitted(false);
     if (embedded && onSlotSelect) {
-      const label = SLOTS.find((s) => s.time === time)?.label || time;
+      const label = slotLabel(time);
       const price = slotPrices[slotKey(d, time)] ?? hourlyPrice ?? 0;
       onSlotSelect(d, time, label, price);
       return;
@@ -384,6 +406,7 @@ export function Availability({
                       if (past) return;
                       setSelected(d);
                       setSlotTime(null);
+                      setCustomOpen(false);
                       setSubmitted(false);
                       scrollToSlotsOnMobile();
                     }}
@@ -476,6 +499,77 @@ export function Availability({
                   </button>
                 );
               })}
+              {selected && (
+                <div
+                  className={`rounded-2xl border transition-all ${
+                    customActive
+                      ? "bg-amber-500/15 border-amber-500/60"
+                      : "bg-stone-800/60 border-stone-700"
+                  }`}
+                >
+                  <button
+                    type="button"
+                    onClick={() => setCustomOpen((o) => !o)}
+                    className={`w-full flex items-center justify-between px-4 py-3 text-left font-semibold ${
+                      customActive ? "text-amber-200" : "text-stone-100"
+                    }`}
+                  >
+                    {customActive && selectedSlot
+                      ? selectedSlot.label
+                      : "Otro horario"}
+                    <span className="text-[11px] font-extrabold uppercase tracking-wider text-amber-300">
+                      {customActive ? "Seleccionado" : customOpen ? "−" : "+"}
+                    </span>
+                  </button>
+                  {customOpen && (
+                    <div className="px-4 pb-4 flex flex-wrap items-center gap-2">
+                      <select
+                        aria-label="Hora"
+                        value={customHour}
+                        onChange={(e) => setCustomHour(e.target.value)}
+                        className="bg-stone-800/80 border border-stone-700 rounded-xl px-2 py-2 text-white focus:outline-none focus:border-amber-500"
+                      >
+                        {HOURS_12.map((h) => (
+                          <option key={h} value={h}>
+                            {h}
+                          </option>
+                        ))}
+                      </select>
+                      <span className="text-stone-400">:</span>
+                      <select
+                        aria-label="Minutos"
+                        value={customMinute}
+                        onChange={(e) => setCustomMinute(e.target.value)}
+                        className="bg-stone-800/80 border border-stone-700 rounded-xl px-2 py-2 text-white focus:outline-none focus:border-amber-500"
+                      >
+                        {MINUTES.map((m) => (
+                          <option key={m} value={m}>
+                            {m}
+                          </option>
+                        ))}
+                      </select>
+                      <select
+                        aria-label="a. m. o p. m."
+                        value={customPeriod}
+                        onChange={(e) =>
+                          setCustomPeriod(e.target.value as "AM" | "PM")
+                        }
+                        className="bg-stone-800/80 border border-stone-700 rounded-xl px-2 py-2 text-white focus:outline-none focus:border-amber-500"
+                      >
+                        <option value="AM">AM</option>
+                        <option value="PM">PM</option>
+                      </select>
+                      <button
+                        type="button"
+                        onClick={() => selectCustom(selected)}
+                        className="ml-auto bg-gradient-to-r from-amber-500 to-yellow-500 text-stone-950 px-4 py-2 rounded-xl font-bold text-sm"
+                      >
+                        Elegir
+                      </button>
+                    </div>
+                  )}
+                </div>
+              )}
             </div>
           </div>
         </div>
