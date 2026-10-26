@@ -68,7 +68,8 @@ export function loc(text) {
 // Bogotá-only overrides of the shared admin package prices, by package name.
 const BOGOTA_PRICES = { "serenata flash": 250000, "serenata basica": 300000 };
 
-export const BOGOTA_BANNER = "Serenatas desde $250.000";
+export const BOGOTA_BANNER =
+  "Serenatas desde $250.000 en Bogotá, Chía, Cajicá y La Calera";
 
 export function bogotaPrice(name, price) {
   const key = String(name)
