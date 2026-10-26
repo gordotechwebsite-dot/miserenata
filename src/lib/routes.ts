@@ -1,4 +1,6 @@
 import type { GenreId } from "./constants";
+import { MUNICIPIO_SLUGS } from "./municipios";
+import { IS_BOGOTA } from "./region";
 
 export const LANDING_PATHS = [
   "/serenatas",
@@ -13,7 +15,8 @@ export type Route =
   | { kind: "admin" }
   | { kind: "faq" }
   | { kind: "genre"; id: GenreId }
-  | { kind: "landing"; path: LandingPath };
+  | { kind: "landing"; path: LandingPath }
+  | { kind: "municipio"; slug: string };
 
 const GENRE_IDS: GenreId[] = ["mariachi", "nortena", "banda"];
 
@@ -26,6 +29,9 @@ export function parseRoute(input: string): Route {
   if (seg === "faq") return { kind: "faq" };
   if ((GENRE_IDS as string[]).includes(seg)) {
     return { kind: "genre", id: seg as GenreId };
+  }
+  if (IS_BOGOTA && MUNICIPIO_SLUGS.includes(seg)) {
+    return { kind: "municipio", slug: seg };
   }
   const candidate = `/${seg}` as LandingPath;
   if ((LANDING_PATHS as readonly string[]).includes(candidate)) {
@@ -61,6 +67,8 @@ export function routePath(route: Route): string {
       return `/${route.id}`;
     case "landing":
       return route.path;
+    case "municipio":
+      return `/${route.slug}`;
   }
 }
 

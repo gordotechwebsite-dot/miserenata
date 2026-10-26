@@ -20,6 +20,8 @@ import { Faq } from "./components/Faq";
 import { WhatsAppFab } from "./components/WhatsAppFab";
 import { BottomBanner } from "./components/BottomBanner";
 import { GenrePage } from "./components/GenrePage";
+import { MunicipioPage, ZonasStrip } from "./components/MunicipioPage";
+import { getMunicipio } from "./lib/municipios";
 
 const AdminPanel = lazy(() =>
   import("./components/AdminPanel").then((m) => ({ default: m.AdminPanel }))
@@ -139,6 +141,8 @@ function App() {
       admin: "Admin | Musicaenvivo.co",
       landing:
         route.kind === "landing" ? landingTitles[route.path] ?? "" : "",
+      municipio:
+        route.kind === "municipio" ? getMunicipio(route.slug)?.title ?? "" : "",
     };
     const title = loc(titles[route.kind]);
     if (title) document.title = title;
@@ -207,7 +211,9 @@ function App() {
         aria-hidden="true"
       />
       <Navbar />
-      {route.kind === "genre" ? (
+      {route.kind === "municipio" ? (
+        <MunicipioPage slug={route.slug} />
+      ) : route.kind === "genre" ? (
         <GenrePage id={route.id} packages={packages} loading={loading} />
       ) : route.kind === "faq" ? (
         <div className="pt-24">
@@ -230,6 +236,7 @@ function App() {
           <Genres />
           <Gallery />
           <Testimonials />
+          {IS_BOGOTA && <ZonasStrip />}
         </>
       )}
       <WhatsAppFab />

@@ -9,6 +9,7 @@ import { readFile, writeFile, mkdir } from "node:fs/promises";
 import { join, dirname } from "node:path";
 import { fileURLToPath } from "node:url";
 import { BOGOTA_FAQ, BOGOTA_SITE, BOGOTA_ZONES, toBogota } from "../src/lib/region.js";
+import { MUNICIPIOS } from "../src/lib/municipios.js";
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const DIST = join(__dirname, "..", "dist");
@@ -511,28 +512,33 @@ async function main() {
 // Bogotá edition: same pages under dist/bogota/, served on bogota.musicaenvivo.co
 // by middleware.js. Copy is rewritten with toBogota(); the Duitama street
 // address/geo is dropped since there is no physical location in Bogotá.
+const bogotaArea = JSON.stringify(
+  BOGOTA_ZONES.map((name) => ({ "@type": "City", name }))
+);
+
+function bogotaHtml(html) {
+  html = html
+    .replace(/"address":\s*\{[\s\S]*?\},\s*"geo":\s*\{[\s\S]*?\},\s*/, "")
+    .replace(/"areaServed":\s*\[[\s\S]*?\]/g, `"areaServed": ${bogotaArea}`)
+    .replaceAll(`"url": "${SITE}"`, `"url": "${BOGOTA_SITE}"`)
+    .replaceAll(`${SITE}/mariachi"`, `${BOGOTA_SITE}/mariachi"`)
+    .replaceAll(`${SITE}/nortena"`, `${BOGOTA_SITE}/nortena"`)
+    .replaceAll(`${SITE}/banda"`, `${BOGOTA_SITE}/banda"`);
+  html = toBogota(html).replace(
+    /("@type": "FAQPage",\s*"mainEntity": \[)/,
+    `$1${JSON.stringify({
+      "@type": "Question",
+      name: BOGOTA_FAQ.q,
+      acceptedAnswer: { "@type": "Answer", text: BOGOTA_FAQ.a },
+    })},`
+  );
+  return html;
+}
+
 async function prerenderBogota(baseHtml) {
   const outDir = join(DIST, "bogota");
-  const bogotaArea = JSON.stringify(
-    BOGOTA_ZONES.map((name) => ({ "@type": "City", name }))
-  );
   for (const route of ROUTES) {
-    let html = applyMeta(baseHtml, route, BOGOTA_SITE);
-    html = html
-      .replace(/"address":\s*\{[\s\S]*?\},\s*"geo":\s*\{[\s\S]*?\},\s*/, "")
-      .replace(/"areaServed":\s*\[[\s\S]*?\]/g, `"areaServed": ${bogotaArea}`)
-      .replaceAll(`"url": "${SITE}"`, `"url": "${BOGOTA_SITE}"`)
-      .replaceAll(`${SITE}/mariachi"`, `${BOGOTA_SITE}/mariachi"`)
-      .replaceAll(`${SITE}/nortena"`, `${BOGOTA_SITE}/nortena"`)
-      .replaceAll(`${SITE}/banda"`, `${BOGOTA_SITE}/banda"`);
-    html = toBogota(html).replace(
-      /("@type": "FAQPage",\s*"mainEntity": \[)/,
-      `$1${JSON.stringify({
-        "@type": "Question",
-        name: BOGOTA_FAQ.q,
-        acceptedAnswer: { "@type": "Answer", text: BOGOTA_FAQ.a },
-      })},`
-    );
+    const html = bogotaHtml(applyMeta(baseHtml, route, BOGOTA_SITE));
     const outPath =
       route.path === "/"
         ? join(outDir, "index.html")
@@ -542,8 +548,61 @@ async function prerenderBogota(baseHtml) {
     console.log(`prerender bogota ${route.path} -> ${outPath}`);
   }
 
+  for (const m of MUNICIPIOS) {
+    const path = `/${m.slug}`;
+    const genres = [
+      ["mariachi", "Mariachi"],
+      ["nortena", "Norteña"],
+      ["banda", "Banda en vivo"],
+    ];
+    const route = {
+      path,
+      title: m.title,
+      description: m.description,
+      extraJsonLd: [
+        {
+          "@context": "https://schema.org",
+          "@type": "Service",
+          name: m.h1,
+          serviceType: "Música en vivo",
+          description: m.description,
+          url: `${BOGOTA_SITE}${path}`,
+          areaServed: { "@type": "City", name: m.name },
+          provider: { "@type": "LocalBusiness", name: "Musicaenvivo.co", url: BOGOTA_SITE },
+        },
+        {
+          "@context": "https://schema.org",
+          "@type": "FAQPage",
+          mainEntity: m.faqs.map((f) => ({
+            "@type": "Question",
+            name: f.q,
+            acceptedAnswer: { "@type": "Answer", text: f.a },
+          })),
+        },
+      ],
+      staticBody: landingStaticBody({
+        h1: m.h1,
+        intro: m.intro.join(" "),
+        sections: [
+          ...genres.map(([id, label]) => ({ h: `${label} en ${m.name}`, p: m.services[id] })),
+          { h: `Ocasiones en ${m.name}`, p: m.occasions },
+          ...m.faqs.map((f) => ({ h: f.q, p: f.a })),
+        ],
+        cta: `Cotiza por WhatsApp tu música en vivo en ${m.name}.`,
+      }),
+    };
+    const html = bogotaHtml(applyMeta(baseHtml, route, BOGOTA_SITE)).replace(
+      /<script type="application\/ld\+json">\s*\{\s*"@context": "https:\/\/schema.org",\s*"@type": "FAQPage"[\s\S]*?<\/script>\s*/,
+      ""
+    );
+    const outPath = join(outDir, m.slug, "index.html");
+    await mkdir(dirname(outPath), { recursive: true });
+    await writeFile(outPath, html, "utf8");
+    console.log(`prerender bogota ${path} -> ${outPath}`);
+  }
+
   const today = new Date().toISOString().slice(0, 10);
-  const urls = ROUTES.map(
+  const urls = [...ROUTES, ...MUNICIPIOS.map((m) => ({ path: `/${m.slug}` }))].map(
     (r) =>
       `  <url><loc>${BOGOTA_SITE}${r.path}</loc><lastmod>${today}</lastmod><priority>${
         r.path === "/" ? "1.0" : "0.8"
