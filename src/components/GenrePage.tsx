@@ -8,7 +8,7 @@ import {
   type PackageData,
 } from "../lib/constants";
 import { getSiteSetting } from "../lib/supabase";
-import { loc } from "../lib/region";
+import { IS_BOGOTA, loc } from "../lib/region";
 import { readCache, writeCache } from "../lib/cache";
 import { navigate } from "../lib/routes";
 import { placeholderSvg } from "../lib/placeholder";
@@ -311,7 +311,23 @@ function GenreSeoSection({ id }: { id: GenreId }) {
           {seo.intro}
         </p>
         <div className="grid sm:grid-cols-2 gap-6">
-          {seo.bullets.map((b) => (
+          {seo.bullets.map((b) =>
+            IS_BOGOTA ? (
+              <details
+                key={b.title}
+                className="group bg-stone-900/40 border border-stone-800 rounded-2xl p-5"
+              >
+                <summary className="flex items-center justify-between gap-4 cursor-pointer list-none [&::-webkit-details-marker]:hidden font-bold text-amber-300 text-base">
+                  {b.title}
+                  <span className="text-stone-500 text-lg leading-none transition-transform group-open:rotate-45">
+                    +
+                  </span>
+                </summary>
+                <p className="mt-3 text-stone-300 text-sm leading-relaxed">
+                  {b.body}
+                </p>
+              </details>
+            ) : (
             <div
               key={b.title}
               className="bg-stone-900/40 border border-stone-800 rounded-2xl p-5"
@@ -321,7 +337,8 @@ function GenreSeoSection({ id }: { id: GenreId }) {
               </h3>
               <p className="text-stone-300 text-sm leading-relaxed">{b.body}</p>
             </div>
-          ))}
+            )
+          )}
         </div>
       </div>
     </section>
