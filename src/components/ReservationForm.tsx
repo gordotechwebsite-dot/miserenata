@@ -797,16 +797,21 @@ export function ReservationForm({
               )}
             </div>
 
-            <div className="flex items-center justify-between gap-3 pt-2">
-              <button
-                type="button"
-                onClick={goPrev}
-                disabled={step === 1}
-                className="inline-flex items-center gap-2 border border-stone-700 hover:border-amber-500/60 bg-stone-900/60 text-stone-100 hover:text-amber-300 disabled:opacity-40 disabled:cursor-not-allowed px-4 py-3 rounded-xl font-semibold text-sm sm:text-base transition-all"
-              >
-                <ChevronLeft className="w-4 h-4" />
-                Anterior
-              </button>
+            <div
+              className={`flex items-center gap-3 pt-2 ${
+                step === firstStep ? "justify-center" : "justify-between"
+              }`}
+            >
+              {step !== firstStep && (
+                <button
+                  type="button"
+                  onClick={goPrev}
+                  className="inline-flex items-center gap-2 border border-stone-700 hover:border-amber-500/60 bg-stone-900/60 text-stone-100 hover:text-amber-300 px-4 py-3 rounded-xl font-semibold text-sm sm:text-base transition-all"
+                >
+                  <ChevronLeft className="w-4 h-4" />
+                  Anterior
+                </button>
+              )}
 
               {step < 4 ? (
                 <button
@@ -815,7 +820,7 @@ export function ReservationForm({
                   disabled={!canNext}
                   className="inline-flex items-center gap-2 bg-gradient-to-r from-amber-500 to-yellow-500 hover:from-amber-400 hover:to-yellow-400 disabled:opacity-50 disabled:cursor-not-allowed text-stone-950 px-5 py-3 rounded-xl font-extrabold text-sm sm:text-base shadow-lg shadow-amber-500/30 transition-all"
                 >
-                  Siguiente
+                  {step === firstStep ? "Empecemos" : "Siguiente"}
                   <ChevronRight className="w-4 h-4" />
                 </button>
               ) : (
