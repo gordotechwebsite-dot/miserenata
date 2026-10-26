@@ -30,11 +30,7 @@ import {
   WHATSAPP_LINK,
   type PaymentMethod,
 } from "../lib/supabase";
-import {
-  trackEvent,
-  trackAdsConversion,
-  trackWhatsAppClick,
-} from "../lib/analytics";
+import { trackEvent, trackAdsConversion, trackWhatsAppClick } from "../lib/analytics";
 import { readCache, writeCache } from "../lib/cache";
 
 type Props = {
@@ -59,18 +55,8 @@ const PAYMENT_OPTIONS: {
   detail: string;
   emoji: string;
 }[] = [
-  {
-    id: "nequi",
-    label: "Nequi",
-    detail: "Transferencia al número",
-    emoji: "📱",
-  },
-  {
-    id: "bancolombia",
-    label: "Bancolombia",
-    detail: "Transferencia bancaria",
-    emoji: "🏦",
-  },
+  { id: "nequi", label: "Nequi", detail: "Transferencia al número", emoji: "📱" },
+  { id: "bancolombia", label: "Bancolombia", detail: "Transferencia bancaria", emoji: "🏦" },
   { id: "efectivo", label: "Efectivo", detail: "Paga al llegar", emoji: "💵" },
 ];
 
@@ -120,7 +106,7 @@ export function ReservationForm({
   const [submitting, setSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState<string | null>(null);
   const [extrasList, setExtrasList] = useState<ExtraItem[]>(
-    () => readCache<ExtraItem[]>("extras_list") ?? DEFAULT_EXTRAS,
+    () => readCache<ExtraItem[]>("extras_list") ?? DEFAULT_EXTRAS
   );
 
   useEffect(() => {
@@ -161,14 +147,7 @@ export function ReservationForm({
     };
     onSelect(synth);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [
-    isHourly,
-    hourly?.rate,
-    hourly?.description,
-    hourly?.image,
-    hours,
-    genreId,
-  ]);
+  }, [isHourly, hourly?.rate, hourly?.description, hourly?.image, hours, genreId]);
 
   useEffect(() => {
     let mounted = true;
@@ -208,7 +187,7 @@ export function ReservationForm({
         }
       }
       setExtrasList(
-        DEFAULT_EXTRAS.map((x) => ({ ...x, imageUrl: imgMap[x.id] })),
+        DEFAULT_EXTRAS.map((x) => ({ ...x, imageUrl: imgMap[x.id] }))
       );
     };
     void load();
@@ -219,7 +198,7 @@ export function ReservationForm({
 
   const toggleExtra = (id: string) =>
     setExtras((prev) =>
-      prev.includes(id) ? prev.filter((e) => e !== id) : [...prev, id],
+      prev.includes(id) ? prev.filter((e) => e !== id) : [...prev, id]
     );
 
   const resetForm = () => {
@@ -253,8 +232,7 @@ export function ReservationForm({
     return true;
   })();
 
-  const canSubmit =
-    !!selected && !!paymentMethod && termsAccepted && !submitting;
+  const canSubmit = !!selected && !!paymentMethod && termsAccepted && !submitting;
 
   const goNext = () => {
     if (!canNext) return;
@@ -318,7 +296,7 @@ export function ReservationForm({
     setSubmitting(false);
     if (error) {
       setSubmitError(
-        "No pudimos guardar la reserva automáticamente, pero igual te abrimos WhatsApp para confirmarla con el equipo.",
+        "No pudimos guardar la reserva automáticamente, pero igual te abrimos WhatsApp para confirmarla con el equipo."
       );
     }
 
@@ -404,8 +382,8 @@ export function ReservationForm({
                     active
                       ? "bg-gradient-to-br from-amber-500 to-yellow-500 text-stone-950 border-amber-400 shadow-lg shadow-amber-500/30"
                       : done
-                        ? "bg-amber-500/20 text-amber-300 border-amber-500/60"
-                        : "bg-stone-900 text-stone-500 border-stone-700"
+                      ? "bg-amber-500/20 text-amber-300 border-amber-500/60"
+                      : "bg-stone-900 text-stone-500 border-stone-700"
                   }`}
                 >
                   {done ? <CheckCircle2 className="w-4 h-4" /> : s.id}
@@ -415,8 +393,8 @@ export function ReservationForm({
                     active
                       ? "text-amber-300"
                       : done
-                        ? "text-stone-300"
-                        : "text-stone-500"
+                      ? "text-stone-300"
+                      : "text-stone-500"
                   }`}
                 >
                   {s.title}
@@ -621,8 +599,7 @@ export function ReservationForm({
                             className="mt-2 w-full bg-stone-800/80 border border-stone-700 rounded-xl px-4 py-3 text-white placeholder-stone-500 focus:outline-none focus:border-amber-500 focus:ring-1 focus:ring-amber-500/50 transition-all"
                           />
                           <p className="mt-1 text-[11px] text-red-400 whitespace-nowrap overflow-hidden text-ellipsis leading-tight">
-                            Ten en cuenta que el valor incrementará en función
-                            de tu distancia
+                            Ten en cuenta que el valor incrementará en función de tu distancia
                           </p>
                         </>
                       )}
@@ -829,7 +806,7 @@ export function ReservationForm({
                 <button
                   type="button"
                   onClick={goPrev}
-                  className="inline-flex items-center gap-2 border border-stone-700 hover:border-amber-500/60 bg-stone-900/60 text-stone-100 hover:text-amber-300 disabled:opacity-40 disabled:cursor-not-allowed px-4 py-3 rounded-xl font-semibold text-sm sm:text-base transition-all"
+                  className="inline-flex items-center gap-2 border border-stone-700 hover:border-amber-500/60 bg-stone-900/60 text-stone-100 hover:text-amber-300 px-4 py-3 rounded-xl font-semibold text-sm sm:text-base transition-all"
                 >
                   <ChevronLeft className="w-4 h-4" />
                   Anterior
