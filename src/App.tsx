@@ -21,7 +21,7 @@ import { WhatsAppFab } from "./components/WhatsAppFab";
 import { BottomBanner } from "./components/BottomBanner";
 import { GenrePage } from "./components/GenrePage";
 import { MunicipioPage, ZonasStrip } from "./components/MunicipioPage";
-import { getMunicipio } from "./lib/municipios";
+import { getMunicipio, HUB } from "./lib/municipios";
 
 const AdminPanel = lazy(() =>
   import("./components/AdminPanel").then((m) => ({ default: m.AdminPanel }))
@@ -142,7 +142,11 @@ function App() {
       landing:
         route.kind === "landing" ? landingTitles[route.path] ?? "" : "",
       municipio:
-        route.kind === "municipio" ? getMunicipio(route.slug)?.title ?? "" : "",
+        route.kind === "municipio"
+          ? route.slug === HUB.slug
+            ? HUB.title
+            : getMunicipio(route.slug)?.title ?? ""
+          : "",
     };
     const title = loc(titles[route.kind]);
     if (title) document.title = title;

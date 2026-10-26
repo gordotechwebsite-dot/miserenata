@@ -9,7 +9,7 @@ import { readFile, writeFile, mkdir } from "node:fs/promises";
 import { join, dirname } from "node:path";
 import { fileURLToPath } from "node:url";
 import { BOGOTA_FAQ, BOGOTA_SITE, BOGOTA_ZONES, toBogota } from "../src/lib/region.js";
-import { MUNICIPIOS } from "../src/lib/municipios.js";
+import { HUB, LOCALIDADES, ZONAS } from "../src/lib/municipios.js";
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const DIST = join(__dirname, "..", "dist");
@@ -518,6 +518,7 @@ const bogotaArea = JSON.stringify(
 
 function bogotaHtml(html) {
   html = html
+    .replace(/<meta name="keywords" content="[^"]*" \/>/, '<meta name="keywords" content="mariachis Bogotá, mariachis Bogotá precio, mariachis económicos Bogotá, mariachis a domicilio Bogotá, serenatas Bogotá, serenata Bogotá precio, serenata mariachis Bogotá, serenata norteña Bogotá, grupo norteño Bogotá, banda en vivo Bogotá, música en vivo Bogotá, músicos para eventos Bogotá, mariachis cerca de mí, mariachis Suba, mariachis Kennedy, mariachis Usaquén, mariachis Engativá, mariachis Bosa, mariachis Chapinero, mariachis Chía, mariachis Cajicá, mariachis La Calera" />')
     .replace(/"address":\s*\{[\s\S]*?\},\s*"geo":\s*\{[\s\S]*?\},\s*/, "")
     .replace(/"areaServed":\s*\[[\s\S]*?\]/g, `"areaServed": ${bogotaArea}`)
     .replaceAll(`"url": "${SITE}"`, `"url": "${BOGOTA_SITE}"`)
@@ -548,7 +549,7 @@ async function prerenderBogota(baseHtml) {
     console.log(`prerender bogota ${route.path} -> ${outPath}`);
   }
 
-  for (const m of MUNICIPIOS) {
+  for (const m of ZONAS) {
     const path = `/${m.slug}`;
     const genres = [
       ["mariachi", "Mariachi"],
@@ -567,7 +568,14 @@ async function prerenderBogota(baseHtml) {
           serviceType: "Música en vivo",
           description: m.description,
           url: `${BOGOTA_SITE}${path}`,
-          areaServed: { "@type": "City", name: m.name },
+          areaServed:
+            m.kind === "localidad"
+              ? {
+                  "@type": "AdministrativeArea",
+                  name: `${m.name}, Bogotá`,
+                  containedInPlace: { "@type": "City", name: "Bogotá" },
+                }
+              : { "@type": "City", name: m.name },
           provider: { "@type": "LocalBusiness", name: "Musicaenvivo.co", url: BOGOTA_SITE },
         },
         {
@@ -601,8 +609,41 @@ async function prerenderBogota(baseHtml) {
     console.log(`prerender bogota ${path} -> ${outPath}`);
   }
 
+  {
+    const route = {
+      path: `/${HUB.slug}`,
+      title: HUB.title,
+      description: HUB.description,
+      extraJsonLd: [
+        {
+          "@context": "https://schema.org",
+          "@type": "ItemList",
+          name: HUB.h1,
+          itemListElement: LOCALIDADES.map((z, i) => ({
+            "@type": "ListItem",
+            position: i + 1,
+            name: `Mariachis en ${z.name}`,
+            url: `${BOGOTA_SITE}/${z.slug}`,
+          })),
+        },
+      ],
+      staticBody: landingStaticBody({
+        h1: HUB.h1,
+        intro: HUB.intro,
+        sections: LOCALIDADES.map((z) => ({
+          h: `Mariachis en ${z.name}`,
+          p: z.description,
+        })),
+        cta: "Cotiza por WhatsApp tu serenata a domicilio en Bogotá.",
+      }),
+    };
+    const outPath = join(outDir, HUB.slug, "index.html");
+    await mkdir(dirname(outPath), { recursive: true });
+    await writeFile(outPath, bogotaHtml(applyMeta(baseHtml, route, BOGOTA_SITE)), "utf8");
+  }
+
   const today = new Date().toISOString().slice(0, 10);
-  const urls = [...ROUTES, ...MUNICIPIOS.map((m) => ({ path: `/${m.slug}` }))].map(
+  const urls = [...ROUTES, ...[...ZONAS, HUB].map((m) => ({ path: `/${m.slug}` }))].map(
     (r) =>
       `  <url><loc>${BOGOTA_SITE}${r.path}</loc><lastmod>${today}</lastmod><priority>${
         r.path === "/" ? "1.0" : "0.8"
