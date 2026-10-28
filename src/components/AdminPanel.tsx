@@ -225,6 +225,9 @@ export function AdminPanel({ onExit }: { onExit: () => void }) {
   const [genreCoverUploading, setGenreCoverUploading] =
     useState<GenreId | null>(null);
   const genreFileInputs = useRef<Partial<Record<GenreId, HTMLInputElement>>>({});
+  const [genreHeroUploading, setGenreHeroUploading] =
+    useState<GenreId | null>(null);
+  const genreHeroInputs = useRef<Partial<Record<GenreId, HTMLInputElement>>>({});
 
   type HourlyForm = { rate: string; image: string; description: string };
   const emptyHourly: HourlyForm = { rate: "", image: "", description: "" };
@@ -569,18 +572,21 @@ export function AdminPanel({ onExit }: { onExit: () => void }) {
     setGenresError(null);
     const entries = await Promise.all(
       DEFAULT_GENRES.map(async (g) => {
-        const [name, image, hRate, hImage, hDesc] = await Promise.all([
-          getSiteSetting(`genre_${g.id}_name`),
-          getSiteSetting(`genre_${g.id}_image`),
-          getSiteSetting(`genre_${g.id}_hourly_rate`),
-          getSiteSetting(`genre_${g.id}_hourly_image`),
-          getSiteSetting(`genre_${g.id}_hourly_description`),
-        ]);
+        const [name, image, hRate, hImage, hDesc, heroImage] =
+          await Promise.all([
+            getSiteSetting(`genre_${g.id}_name`),
+            getSiteSetting(`genre_${g.id}_image`),
+            getSiteSetting(`genre_${g.id}_hourly_rate`),
+            getSiteSetting(`genre_${g.id}_hourly_image`),
+            getSiteSetting(`genre_${g.id}_hourly_description`),
+            getSiteSetting(`genre_${g.id}_hero_image`),
+          ]);
         return {
           base: {
             ...g,
             name: name?.trim() || g.name,
             image: image?.trim() || g.image,
+            heroImage: heroImage?.trim() || "",
           } as GenreData,
           hourly: {
             rate: hRate?.trim() || "",
@@ -619,6 +625,7 @@ export function AdminPanel({ onExit }: { onExit: () => void }) {
     const results = await Promise.all([
       setSiteSetting(`genre_${g.id}_name`, g.name),
       setSiteSetting(`genre_${g.id}_image`, g.image),
+      setSiteSetting(`genre_${g.id}_hero_image`, (g.heroImage || "").trim()),
       setSiteSetting(`genre_${g.id}_hourly_rate`, sanitizedRate),
       setSiteSetting(`genre_${g.id}_hourly_image`, h.image || ""),
       setSiteSetting(`genre_${g.id}_hourly_description`, h.description || ""),
@@ -1070,6 +1077,41 @@ export function AdminPanel({ onExit }: { onExit: () => void }) {
     }
     setGenreCoverUploading(null);
     const input = genreFileInputs.current[id];
+    if (input) input.value = "";
+  };
+
+  const handleGenreHeroUpload = async (id: GenreId, file: File | null) => {
+    if (!file) return;
+    setGenreHeroUploading(id);
+    setGenresError(null);
+    const ext = file.name.split(".").pop()?.toLowerCase() || "jpg";
+    const key = `covers/${id}-hero-${Date.now()}.${ext}`;
+    const { error: upErr } = await supabase.storage
+      .from(GALLERY_BUCKET)
+      .upload(key, file, {
+        cacheControl: "3600",
+        upsert: true,
+        contentType: file.type || undefined,
+      });
+    if (upErr) {
+      setGenresError(upErr.message);
+      setGenreHeroUploading(null);
+      return;
+    }
+    const { data } = supabase.storage.from(GALLERY_BUCKET).getPublicUrl(key);
+    const url = data.publicUrl;
+    const { error: setErr } = await setSiteSetting(
+      `genre_${id}_hero_image`,
+      url
+    );
+    if (setErr) {
+      setGenresError(setErr);
+    } else {
+      updateGenreField(id, { heroImage: url });
+      setGenresSavedId(id);
+    }
+    setGenreHeroUploading(null);
+    const input = genreHeroInputs.current[id];
     if (input) input.value = "";
   };
 
@@ -2131,7 +2173,7 @@ export function AdminPanel({ onExit }: { onExit: () => void }) {
                       </div>
                       <div>
                         <label className="block text-xs font-medium text-stone-400 mb-1">
-                          Imagen
+                          Imagen (tarjeta del inicio)
                         </label>
                         <div className="flex items-center gap-2 mb-2">
                           <input
@@ -2189,6 +2231,68 @@ export function AdminPanel({ onExit }: { onExit: () => void }) {
                             /images/mariachi-hero.jpg
                           </code>
                           .
+                        </div>
+                      </div>
+
+                      <div>
+                        <label className="block text-xs font-medium text-stone-400 mb-1">
+                          Portada interna (opcional)
+                        </label>
+                        <div className="flex items-center gap-2 mb-2">
+                          <input
+                            ref={(el) => {
+                              if (el) genreHeroInputs.current[g.id] = el;
+                              else delete genreHeroInputs.current[g.id];
+                            }}
+                            type="file"
+                            accept="image/*"
+                            className="hidden"
+                            onChange={(e) =>
+                              handleGenreHeroUpload(
+                                g.id,
+                                e.target.files?.[0] || null
+                              )
+                            }
+                          />
+                          <button
+                            onClick={() =>
+                              genreHeroInputs.current[g.id]?.click()
+                            }
+                            disabled={
+                              genresLoading ||
+                              genresSaving === g.id ||
+                              genreHeroUploading === g.id
+                            }
+                            className="flex items-center gap-2 bg-gradient-to-r from-amber-500 to-yellow-500 text-stone-950 px-4 py-2 rounded-xl font-bold disabled:opacity-50"
+                          >
+                            <Upload className="w-4 h-4" />
+                            {genreHeroUploading === g.id
+                              ? "Subiendo..."
+                              : "Subir foto"}
+                          </button>
+                          <span className="text-xs text-stone-500">
+                            Se guarda automáticamente.
+                          </span>
+                        </div>
+                        <input
+                          value={g.heroImage || ""}
+                          onChange={(e) =>
+                            updateGenreField(g.id, {
+                              heroImage: e.target.value,
+                            })
+                          }
+                          disabled={
+                            genresLoading ||
+                            genresSaving === g.id ||
+                            genreHeroUploading === g.id
+                          }
+                          placeholder="https://..."
+                          className="w-full bg-stone-800/80 border border-stone-700 rounded-xl px-3 py-2 text-white focus:outline-none focus:border-amber-500 disabled:opacity-50"
+                        />
+                        <div className="text-xs text-stone-500 mt-1">
+                          Foto grande de arriba en la página del género
+                          (1920 × 1080). Si la dejas vacía se usa la de la
+                          tarjeta.
                         </div>
                       </div>
 
