@@ -17,10 +17,10 @@ export const ADMIN_EMAIL =
   "promotionsmiserenata@gmail.com";
 
 export const PHONE_NUMBER =
-  (import.meta.env.VITE_PHONE_NUMBER as string) || "+573138969608";
+  (import.meta.env.VITE_PHONE_NUMBER as string) || "+573112260769";
 
 export const PHONE_DISPLAY =
-  (import.meta.env.VITE_PHONE_DISPLAY as string) || "+57 313 896 9608";
+  (import.meta.env.VITE_PHONE_DISPLAY as string) || "+57 311 226 0769";
 
 const waDigits = PHONE_NUMBER.replace(/\D/g, "");
 
