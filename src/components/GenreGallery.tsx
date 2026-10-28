@@ -115,14 +115,14 @@ export function GenreGallery({ id, genreName }: Props) {
           {loop.map((item, idx) => (
             <div
               key={`${item.name}-${idx}`}
-              className="flex-shrink-0 w-[78vw] sm:w-[360px] lg:w-[420px] aspect-[4/3] rounded-3xl overflow-hidden border border-stone-800 bg-stone-900"
+              className="flex-shrink-0 h-[70vw] sm:h-[320px] lg:h-[380px] max-w-[88vw] sm:max-w-none rounded-3xl overflow-hidden border border-stone-800 bg-stone-900"
             >
               <img
                 src={item.url}
                 alt={`${genreName} ${idx + 1}`}
                 loading="lazy"
                 draggable={false}
-                className="w-full h-full object-cover pointer-events-none"
+                className="h-full w-auto max-w-full min-w-[40vw] sm:min-w-[200px] object-contain pointer-events-none"
               />
             </div>
           ))}
