@@ -225,9 +225,10 @@ export function AdminPanel({ onExit }: { onExit: () => void }) {
   const [genreCoverUploading, setGenreCoverUploading] =
     useState<GenreId | null>(null);
   const genreFileInputs = useRef<Partial<Record<GenreId, HTMLInputElement>>>({});
-  const [genreHeroUploading, setGenreHeroUploading] =
-    useState<GenreId | null>(null);
-  const genreHeroInputs = useRef<Partial<Record<GenreId, HTMLInputElement>>>({});
+  const [genreHeroUploading, setGenreHeroUploading] = useState<string | null>(
+    null
+  );
+  const genreHeroInputs = useRef<Partial<Record<string, HTMLInputElement>>>({});
 
   type HourlyForm = { rate: string; image: string; description: string };
   const emptyHourly: HourlyForm = { rate: "", image: "", description: "" };
@@ -572,7 +573,7 @@ export function AdminPanel({ onExit }: { onExit: () => void }) {
     setGenresError(null);
     const entries = await Promise.all(
       DEFAULT_GENRES.map(async (g) => {
-        const [name, image, hRate, hImage, hDesc, heroImage] =
+        const [name, image, hRate, hImage, hDesc, heroImage, heroMobile] =
           await Promise.all([
             getSiteSetting(`genre_${g.id}_name`),
             getSiteSetting(`genre_${g.id}_image`),
@@ -580,6 +581,7 @@ export function AdminPanel({ onExit }: { onExit: () => void }) {
             getSiteSetting(`genre_${g.id}_hourly_image`),
             getSiteSetting(`genre_${g.id}_hourly_description`),
             getSiteSetting(`genre_${g.id}_hero_image`),
+            getSiteSetting(`genre_${g.id}_hero_image_mobile`),
           ]);
         return {
           base: {
@@ -587,6 +589,7 @@ export function AdminPanel({ onExit }: { onExit: () => void }) {
             name: name?.trim() || g.name,
             image: image?.trim() || g.image,
             heroImage: heroImage?.trim() || "",
+            heroImageMobile: heroMobile?.trim() || "",
           } as GenreData,
           hourly: {
             rate: hRate?.trim() || "",
@@ -626,6 +629,10 @@ export function AdminPanel({ onExit }: { onExit: () => void }) {
       setSiteSetting(`genre_${g.id}_name`, g.name),
       setSiteSetting(`genre_${g.id}_image`, g.image),
       setSiteSetting(`genre_${g.id}_hero_image`, (g.heroImage || "").trim()),
+      setSiteSetting(
+        `genre_${g.id}_hero_image_mobile`,
+        (g.heroImageMobile || "").trim()
+      ),
       setSiteSetting(`genre_${g.id}_hourly_rate`, sanitizedRate),
       setSiteSetting(`genre_${g.id}_hourly_image`, h.image || ""),
       setSiteSetting(`genre_${g.id}_hourly_description`, h.description || ""),
@@ -1080,12 +1087,17 @@ export function AdminPanel({ onExit }: { onExit: () => void }) {
     if (input) input.value = "";
   };
 
-  const handleGenreHeroUpload = async (id: GenreId, file: File | null) => {
+  const handleGenreHeroUpload = async (
+    id: GenreId,
+    file: File | null,
+    mobile = false
+  ) => {
     if (!file) return;
-    setGenreHeroUploading(id);
+    const uploadKey = mobile ? `${id}-mobile` : id;
+    setGenreHeroUploading(uploadKey);
     setGenresError(null);
     const ext = file.name.split(".").pop()?.toLowerCase() || "jpg";
-    const key = `covers/${id}-hero-${Date.now()}.${ext}`;
+    const key = `covers/${id}-hero${mobile ? "-mobile" : ""}-${Date.now()}.${ext}`;
     const { error: upErr } = await supabase.storage
       .from(GALLERY_BUCKET)
       .upload(key, file, {
@@ -1101,17 +1113,17 @@ export function AdminPanel({ onExit }: { onExit: () => void }) {
     const { data } = supabase.storage.from(GALLERY_BUCKET).getPublicUrl(key);
     const url = data.publicUrl;
     const { error: setErr } = await setSiteSetting(
-      `genre_${id}_hero_image`,
+      `genre_${id}_hero_image${mobile ? "_mobile" : ""}`,
       url
     );
     if (setErr) {
       setGenresError(setErr);
     } else {
-      updateGenreField(id, { heroImage: url });
+      updateGenreField(id, mobile ? { heroImageMobile: url } : { heroImage: url });
       setGenresSavedId(id);
     }
     setGenreHeroUploading(null);
-    const input = genreHeroInputs.current[id];
+    const input = genreHeroInputs.current[uploadKey];
     if (input) input.value = "";
   };
 
@@ -2293,6 +2305,68 @@ export function AdminPanel({ onExit }: { onExit: () => void }) {
                           Foto grande de arriba en la página del género
                           (1920 × 1080). Si la dejas vacía se usa la de la
                           tarjeta.
+                        </div>
+                      </div>
+
+                      <div>
+                        <label className="block text-xs font-medium text-stone-400 mb-1">
+                          Portada interna celular (opcional)
+                        </label>
+                        <div className="flex items-center gap-2 mb-2">
+                          <input
+                            ref={(el) => {
+                              if (el) genreHeroInputs.current[`${g.id}-mobile`] = el;
+                              else delete genreHeroInputs.current[`${g.id}-mobile`];
+                            }}
+                            type="file"
+                            accept="image/*"
+                            className="hidden"
+                            onChange={(e) =>
+                              handleGenreHeroUpload(
+                                g.id,
+                                e.target.files?.[0] || null,
+                                true
+                              )
+                            }
+                          />
+                          <button
+                            onClick={() =>
+                              genreHeroInputs.current[`${g.id}-mobile`]?.click()
+                            }
+                            disabled={
+                              genresLoading ||
+                              genresSaving === g.id ||
+                              genreHeroUploading === `${g.id}-mobile`
+                            }
+                            className="flex items-center gap-2 bg-gradient-to-r from-amber-500 to-yellow-500 text-stone-950 px-4 py-2 rounded-xl font-bold disabled:opacity-50"
+                          >
+                            <Upload className="w-4 h-4" />
+                            {genreHeroUploading === `${g.id}-mobile`
+                              ? "Subiendo..."
+                              : "Subir foto"}
+                          </button>
+                          <span className="text-xs text-stone-500">
+                            Se guarda automáticamente.
+                          </span>
+                        </div>
+                        <input
+                          value={g.heroImageMobile || ""}
+                          onChange={(e) =>
+                            updateGenreField(g.id, {
+                              heroImageMobile: e.target.value,
+                            })
+                          }
+                          disabled={
+                            genresLoading ||
+                            genresSaving === g.id ||
+                            genreHeroUploading === `${g.id}-mobile`
+                          }
+                          placeholder="https://..."
+                          className="w-full bg-stone-800/80 border border-stone-700 rounded-xl px-3 py-2 text-white focus:outline-none focus:border-amber-500 disabled:opacity-50"
+                        />
+                        <div className="text-xs text-stone-500 mt-1">
+                          Foto vertical para celulares (1080 × 1350). Si la
+                          dejas vacía se usa la portada interna.
                         </div>
                       </div>
 
