@@ -1,10 +1,10 @@
-import { WHATSAPP_LINK } from "../lib/supabase";
+import { WHATSAPP_GREETING_LINK } from "../lib/supabase";
 import { trackWhatsAppClick } from "../lib/analytics";
 
 export function WhatsAppFab() {
   return (
     <a
-      href={WHATSAPP_LINK}
+      href={WHATSAPP_GREETING_LINK}
       target="_blank"
       rel="noopener noreferrer"
       onClick={trackWhatsAppClick}

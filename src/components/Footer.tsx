@@ -1,6 +1,6 @@
 import { loc } from "../lib/region";
 import { Music4, Instagram, Mail, MapPin, Phone } from "lucide-react";
-import { WHATSAPP_LINK, PHONE_NUMBER, PHONE_DISPLAY } from "../lib/supabase";
+import { WHATSAPP_GREETING_LINK, PHONE_NUMBER, PHONE_DISPLAY } from "../lib/supabase";
 import { trackWhatsAppClick, trackPhoneClick } from "../lib/analytics";
 
 export function Footer() {
@@ -66,7 +66,7 @@ export function Footer() {
               </li>
               <li>
                 <a
-                  href={WHATSAPP_LINK}
+                  href={WHATSAPP_GREETING_LINK}
                   target="_blank"
                   rel="noopener noreferrer"
                   onClick={trackWhatsAppClick}

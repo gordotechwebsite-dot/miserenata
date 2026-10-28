@@ -1,6 +1,6 @@
 import { loc } from "../lib/region";
 import { MessageCircle, Clock, MapPin, Phone } from "lucide-react";
-import { WHATSAPP_LINK, PHONE_NUMBER, PHONE_DISPLAY } from "../lib/supabase";
+import { WHATSAPP_GREETING_LINK, PHONE_NUMBER, PHONE_DISPLAY } from "../lib/supabase";
 import { trackWhatsAppClick, trackPhoneClick } from "../lib/analytics";
 
 export function Contact() {
@@ -13,7 +13,7 @@ export function Contact() {
       <div className="relative max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-6 mb-10">
           <a
-            href={WHATSAPP_LINK}
+            href={WHATSAPP_GREETING_LINK}
             target="_blank"
             rel="noopener noreferrer"
             onClick={trackWhatsAppClick}
@@ -52,7 +52,7 @@ export function Contact() {
 
         <div className="flex flex-col sm:flex-row gap-4 justify-center">
           <a
-            href={WHATSAPP_LINK}
+            href={WHATSAPP_GREETING_LINK}
             target="_blank"
             rel="noopener noreferrer"
             onClick={trackWhatsAppClick}
