@@ -29,6 +29,7 @@ export type GenreData = {
   id: GenreId;
   name: string;
   image: string;
+  heroImage?: string;
 };
 
 export type GenreHourlyConfig = {

@@ -146,12 +146,14 @@ export function GenrePage({ id, packages, loading }: Props) {
       getSiteSetting(`genre_${id}_hourly_rate`),
       getSiteSetting(`genre_${id}_hourly_image`),
       getSiteSetting(`genre_${id}_hourly_description`),
-    ]).then(([name, image, hRate, hImage, hDesc]) => {
+      getSiteSetting(`genre_${id}_hero_image`),
+    ]).then(([name, image, hRate, hImage, hDesc, heroImage]) => {
       if (!mounted) return;
       const nextGenre: GenreData = {
         ...base,
         name: name?.trim() || base.name,
         image: image?.trim() || base.image,
+        heroImage: heroImage?.trim() || undefined,
       };
       setGenre(nextGenre);
       writeCache(`genre_${id}`, nextGenre);
@@ -205,7 +207,7 @@ export function GenrePage({ id, packages, loading }: Props) {
     <>
       <section className="relative min-h-[60vh] sm:min-h-[75vh] flex items-end overflow-hidden">
         <img
-          src={genre.image}
+          src={genre.heroImage || genre.image}
           alt={genre.name}
           className="absolute inset-0 w-full h-full object-cover"
           loading="eager"
