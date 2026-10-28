@@ -16,17 +16,13 @@ export const ADMIN_EMAIL =
   (import.meta.env.VITE_ADMIN_EMAIL as string) ||
   "promotionsmiserenata@gmail.com";
 
-export const PHONE_NUMBER =
-  (import.meta.env.VITE_PHONE_NUMBER as string) || "+573112260769";
+export const PHONE_NUMBER = "+573112260769";
 
-export const PHONE_DISPLAY =
-  (import.meta.env.VITE_PHONE_DISPLAY as string) || "+57 311 226 0769";
+export const PHONE_DISPLAY = "+57 311 226 0769";
 
 const waDigits = PHONE_NUMBER.replace(/\D/g, "");
 
-export const WHATSAPP_LINK =
-  (import.meta.env.VITE_WHATSAPP_LINK as string) ||
-  `https://wa.me/${waDigits}`;
+export const WHATSAPP_LINK = `https://wa.me/${waDigits}`;
 
 export const DEFAULT_BANNER_TEXT = loc(
   "Reserva serenatas desde $300.000 en Duitama, Paipa y Sogamoso"
