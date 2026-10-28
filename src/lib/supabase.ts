@@ -24,6 +24,10 @@ const waDigits = PHONE_NUMBER.replace(/\D/g, "");
 
 export const WHATSAPP_LINK = `https://wa.me/${waDigits}`;
 
+export const WHATSAPP_GREETING_LINK = `${WHATSAPP_LINK}?text=${encodeURIComponent(
+  "Deseo agendar una serenata"
+)}`;
+
 export const DEFAULT_BANNER_TEXT = loc(
   "Reserva serenatas desde $300.000 en Duitama, Paipa y Sogamoso"
 );
