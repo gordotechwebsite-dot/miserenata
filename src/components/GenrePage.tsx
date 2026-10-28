@@ -147,13 +147,15 @@ export function GenrePage({ id, packages, loading }: Props) {
       getSiteSetting(`genre_${id}_hourly_image`),
       getSiteSetting(`genre_${id}_hourly_description`),
       getSiteSetting(`genre_${id}_hero_image`),
-    ]).then(([name, image, hRate, hImage, hDesc, heroImage]) => {
+      getSiteSetting(`genre_${id}_hero_image_mobile`),
+    ]).then(([name, image, hRate, hImage, hDesc, heroImage, heroMobile]) => {
       if (!mounted) return;
       const nextGenre: GenreData = {
         ...base,
         name: name?.trim() || base.name,
         image: image?.trim() || base.image,
         heroImage: heroImage?.trim() || undefined,
+        heroImageMobile: heroMobile?.trim() || undefined,
       };
       setGenre(nextGenre);
       writeCache(`genre_${id}`, nextGenre);
@@ -206,21 +208,26 @@ export function GenrePage({ id, packages, loading }: Props) {
   return (
     <>
       <section className="relative min-h-[60vh] sm:min-h-[75vh] flex items-end overflow-hidden">
-        <img
-          src={genre.heroImage || genre.image}
-          alt={genre.name}
-          className="absolute inset-0 w-full h-full object-cover"
-          loading="eager"
-          decoding="async"
-          fetchPriority="high"
-          onError={(e) => {
-            (e.target as HTMLImageElement).src = placeholderSvg(
-              genre.name,
-              1600,
-              900
-            );
-          }}
-        />
+        <picture>
+          {genre.heroImageMobile && (
+            <source media="(max-width: 639px)" srcSet={genre.heroImageMobile} />
+          )}
+          <img
+            src={genre.heroImage || genre.image}
+            alt={genre.name}
+            className="absolute inset-0 w-full h-full object-cover"
+            loading="eager"
+            decoding="async"
+            fetchPriority="high"
+            onError={(e) => {
+              (e.target as HTMLImageElement).src = placeholderSvg(
+                genre.name,
+                1600,
+                900
+              );
+            }}
+          />
+        </picture>
         <div className="absolute inset-0 bg-gradient-to-t from-stone-950 via-stone-950/60 to-stone-950/30" />
 
         <div className="relative z-10 w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-28 pb-12 sm:pb-20">
