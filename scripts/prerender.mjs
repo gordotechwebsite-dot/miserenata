@@ -173,7 +173,7 @@ const ROUTES = [
       coverage:
         "Cobertura completa en Boyacá: mariachi en Duitama, mariachi en Paipa, mariachi en Sogamoso, mariachi en Tunja, mariachi en Nobsa, mariachi en Belén, mariachi en Sutamarchán, mariachi en Villa de Leyva y municipios cercanos. Para localidades fuera del corredor industrial cotizamos recargo por desplazamiento. Llegamos puntuales y con presentación impecable.",
       reserva:
-        "Reserva con al menos 24 horas de anticipación; para bodas y eventos grandes recomendamos 2 a 4 semanas. Pago en Nequi, Daviplata, Bancolombia, efectivo o tarjeta — el 50% asegura tu fecha y el saldo se paga el día del evento. Precio mariachi por hora o por paquete: contrata 3, 5 o 10 canciones, o cotiza un show completo. Pide tu cotización personalizada por WhatsApp al +57 313 8969608.",
+        "Reserva con al menos 24 horas de anticipación; para bodas y eventos grandes recomendamos 2 a 4 semanas. Pago en Nequi, Daviplata, Bancolombia, efectivo o tarjeta — el 50% asegura tu fecha y el saldo se paga el día del evento. Precio mariachi por hora o por paquete: contrata 3, 5 o 10 canciones, o cotiza un show completo. Pide tu cotización personalizada por WhatsApp al +57 311 226 0769.",
       faqs: [
         {
           q: "¿Cuánto cuesta un mariachi en Duitama?",
@@ -338,7 +338,7 @@ const ROUTES = [
         },
         {
           h: "Reserva tu serenata",
-          p: "Mínimo 24 horas de anticipación. Pago: Nequi, Daviplata, Bancolombia, efectivo o tarjeta — el 50% asegura la fecha y el saldo se paga el día. Paquetes de 3, 5 o 10 canciones, o show completo. Coordinamos hora, lugar y canciones por WhatsApp al +57 313 8969608.",
+          p: "Mínimo 24 horas de anticipación. Pago: Nequi, Daviplata, Bancolombia, efectivo o tarjeta — el 50% asegura la fecha y el saldo se paga el día. Paquetes de 3, 5 o 10 canciones, o show completo. Coordinamos hora, lugar y canciones por WhatsApp al +57 311 226 0769.",
         },
       ],
       cta: "Cotiza tu serenata por WhatsApp y te confirmamos disponibilidad en minutos.",
@@ -369,7 +369,7 @@ const ROUTES = [
           p: "Aceptamos transferencia Bancolombia, Nequi, Daviplata, efectivo y tarjeta. Emitimos factura electrónica para empresas. El 50% confirma la reserva y el saldo se paga al cierre del evento.",
         },
       ],
-      cta: "Pide tu cotización corporativa al WhatsApp +57 313 8969608.",
+      cta: "Pide tu cotización corporativa al WhatsApp +57 311 226 0769.",
     }),
   },
   {
@@ -397,7 +397,7 @@ const ROUTES = [
           p: "Para bodas recomendamos reservar con 2 a 4 semanas mínimo (las fechas pico — diciembre, fines de semana de puente, temporada de bodas — se llenan rápido). Pago en Nequi, Daviplata, Bancolombia, efectivo o tarjeta. 50% asegura la fecha y el saldo se paga el día del evento. Sonido y luces incluidos en el precio por hora de banda.",
         },
       ],
-      cta: "Pide tu cotización de boda al WhatsApp +57 313 8969608. Te respondemos en minutos.",
+      cta: "Pide tu cotización de boda al WhatsApp +57 311 226 0769. Te respondemos en minutos.",
     }),
   },
   {
@@ -425,7 +425,7 @@ const ROUTES = [
           p: "Si es para mañana o pasado, escríbenos por WhatsApp ya — solemos tener disponibilidad de último minuto. Mínimo 24 horas para serenatas. Pago: Nequi, Daviplata, Bancolombia, efectivo o tarjeta. 50% asegura la fecha.",
         },
       ],
-      cta: "Cotiza tu cumpleaños por WhatsApp al +57 313 8969608.",
+      cta: "Cotiza tu cumpleaños por WhatsApp al +57 311 226 0769.",
     }),
   },
   {
